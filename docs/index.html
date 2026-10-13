@@ -61,6 +61,21 @@ textarea{min-height:70px;resize:vertical}
 .msg{font-size:15px;margin-top:8px}
 .msg.ok{color:var(--ok)}.msg.err{color:var(--err)}.msg.warn{color:var(--warn)}
 .empty{font-size:14px;color:#777;font-style:italic;margin:4px 0 8px}
+/* danh mục */
+.dm-wrap{display:grid;grid-template-columns:250px 1fr;gap:16px;padding:16px;max-width:1250px;margin:0 auto;align-items:start}
+.dm-side{position:sticky;top:70px}
+.dm-nav button{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:6px;padding:9px 10px;margin-bottom:6px;cursor:pointer;font-size:14px;color:var(--blue)}
+.dm-nav button:hover{background:#eaf2fb}
+.dm-nav button.on{background:var(--blue2);color:#fff;border-color:var(--blue2);font-weight:600}
+.dm-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.dm-head b{font-size:16px;color:var(--blue)}
+.card-b .hint{margin:2px 0 8px}
+.ih3{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 34px;gap:6px;align-items:center;margin-bottom:6px}
+.ih3 input{padding:6px 7px;font-size:15px}
+.cbrow-grid{display:grid}
+.item .ih3 input[data-phan]{font-size:13px}
+#rosterHolder .card{margin-bottom:12px}
+@media (max-width:980px){.dm-wrap{grid-template-columns:1fr}.dm-side{position:static}}
 /* thanh chọn cố định đầu form */
 .toolbar{position:sticky;top:-14px;z-index:6;background:#fff;margin:-14px -16px 12px;padding:10px 16px;border-bottom:2px solid var(--blue2);box-shadow:0 2px 6px rgba(0,0,0,.06)}
 .tb-row{display:grid;gap:6px;align-items:center;margin-bottom:6px}
@@ -122,7 +137,6 @@ th{background:#f5f8fb;font-size:14px}
   <button class="btn" data-go="editor">✎ Biên bản</button>
   <button class="btn" data-go="list">📂 Danh sách</button>
   <button class="btn" data-go="danhmuc">🗂 Danh mục</button>
-  <button class="btn" data-go="roster">👥 Danh bạ</button>
   <button class="btn" data-go="settings">⚙ Kết nối</button>
   <span class="grow"></span>
   <span class="status" id="status"></span>
@@ -218,103 +232,61 @@ th{background:#f5f8fb;font-size:14px}
 
 <!-- ============ DANH MỤC ============ -->
 <div class="view" id="danhmuc">
-  <div class="page set">
-    <div class="card">
-      <div class="grid2">
-        <div><label class="lb">Cảng đang sửa</label><select id="dmCang"></select></div>
-        <div style="display:flex;align-items:end;gap:6px"><input type="text" id="dmCangMoi" placeholder="Tên cảng mới"><button class="btn small" id="btnDmCangMoi">+ Thêm cảng</button></div>
+  <div class="dm-wrap">
+    <aside class="dm-side">
+      <div class="card-b" style="margin:0 0 10px">
+        <label class="lb" style="margin-top:0">Cảng đang sửa</label>
+        <select id="dmCang"></select>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px">
+          <input type="text" id="dmCangMoi" placeholder="Thêm cảng mới">
+          <button class="btn small" id="btnDmCangMoi">+ Thêm</button>
+        </div>
       </div>
-      <p class="hint">Danh mục là dữ liệu cài sẵn của từng cảng. Khi lập biên bản, chọn từ danh sách xổ xuống. Mỗi dòng là một mục; dấu <b>|</b> ngăn cách các cột. Sửa xong bấm <b>Lưu danh mục</b>.</p>
-      <div class="grid2">
-        <div><label class="lb">Tiêu đề phụ (phần trong ngoặc)</label><input type="text" id="s_phuDe"></div>
-        <div><label class="lb">Tên mục trực</label><input type="text" id="s_tenTruc"></div>
-        <div><label class="lb">Tên mục đơn vị thuê ngoài</label><input type="text" id="s_tenThue"></div>
-        <div><label class="lb">Câu mở đầu trước danh sách người (mặc định)</label><input type="text" id="s_leadIn"></div>
-        <div><label class="lb">Cách ghi chức vụ trong thành phần</label>
-          <select id="s_kieuChucVu"><option value="gach">Ông X - Chức vụ</option><option value="chucvu">Ông: X  Chức vụ: ...</option></select></div>
-        <div><label class="lb">Cách ghi cầu bến</label>
-          <select id="s_kieuCauBen"><option value="mot">Một dòng (kiểu biên bản Long Bình Tân)</option><option value="dong">Ba dòng (kiểu biên bản Gò Dầu)</option></select></div>
-        <div><label class="lb">Đánh số các mục</label>
-          <select id="s_danhSo"><option value="co">Có: 1., 2., 3. ...</option><option value="khong">Không: dùng dấu *, không có I/II/III</option></select></div>
-        <div><label class="lb">Cách ghi trực điều hành</label>
-          <select id="s_kieuTruc"><option value="dangco">Danh sách: Ông X - đang có mặt tại Cảng</option><option value="vang">Một dòng: ông X không có mặt tại cảng...</option></select></div>
-        <div><label class="lb">Có dòng "Chúng tôi gồm:"</label>
-          <select id="s_chungToi"><option value="khong">Không</option><option value="co">Có</option></select></div>
+      <nav class="dm-nav" id="dmNav"></nav>
+    </aside>
+    <section>
+      <div class="card-b dm-head">
+        <b id="dmTitle"></b>
+        <div class="top-actions">
+          <button class="btn primary" id="btnDmSave">💾 Lưu lên máy chủ</button>
+          <button class="btn alt" id="btnDmReset">Khôi phục mẫu gốc</button>
+        </div>
+        <div class="msg" id="dmMsg" style="width:100%;margin-top:0"></div>
       </div>
-
-      <label class="lb">Căn cứ mặc định</label>
-      <textarea id="s_canCu"></textarea>
-      <div class="help">Mỗi dòng một căn cứ. Khi lập biên bản, căn cứ nào được tick mới in ra.</div>
-
-      <label class="lb">Ban Kiểm soát nội bộ (thành phần)</label>
-      <textarea id="s_ksnb"></textarea>
-      <div class="help">Mỗi dòng: <b>Ông Họ tên | Chức vụ</b> (hoặc Bà). Thêm dòng để thêm người.</div>
-
-      <label class="lb">Đại diện các đơn vị</label>
-      <textarea id="s_dvKhac"></textarea>
-      <div class="help">Dòng bắt đầu bằng <b>##</b> là tên đơn vị. Các dòng bên dưới là người của đơn vị đó, dạng: <b>Ông Họ tên | Chức vụ</b>.</div>
-
-      <label class="lb">Cầu bến</label>
-      <textarea id="s_cauBen"></textarea>
-      <div class="help">Mỗi dòng: <b>Tên cầu | phương tiện cập bến | thực hiện làm hàng | thiết bị làm hàng</b>. Dùng "không" nếu không có.</div>
-
-      <label class="lb">Ban / bộ phận làm việc, vị trí, thiết bị</label>
-      <textarea id="s_viTri" style="min-height:260px"></textarea>
-      <div class="help">Dòng <b>##</b> là ban (vd: Ban Khai thác điều độ). Dòng <b>###</b> là bộ phận con (không bắt buộc).
-Mỗi mục: <b>Tên vị trí | Họ tên; Họ tên</b>. Nếu mục không có người mà chỉ có ghi chú, đặt ghi chú trong ngoặc: <b>Cẩu Lima 1 | (không bố trí làm hàng)</b>.
-Muốn người có chức danh riêng (vd: Lái cẩu), viết <b>Cẩu LH1 | Lái cẩu: Trần Văn Hưng</b>.</div>
-
-      <label class="lb">Đơn vị thuê ngoài</label>
-      <textarea id="s_thueNgoai"></textarea>
-      <div class="help">Dòng <b>## Tên công ty</b>, có thể kèm giới thiệu sau dấu | (vd: cung cấp dịch vụ cho tàu...) hoặc ghi chú trong ngoặc (vd: (không bố trí thiết bị, dịch vụ làm hàng)). Các dòng bên dưới là thiết bị/dịch vụ.</div>
-
-      <label class="lb">Trực điều hành / trực chỉ huy</label>
-      <textarea id="s_truc"></textarea>
-      <div class="help">Mỗi dòng: <b>Ông Họ tên | Chức vụ</b>. Dòng bắt đầu bằng <b>!</b> là người mặc định vắng.</div>
-
-      <label class="lb">Tình hình an ninh trật tự (mặc định)</label>
-      <textarea id="s_antt" style="min-height:50px"></textarea>
-
-      <div class="msg" id="dmMsg"></div>
-      <div class="top-actions" style="margin-top:10px">
-        <button class="btn primary" id="btnDmSave">💾 Lưu danh mục lên máy chủ</button>
-        <button class="btn alt" id="btnDmReset">Khôi phục mẫu gốc của cảng này</button>
-      </div>
-    </div>
+      <div id="dmPanel"></div>
+    </section>
   </div>
 </div>
 
-<!-- ============ DANH BẠ ============ -->
-<div class="view" id="roster">
-  <div class="page">
-    <div class="card">
-      <b>1. Tải danh bạ từ file Excel</b>
-      <p class="hint">File Excel (.xlsx, .xls) hoặc CSV. Dòng đầu nên là tiêu đề: <b>Đơn vị | Họ và tên | Chức danh | Ghi chú</b>.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" style="max-width:100%">
-        <select id="rosterMode" style="width:auto">
-          <option value="replace">Thay toàn bộ danh sách</option>
-          <option value="append">Thêm vào cuối</option>
-        </select>
-      </div>
-      <div class="msg" id="rosterFileMsg"></div>
+<!-- Danh bạ nhân viên: nằm trong tab Danh mục (mục 8), giữ ở đây khi chưa mở -->
+<div id="rosterHolder" hidden>
+  <div class="card">
+    <b>Tải danh bạ từ file Excel</b>
+    <p class="hint">File Excel (.xlsx, .xls) hoặc CSV. Dòng đầu nên là tiêu đề: <b>Đơn vị | Họ và tên | Chức danh | Ghi chú</b>.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" style="max-width:100%">
+      <select id="rosterMode" style="width:auto">
+        <option value="replace">Thay toàn bộ danh sách</option>
+        <option value="append">Thêm vào cuối</option>
+      </select>
     </div>
-    <div class="card">
-      <b>2. Danh bạ (nhập hoặc sửa tay)</b>
-      <p class="hint">Danh bạ dùng để gợi ý tên khi gõ. Dòng nào không có họ tên sẽ không được lưu.</p>
-      <div style="overflow:auto">
-        <table>
-          <thead><tr><th style="width:24%">Đơn vị</th><th style="width:26%">Họ và tên</th><th style="width:30%">Chức danh</th><th>Ghi chú</th><th style="width:44px"></th></tr></thead>
-          <tbody id="rosterBody"></tbody>
-        </table>
-      </div>
-      <div class="top-actions" style="margin-top:10px">
-        <button class="btn alt" id="btnRosterAdd">+ Thêm dòng</button>
-        <button class="btn alt" id="btnRosterLoad">↓ Tải lại từ máy chủ</button>
-        <button class="btn primary" id="btnRosterSave">💾 Lưu danh bạ lên máy chủ</button>
-      </div>
-      <div class="msg" id="rosterMsg"></div>
+    <div class="msg" id="rosterFileMsg"></div>
+  </div>
+  <div class="card">
+    <b>Danh bạ (nhập hoặc sửa tay)</b>
+    <p class="hint">Danh bạ dùng để gợi ý tên khi gõ trong biên bản và để điền sẵn chức danh. Dòng nào không có họ tên sẽ không được lưu.</p>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th style="width:24%">Đơn vị</th><th style="width:26%">Họ và tên</th><th style="width:30%">Chức danh</th><th>Ghi chú</th><th style="width:44px"></th></tr></thead>
+        <tbody id="rosterBody"></tbody>
+      </table>
     </div>
+    <div class="top-actions" style="margin-top:10px">
+      <button class="btn alt" id="btnRosterAdd">+ Thêm dòng</button>
+      <button class="btn alt" id="btnRosterLoad">↓ Tải lại từ máy chủ</button>
+      <button class="btn primary" id="btnRosterSave">💾 Lưu danh bạ lên máy chủ</button>
+    </div>
+    <div class="msg" id="rosterMsg"></div>
   </div>
 </div>
 
@@ -580,12 +552,6 @@ function parseThue(text){
   return out;
 }
 function parseCanCu(text){ return lines(text).map(t => ({ inc: true, t })); }
-function settingsOf(cang){ return DM[cang] || SEED[cang] || {}; }
-function cat(cang){
-  const s = settingsOf(cang);
-  return { ks: parseKs(s.ksnb), dv: parseDv(s.dvKhac), berths: parseCauBen(s.cauBen),
-           groups: parseViTri(s.viTri), thue: parseThue(s.thueNgoai), truc: parseTruc(s.truc) };
-}
 function allUnits(cang){
   const c = cat(cang);
   return [{ ten: KSNB_NAME, nguoi: c.ks }, ...c.dv.map(b => ({ ten: b.ten, nguoi: b.nguoi }))];
@@ -602,7 +568,7 @@ function buildNew(cang){
   return {
     v: VERSION, cang,
     tieuDe: 'BIÊN BẢN KIỂM TRA', phuDe: s.phuDe || '', diaDiem: 'Đồng Nai', ngayLap: todayIso(), trangThai: 'nháp',
-    canCu: parseCanCu(s.canCu), canCuThem: '',
+    canCu: (s.canCu || []).map(t => ({ inc: true, t })), canCuThem: '',
     thanhPhan: [{ ten: KSNB_NAME, nguoi: c.ks }],
     phamVi: { bophan: '', manual: false, catruc: '', tuNgay: '', tuGio: '', denNgay: '', denGio: '' },
     cauBen: [], ban: [], thue: [], truc: null,
@@ -949,46 +915,207 @@ function drawList(){
     || `<tr><td colspan="6">Chưa có biên bản nào.</td></tr>`;
 }
 
-/* ---------------- danh mục (cài đặt) ---------------- */
-const DM_FIELDS = ['phuDe','tenTruc','tenThue','leadIn','antt','canCu','ksnb','dvKhac','cauBen','viTri','thueNgoai','truc'];
-const DM_SELECTS = ['kieuChucVu','kieuCauBen','danhSo','kieuTruc','chungToi'];
+/* ---------------- danh mục: dữ liệu nguồn cho các menu ---------------- */
+const SECTIONS = [
+  ['meta', '1. Cài đặt chung'],
+  ['ksnb', '2. Ban Kiểm soát nội bộ'],
+  ['donvi', '3. Đơn vị đại diện (thành phần)'],
+  ['caubien', '4. Cầu bến'],
+  ['ban', '5. Ban, vị trí, thiết bị, nhân viên'],
+  ['thue', '6. Công ty thuê ngoài'],
+  ['truc', '7. Trực điều hành'],
+  ['roster', '8. Danh bạ nhân viên (gợi ý tên)']
+];
+let DM_SEC = 'meta';
+let DM_CUR = null;
+const RH = document.getElementById('rosterHolder');
+
+// đổi dữ liệu kiểu cũ (văn bản) sang kiểu mới (danh sách có cấu trúc)
+function normalize(o){
+  o = o || {};
+  if (o.schema === 2) return o;
+  return {
+    schema: 2,
+    phuDe: o.phuDe || '', tenTruc: o.tenTruc || 'Trực điều hành', tenThue: o.tenThue || 'Đơn vị thuê ngoài',
+    leadIn: o.leadIn || DEFAULT_LEAD, kieuChucVu: o.kieuChucVu || 'gach', kieuCauBen: o.kieuCauBen || 'mot',
+    danhSo: o.danhSo || 'co', kieuTruc: o.kieuTruc || 'dangco', chungToi: o.chungToi || 'khong',
+    antt: o.antt || 'Tình hình an ninh trật tự ổn định.',
+    canCu: lines(o.canCu).map(x => x.replace(/^[-–•]\s*/, '')),
+    ksnb: parseKs(o.ksnb || ''),
+    donVi: parseDv(o.dvKhac || ''),
+    cauBen: parseCauBen(o.cauBen || ''),
+    bans: parseViTri(o.viTri || '').map(g => ({ ten: g.ten, items: g.items })),
+    thue: parseThue(o.thueNgoai || '').map(t => ({ congTy: t.congTy, intro: t.intro, note: t.note, dv: t.dv.map(x => x.t) })),
+    truc: parseTruc(o.truc || '')
+  };
+}
+function DMof(c){ DM[c] = normalize(DM[c] || SEED[c] || {}); return DM[c]; }
+function settingsOf(c){ return DMof(c); }
+function cat(cang){
+  const s = DMof(cang);
+  const pp = a => (a || []).map(x => ({ ...x, co: x.co !== false }));
+  return {
+    ks: pp(s.ksnb),
+    dv: (s.donVi || []).map(u => ({ ten: u.ten, nguoi: pp(u.nguoi) })),
+    berths: s.cauBen || [],
+    groups: (s.bans || []).map(g => ({ ten: g.ten, items: (g.items || []).map(it => ({ phan: it.phan || '', label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
+    thue: (s.thue || []).map(t => ({ congTy: t.congTy, intro: t.intro || '', note: t.note || '', dv: (t.dv || []).map(x => ({ t: x })) })),
+    truc: pp(s.truc)
+  };
+}
 function refreshCangSelects(){
-  const opts = Object.keys(DM).map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  const cur = $('cang').value;
+  const names = Object.keys(DM);
+  const opts = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
   $('cang').innerHTML = opts;
   $('dmCang').innerHTML = opts;
+  $('cang').value = names.includes(cur) ? cur : names[0];
+  if (DM_CUR && names.includes(DM_CUR)) $('dmCang').value = DM_CUR;
 }
-function showDM(cang){
-  const s = settingsOf(cang);
+
+/* --- khối giao diện từng mục --- */
+const dmFld = (k, label, v) => `<div><label class="lb">${label}</label><input type="text" data-m="${k}" value="${esc(v || '')}"></div>`;
+const dmSel = (k, label, opts, v) => `<div><label class="lb">${label}</label><select data-m="${k}">${opts.map(o => `<option value="${o[0]}" ${o[0] === v ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+const addBtn = (a, t) => `<button class="btn small" data-dm="${a}">${t}</button>`;
+const hintP = t => `<p class="hint">${t}</p>`;
+const czRow = t => `<div class="crow" data-cz><input type="text" data-cztxt value="${esc(t)}"><button class="del" data-del>✕</button></div>`;
+const cbRow = b => `<div class="brow" data-cbrow><input type="text" data-cbten value="${esc(b.ten || '')}" placeholder="Cầu (vd: K1-K2)"><input type="text" data-cbpt value="${esc(b.phuongTien || '')}" placeholder="Phương tiện cập bến"><input type="text" data-cbtk value="${esc(b.thucHien || '')}" placeholder="Thực hiện làm hàng"><input type="text" data-cbtb value="${esc(b.thietBi || '')}" placeholder="Thiết bị làm hàng"><button class="del" data-del>✕</button></div>`;
+const svcRow = x => `<div class="srow" data-svc><input type="text" data-tv value="${esc(x)}"><button class="del" data-del>✕</button></div>`;
+const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`;
+const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div><details class="pl-d" ${(g.items || []).length ? '' : 'open'}><summary>Vị trí, thiết bị và nhân viên (${(g.items || []).length})</summary><div class="items">${(g.items || []).map(itemRow).join('')}</div>${addBtn('addItem', '+ vị trí / thiết bị')}</details></div>`;
+const dvCard = u => `<div class="card-b" data-dvcard><div class="bh"><input type="text" data-dvten value="${esc(u.ten || '')}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="pl">${(u.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`;
+const tcard = t => `<div class="card-b" data-tcard><div class="bh"><input type="text" data-congty value="${esc(t.congTy || '')}" placeholder="Tên công ty"><button class="del" data-del>✕</button></div><input type="text" data-intro value="${esc(t.intro || '')}" placeholder="Giới thiệu (tùy chọn, vd: cung cấp dịch vụ cho tàu...)" style="margin-bottom:5px"><input type="text" data-tnote value="${esc(t.note || '')}" placeholder="Ghi chú (vd: không bố trí thiết bị, dịch vụ làm hàng)" style="margin-bottom:6px"><div class="svcs">${(t.dv || []).map(svcRow).join('')}</div>${addBtn('addSvc', '+ thiết bị / dịch vụ')}</div>`;
+
+const SEC_HTML = {
+  meta: s => `<div class="card-b"><div class="grid2">
+      ${dmFld('phuDe', 'Tiêu đề phụ (phần trong ngoặc)', s.phuDe)}
+      ${dmFld('tenTruc', 'Tên mục trực điều hành', s.tenTruc)}
+      ${dmFld('tenThue', 'Tên mục thuê ngoài', s.tenThue)}
+      ${dmFld('leadIn', 'Câu mở đầu danh sách người có mặt', s.leadIn)}
+      ${dmSel('danhSo', 'Đánh số các mục', [['co', 'Có: 1., 2., 3. và I, II, III'], ['khong', 'Không: dùng dấu *']], s.danhSo)}
+      ${dmSel('chungToi', 'Dòng "Chúng tôi gồm:"', [['khong', 'Không'], ['co', 'Có']], s.chungToi)}
+      ${dmSel('kieuChucVu', 'Cách ghi chức vụ', [['gach', 'Ông X - Chức vụ'], ['chucvu', 'Ông: X    Chức vụ: ...']], s.kieuChucVu)}
+      ${dmSel('kieuCauBen', 'Cách ghi cầu bến', [['mot', 'Một dòng'], ['dong', 'Ba dòng']], s.kieuCauBen)}
+      ${dmSel('kieuTruc', 'Cách ghi trực điều hành', [['dangco', 'Danh sách: Ông X – đang có mặt tại Cảng'], ['vang', 'Một dòng: ông X không có mặt tại cảng...']], s.kieuTruc)}
+    </div></div>
+    <div class="card-b"><b>Căn cứ mặc định</b>${hintP('Mỗi dòng một căn cứ. Khi lập biên bản, căn cứ nào được tick thì mới in ra.')}<div data-list>${(s.canCu || []).map(czRow).join('')}</div>${addBtn('addCz', '+ thêm căn cứ')}</div>
+    <div class="card-b"><label class="lb" style="margin-top:0">Tình hình an ninh trật tự (mặc định)</label><textarea data-m="antt" style="min-height:60px">${esc(s.antt)}</textarea></div>`,
+  ksnb: s => `<div class="card-b" data-kcard>${hintP('Người của Ban Kiểm soát nội bộ. Tự có sẵn trong mục Thành phần khi lập biên bản.')}<div class="pl">${(s.ksnb || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`,
+  donvi: s => `${hintP('Các đơn vị cử người cùng đi kiểm tra (vd: Cảng, Phòng Kho vận). Khi lập biên bản, chọn đơn vị từ thanh chọn ở đầu form.')}<div data-list>${(s.donVi || []).map(dvCard).join('')}</div>${addBtn('addDv', '+ thêm đơn vị')}`,
+  caubien: s => `<div class="card-b">${hintP('Mỗi dòng một cầu bến. Khi lập biên bản, chọn cầu từ danh sách rồi chỉnh phương tiện, thiết bị nếu khác.')}<div data-list>${(s.cauBen || []).map(cbRow).join('')}</div>${addBtn('addCb', '+ thêm cầu bến')}</div>`,
+  ban: s => `${hintP('Mỗi ban có các vị trí hoặc thiết bị. Mỗi vị trí ghi người đang làm. Chức danh riêng (vd: Lái cẩu) ghi ở cột chức danh của người đó.')}<div data-list>${(s.bans || []).map(banCard).join('')}</div>${addBtn('addBan', '+ thêm ban / bộ phận')}`,
+  thue: s => `${hintP('Công ty cho thuê thiết bị, dịch vụ. Nếu công ty không bố trí gì thì ghi vào ô ghi chú.')}<div data-list>${(s.thue || []).map(tcard).join('')}</div>${addBtn('addTc', '+ thêm công ty')}`,
+  truc: s => `<div class="card-b" data-truccard>${hintP('Người trực điều hành. Bỏ tick "có mặt" nếu người đó mặc định vắng.')}<div class="pl">${(s.truc || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`
+};
+
+function renderDM(){
+  const cang = DM_CUR || Object.keys(DM)[0];
+  DM_CUR = cang;
   $('dmCang').value = cang;
-  DM_FIELDS.forEach(f => { const el = $('s_' + f); if (el) el.value = s[f] || ''; });
-  $('s_leadIn').value = s.leadIn || DEFAULT_LEAD;
-  $('s_kieuChucVu').value = s.kieuChucVu || 'gach';
-  $('s_kieuCauBen').value = s.kieuCauBen || 'mot';
-  $('s_danhSo').value = s.danhSo || 'co';
-  $('s_kieuTruc').value = s.kieuTruc || 'dangco';
-  $('s_chungToi').value = s.chungToi || 'khong';
+  const s = DMof(cang);
+  $('dmNav').innerHTML = SECTIONS.map(x => `<button class="${x[0] === DM_SEC ? 'on' : ''}" data-sec="${x[0]}">${x[1]}</button>`).join('');
+  $('dmTitle').textContent = cang + ' — ' + SECTIONS.find(x => x[0] === DM_SEC)[1];
+  if (RH.parentNode !== document.body) document.body.appendChild(RH);
+  RH.hidden = true;
+  const P = $('dmPanel');
+  if (DM_SEC === 'roster'){ P.innerHTML = ''; RH.hidden = false; P.appendChild(RH); renderRosterTable(roster); return; }
+  P.innerHTML = SEC_HTML[DM_SEC](s);
 }
-function readDM(){
-  const o = {};
-  DM_FIELDS.forEach(f => { const el = $('s_' + f); if (el) o[f] = el.value; });
-  DM_SELECTS.forEach(f => { o[f] = $('s_' + f).value; });
-  o.sig = (DM[$('dmCang').value] || {}).sig || [];
-  return o;
+
+// đọc lại mục đang mở trên màn hình vào dữ liệu, rồi lưu tạm trên máy
+function syncDM(){
+  if (!DM_CUR || DM_SEC === 'roster') return;
+  const s = DMof(DM_CUR), P = $('dmPanel');
+  const pv = root => [...root.querySelectorAll('[data-p]')].map(readP);
+  const g = (el, sel) => val(el, sel).trim();
+  if (DM_SEC === 'meta'){
+    P.querySelectorAll('[data-m]').forEach(el => { s[el.dataset.m] = el.value; });
+    s.canCu = [...P.querySelectorAll('[data-cztxt]')].map(x => x.value.trim()).filter(Boolean);
+  }
+  if (DM_SEC === 'ksnb') s.ksnb = pv(P);
+  if (DM_SEC === 'donvi') s.donVi = [...P.querySelectorAll('[data-dvcard]')].map(c => ({ ten: g(c, '[data-dvten]'), nguoi: pv(c) }));
+  if (DM_SEC === 'caubien') s.cauBen = [...P.querySelectorAll('[data-cbrow]')].map(r => ({ ten: g(r, '[data-cbten]'), phuongTien: g(r, '[data-cbpt]'), thucHien: g(r, '[data-cbtk]'), thietBi: g(r, '[data-cbtb]') }));
+  if (DM_SEC === 'ban') s.bans = [...P.querySelectorAll('[data-bancard]')].map(c => ({ ten: g(c, '[data-bten]'),
+    items: [...c.querySelectorAll('[data-item]')].map(it => ({ phan: g(it, '[data-phan]'), label: g(it, '[data-label]'), note: g(it, '[data-note]'), nguoi: pv(it) })) }));
+  if (DM_SEC === 'thue') s.thue = [...P.querySelectorAll('[data-tcard]')].map(c => ({ congTy: g(c, '[data-congty]'), intro: g(c, '[data-intro]'), note: g(c, '[data-tnote]'),
+    dv: [...c.querySelectorAll('[data-tv]')].map(x => x.value.trim()).filter(Boolean) }));
+  if (DM_SEC === 'truc') s.truc = pv(P);
+  try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
+}
+
+function bindDM(){
+  $('dmCang').addEventListener('change', () => { syncDM(); DM_CUR = $('dmCang').value; renderDM(); });
+  $('dmNav').addEventListener('click', e => {
+    const b = e.target.closest('[data-sec]'); if (!b) return;
+    syncDM(); DM_SEC = b.dataset.sec; renderDM();
+  });
+  const P = $('dmPanel');
+  P.addEventListener('input', syncDM);
+  P.addEventListener('change', syncDM);
+  P.addEventListener('click', e => {
+    const add = e.target.closest('[data-dm]');
+    if (add){
+      const a = add.dataset.dm;
+      const into = (sel, h) => P.querySelector(sel).insertAdjacentHTML('beforeend', h);
+      if (a === 'addP') add.closest('[data-kcard],[data-dvcard],[data-item],[data-truccard]').querySelector(':scope > .pl').insertAdjacentHTML('beforeend', tP({ co: true, xung: 'Ông', hoTen: '', chucDanh: '' }));
+      else if (a === 'addDv') into('[data-list]', dvCard({ ten: '', nguoi: [] }));
+      else if (a === 'addBan') into('[data-list]', banCard({ ten: '', items: [] }));
+      else if (a === 'addItem') add.closest('[data-bancard]').querySelector('.items').insertAdjacentHTML('beforeend', itemRow({}));
+      else if (a === 'addCb') into('[data-list]', cbRow({}));
+      else if (a === 'addTc') into('[data-list]', tcard({}));
+      else if (a === 'addSvc') add.closest('[data-tcard]').querySelector(':scope > .svcs').insertAdjacentHTML('beforeend', svcRow(''));
+      else if (a === 'addCz') into('[data-list]', czRow(''));
+      syncDM();
+      return;
+    }
+    const del = e.target.closest('[data-del]');
+    if (del){
+      const host = del.closest('[data-p],[data-item],[data-dvcard],[data-bancard],[data-cbrow],[data-tcard],[data-svc],[data-cz]');
+      if (!host) return;
+      if (host.matches('[data-dvcard],[data-bancard],[data-tcard]') && !confirm('Xóa cả mục này và mọi thứ bên trong?')) return;
+      host.remove(); syncDM();
+    }
+  });
+  $('btnDmCangMoi').onclick = () => {
+    const name = $('dmCangMoi').value.trim();
+    if (!name) return;
+    if (DM[name]){ say('dmMsg', 'Cảng này đã có.', 'warn'); return; }
+    syncDM();
+    DM[name] = normalize({});
+    $('dmCangMoi').value = '';
+    DM_CUR = name; DM_SEC = 'meta';
+    refreshCangSelects(); renderDM();
+    try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
+    say('dmMsg', `Đã thêm cảng ${name}. Nhập các mục rồi bấm Lưu lên máy chủ.`, 'ok');
+  };
+  $('btnDmSave').onclick = async () => {
+    syncDM();
+    const cang = DM_CUR;
+    say('dmMsg', 'Đang lưu...', '');
+    try { await api('saveDanhMuc', { cang, settings: DM[cang] }); say('dmMsg', `Đã lưu danh mục ${cang} lên máy chủ.`, 'ok'); }
+    catch(e){ say('dmMsg', 'Chưa lưu lên máy chủ: ' + e.message + ' (vẫn lưu tạm trên máy này).', 'err'); }
+  };
+  $('btnDmReset').onclick = () => {
+    if (!SEED[DM_CUR]){ say('dmMsg', 'Cảng này không có mẫu gốc.', 'warn'); return; }
+    if (!confirm('Khôi phục toàn bộ danh mục của ' + DM_CUR + ' về mẫu gốc? (chưa lưu lên máy chủ)')) return;
+    DM[DM_CUR] = normalize(SEED[DM_CUR]);
+    try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
+    renderDM();
+    say('dmMsg', 'Đã khôi phục mẫu gốc. Bấm Lưu để ghi lên máy chủ.', 'ok');
+  };
 }
 async function loadDanhMuc(){
   try {
-    const server = await api('getDanhMuc');
-    DM = {};
-    Object.keys(SEED).forEach(c => DM[c] = (server && server[c]) || SEED[c]);
-    Object.keys(server || {}).forEach(c => { if (!DM[c]) DM[c] = server[c]; });
-    try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
+    const server = (await api('getDanhMuc')) || {};
+    Object.keys(server).forEach(c => { DM[c] = normalize(server[c]); });
     say('dmMsg', 'Đã tải danh mục từ máy chủ.', 'ok');
   } catch(e){
-    DM = {};
-    Object.keys(SEED).forEach(c => DM[c] = SEED[c]);
-    say('dmMsg', 'Chưa tải được danh mục từ máy chủ, đang dùng mẫu gốc. Lỗi: ' + e.message, 'warn');
+    say('dmMsg', 'Chưa tải được danh mục từ máy chủ, đang dùng bản trên máy này. Lỗi: ' + e.message, 'warn');
   }
+  Object.keys(SEED).forEach(c => { if (!DM[c]) DM[c] = normalize(SEED[c]); });
+  try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
   refreshCangSelects();
+  if ($('danhmuc').classList.contains('on')) renderDM();
 }
 
 /* ---------------- danh bạ ---------------- */
@@ -1076,9 +1203,8 @@ function fillTitleFromRoster(input){
 function show(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === name));
   if (name === 'list') loadList();
-  if (name === 'roster') renderRosterTable(roster);
   if (name === 'settings') fillSettings();
-  if (name === 'danhmuc') showDM($('dmCang').value || Object.keys(DM)[0]);
+  if (name === 'danhmuc') renderDM();
 }
 function fillSettings(){
   const c = getCfg();
@@ -1097,6 +1223,7 @@ function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanP
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
   if (go){ show(go.dataset.go); return; }
+  if (e.target.closest('#dmPanel,#rosterHolder,#dmNav')) return;
   const open = e.target.closest('[data-open]');
   if (open){ openBienBan(open.dataset.open, false); return; }
   const tpl = e.target.closest('[data-tpl]');
@@ -1185,36 +1312,6 @@ $('qList').addEventListener('input', drawList);
 $('fTrang').addEventListener('change', loadList);
 $('btnReload').onclick = loadList;
 
-$('dmCang').addEventListener('change', e => showDM(e.target.value));
-$('btnDmCangMoi').onclick = () => {
-  const name = $('dmCangMoi').value.trim();
-  if (!name) return;
-  if (DM[name]){ say('dmMsg', 'Cảng này đã có.', 'warn'); return; }
-  DM[name] = { phuDe: '', tenTruc: 'Trực điều hành sản xuất', tenThue: 'Đơn vị thuê ngoài', leadIn: DEFAULT_LEAD,
-    kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong',
-    antt: 'Tình hình an ninh trật tự ổn định.', canCu: '', ksnb: '', dvKhac: '', cauBen: '', viTri: '', thueNgoai: '', truc: '' };
-  $('dmCangMoi').value = '';
-  refreshCangSelects(); $('dmCang').value = name; showDM(name);
-  say('dmMsg', `Đã thêm cảng ${name}. Nhập danh mục rồi bấm Lưu.`, 'ok');
-};
-$('btnDmSave').onclick = async () => {
-  const cang = $('dmCang').value;
-  const settings = readDM();
-  DM[cang] = settings;
-  try { localStorage.setItem(LS.dm, JSON.stringify(DM)); } catch(e){}
-  say('dmMsg', 'Đang lưu...', '');
-  try { await api('saveDanhMuc', { cang, settings }); say('dmMsg', `Đã lưu danh mục ${cang} lên máy chủ.`, 'ok'); }
-  catch(e){ say('dmMsg', 'Chưa lưu lên máy chủ: ' + e.message + ' (vẫn lưu tạm trên máy này).', 'err'); }
-  refreshCangSelects(); $('dmCang').value = cang;
-};
-$('btnDmReset').onclick = () => {
-  const cang = $('dmCang').value;
-  if (!SEED[cang]){ say('dmMsg', 'Cảng này không có mẫu gốc.', 'warn'); return; }
-  if (!confirm('Khôi phục danh mục của ' + cang + ' về mẫu gốc (chưa lưu lên máy chủ)?')) return;
-  DM[cang] = { ...SEED[cang] }; showDM(cang);
-  say('dmMsg', 'Đã khôi phục mẫu gốc. Bấm Lưu để ghi lên máy chủ.', 'ok');
-};
-
 $('rosterFile').addEventListener('change', e => importRosterFile(e.target.files[0]));
 $('btnRosterAdd').onclick = () => $('rosterBody').insertAdjacentHTML('beforeend', rosterRowHtml({}));
 $('btnRosterLoad').onclick = loadRoster;
@@ -1241,8 +1338,12 @@ window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefaul
   try { roster = JSON.parse(localStorage.getItem(LS.roster) || '[]'); } catch(e){ roster = []; }
   applyRoster(roster);
   try { DM = JSON.parse(localStorage.getItem(LS.dm) || 'null') || {}; } catch(e){ DM = {}; }
-  Object.keys(SEED).forEach(c => { if (!DM[c]) DM[c] = SEED[c]; });
+  Object.keys(DM).forEach(c => { DM[c] = normalize(DM[c]); });
+  Object.keys(SEED).forEach(c => { if (!DM[c]) DM[c] = normalize(SEED[c]); });
   refreshCangSelects();
+  DM_CUR = Object.keys(DM)[0];
+  $('dmCang').value = DM_CUR;
+  bindDM();
 
   let dr = null;
   try { dr = JSON.parse(localStorage.getItem(LS.draft) || 'null'); } catch(e){}
