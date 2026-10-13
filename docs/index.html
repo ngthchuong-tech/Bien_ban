@@ -238,6 +238,12 @@ tbody tr:hover{background:#e3effb}
 .set b{display:block;background:var(--blue);color:#fff;padding:6px 10px;border-radius:6px;margin-bottom:6px}
 .btn.alt{background:var(--blue2);color:#fff}
 .btn.primary{box-shadow:0 1px 3px rgba(0,0,0,.25)}
+/* khối đang làm việc (không làm xê dịch bố cục để không lệch khi bấm chuột) */
+.working{background:#fff4c2!important;border-color:#F59E0B!important;box-shadow:inset 8px 0 0 #F59E0B,0 0 0 3px rgba(245,158,11,.5),0 3px 10px rgba(180,83,9,.25)!important;position:relative}
+.working::before{content:"● ĐANG LÀM VIỆC Ở ĐÂY";position:absolute;top:-9px;right:10px;z-index:2;background:#F59E0B;color:#fff;font-size:11px;font-weight:800;letter-spacing:.4px;padding:1px 8px;border-radius:4px;pointer-events:none}
+.working .prow:has([data-co]:checked){background:#fffbe6}
+.working-in{border-color:#F59E0B!important;box-shadow:0 0 0 2px rgba(245,158,11,.5)!important;position:relative}
+.working-in>.bh{background:#ffe9a8;border-radius:6px}
 @media print{
   body{background:#fff}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -453,6 +459,8 @@ tbody tr:hover{background:#e3effb}
  * Danh mục cài sẵn theo cảng; biên bản chọn từng mục từ danh sách xổ xuống.
  * ===================================================================== */
 
+const WORK_SEL = '[data-item],[data-ban],[data-unit],[data-berth],[data-tn],[data-truc]';
+let workEl = null;
 const LS = { draft: 'bb_draft', cfg: 'bb_cfg', roster: 'bb_roster', dm: 'bb_danhmuc', logo: 'bb_logo' };
 let LOGO = '';
 try { LOGO = localStorage.getItem('bb_logo') || ''; } catch(e){}
@@ -766,7 +774,7 @@ function tTruc(t){
 
 /* ---------------- đưa dữ liệu lên form ---------------- */
 function renderForm(d){
-  dockHidden.clear();
+  dockHidden.clear(); setWork(null);
   $('cang').value = d.cang;
   $('tieuDe').value = d.tieuDe || '';
   $('phuDe').value = d.phuDe || '';
@@ -1741,6 +1749,7 @@ document.addEventListener('click', e => {
       plOf(it).insertAdjacentHTML('beforeend', tP({ co: true, xung: who.xung, hoTen: who.hoTen, chucDanh: '' }));
       const nt = it.querySelector('[data-note]'); if (nt) nt.value = '';   // đã có người làm thì bỏ ghi chú "không bố trí"
       refreshBanPick(card);
+      setWork(it); it.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
     else if (a === 'addSvc') act.closest('[data-tn]').querySelector(':scope > .svcs').insertAdjacentHTML('beforeend', `<div class="srow" data-svc><input type="text" data-t value=""><button class="del" data-del>✕</button></div>`);
     markDirty();
@@ -1757,6 +1766,32 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-hoten]')) refreshNameList(); });
+/* ---- tô nổi bật khối đang làm việc ---- */
+function setWork(el){
+  if (workEl === el) return;
+  document.querySelectorAll('.working,.working-in').forEach(x => x.classList.remove('working', 'working-in'));
+  workEl = el;
+  if (!el || !el.isConnected) return;
+  el.classList.add('working');
+  const up = el.parentElement && el.parentElement.closest(WORK_SEL);
+  if (up) up.classList.add('working-in');
+}
+function workFromBar(bar){
+  const sel = bar.querySelector('[data-qdev]'); if (!sel || sel.value === '') return;
+  const card = $('ndBox').querySelectorAll(':scope > [data-ban]')[+bar.dataset.qban]; if (!card) return;
+  const label = sel.options[sel.selectedIndex].textContent.trim();
+  const it = kids(card.querySelector(':scope > .items'), '[data-item]').find(x => (x.dataset.phan || '') === bar.dataset.qpool && val(x, '[data-label]').trim() === label);
+  setWork(it || card);
+}
+document.addEventListener('focusin', e => {
+  const t = e.target; if (!t.closest) return;
+  const bar = t.closest('[data-qbar]');
+  if (bar){ workFromBar(bar); return; }
+  if (!t.closest('#ndBox,#tpBox,#formBox')) return;
+  const c = t.closest(WORK_SEL); if (c) setWork(c);
+});
+document.addEventListener('change', e => { const bar = e.target.closest && e.target.closest('[data-qbar]'); if (bar && e.target.matches('[data-qdev]')) workFromBar(bar); });
+
 document.getElementById('formBox').addEventListener('input', e => {
   if (e.target.matches('[data-hoten]')) fillTitleFromRoster(e.target);
   if (e.target.id === 'bophan') $('bophan').dataset.manual = '1';
