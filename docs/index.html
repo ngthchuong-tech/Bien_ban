@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lập biên bản KSNB</title>
+<script src="vendor/xlsx.full.min.js"></script>
 <style>
 :root{--blue:#1F4E78;--blue2:#2E75B6;--line:#d6dde6;--bg:#f2f5f9;--ink:#1a1a1a;--ok:#2E7D32;--warn:#B45309;--err:#B91C1C}
 *{box-sizing:border-box}
@@ -212,13 +213,31 @@ tr:hover td{background:#f8fbff}
 <div class="view" id="roster">
   <div class="page">
     <div class="card">
-      <b>Danh bạ nhân sự</b>
-      <p class="hint">Mỗi dòng một người, theo thứ tự: <b>Đơn vị | Họ và tên | Chức danh</b>. Có thể copy từ Excel (các cột cách nhau bằng dấu Tab).<br>
-      Khi lập biên bản, gõ tên người sẽ có gợi ý, và chức danh được điền tự động.</p>
-      <textarea id="rosterText" style="min-height:360px;font-family:Consolas,monospace;font-size:14px" placeholder="Long Bình Tân | Nguyễn Mạnh Sơn | Phó Ban KTĐĐ&#10;Long Bình Tân | Nguyễn Đình Tâm | Đội Trưởng Đội cơ giới"></textarea>
+      <b>1. Tải danh bạ từ file Excel</b>
+      <p class="hint">File Excel (.xlsx, .xls) hoặc CSV. Dòng đầu nên là tiêu đề: <b>Đơn vị | Họ và tên | Chức danh | Ghi chú</b>. Nếu không có dòng tiêu đề, các cột được hiểu theo thứ tự đó.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" style="max-width:100%">
+        <select id="rosterMode" style="width:auto">
+          <option value="replace">Thay toàn bộ danh sách</option>
+          <option value="append">Thêm vào cuối</option>
+        </select>
+      </div>
+      <div class="msg" id="rosterFileMsg"></div>
+    </div>
+
+    <div class="card">
+      <b>2. Danh bạ hiện có (nhập hoặc sửa tay)</b>
+      <p class="hint">Gõ trực tiếp vào bảng. Dòng nào không có họ tên sẽ không được lưu.</p>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th style="width:24%">Đơn vị</th><th style="width:26%">Họ và tên</th><th style="width:30%">Chức danh</th><th>Ghi chú</th><th style="width:44px"></th></tr></thead>
+          <tbody id="rosterBody"></tbody>
+        </table>
+      </div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="btnRosterLoad" style="background:var(--blue);color:#fff">↓ Tải từ máy chủ</button>
-        <button class="btn primary" id="btnRosterSave">Lưu danh bạ lên máy chủ</button>
+        <button class="btn" id="btnRosterAdd" style="background:var(--blue);color:#fff">+ Thêm dòng</button>
+        <button class="btn" id="btnRosterLoad" style="background:var(--blue);color:#fff">↓ Tải lại từ máy chủ</button>
+        <button class="btn primary" id="btnRosterSave">💾 Lưu danh bạ lên máy chủ</button>
       </div>
       <div class="msg" id="rosterMsg"></div>
     </div>
@@ -632,30 +651,100 @@ function drawList(){
 }
 
 /* ---------------- danh bạ ---------------- */
-function rosterToText(){
-  return roster.map(r => [r.donVi, r.hoTen, r.chucDanh].join(' | ')).join('\n');
+const RCOLS = ['donVi','hoTen','chucDanh','ghiChu'];
+function rosterRowHtml(r){
+  return `<tr data-rrow>
+    <td><input type="text" data-rf="donVi" value="${esc(r.donVi)}"></td>
+    <td><input type="text" data-rf="hoTen" value="${esc(r.hoTen)}"></td>
+    <td><input type="text" data-rf="chucDanh" value="${esc(r.chucDanh)}"></td>
+    <td><input type="text" data-rf="ghiChu" value="${esc(r.ghiChu)}"></td>
+    <td><button class="del" data-rdel title="Xóa dòng">✕</button></td></tr>`;
 }
-function parseRosterText(t){
-  return lines(t).map(l => {
-    const parts = l.includes('\t') ? l.split('\t') : l.split('|');
-    const [donVi, hoTen, chucDanh, ghiChu] = parts.map(x => (x||'').trim());
-    return { donVi, hoTen, chucDanh, ghiChu };
+function renderRosterTable(list){
+  $('rosterBody').innerHTML = (list || []).map(rosterRowHtml).join('');
+}
+function addRosterRow(r){
+  $('rosterBody').insertAdjacentHTML('beforeend', rosterRowHtml(r || {}));
+}
+function readRosterTable(){
+  return [...document.querySelectorAll('[data-rrow]')].map(tr => {
+    const g = k => (tr.querySelector(`[data-rf="${k}"]`).value || '').trim();
+    return { donVi: g('donVi'), hoTen: g('hoTen'), chucDanh: g('chucDanh'), ghiChu: g('ghiChu') };
   }).filter(r => r.hoTen);
 }
 function applyRoster(list){
   roster = list || [];
   try { localStorage.setItem(LS.roster, JSON.stringify(roster)); } catch(e){}
-  const dl = $('rosterNames');
-  dl.innerHTML = [...new Set(roster.map(r => r.hoTen))].map(n => `<option value="${esc(n)}">`).join('');
+  $('rosterNames').innerHTML = [...new Set(roster.map(r => r.hoTen))].map(n => `<option value="${esc(n)}">`).join('');
+}
+// Đọc file Excel/CSV: tìm dòng tiêu đề, nếu không có thì lấy theo thứ tự cột
+function parseRosterSheet(rowsArr){
+  const norm = x => String(x == null ? '' : x).trim().toLowerCase();
+  let headerIdx = -1, map = null;
+  for (let i = 0; i < Math.min(rowsArr.length, 10); i++){
+    const cells = rowsArr[i].map(norm);
+    const hasName = cells.some(c => c.includes('họ') || c.includes('ho ten') || c.includes('họ tên') || c.includes('họ và tên'));
+    if (hasName){
+      headerIdx = i;
+      map = {};
+      cells.forEach((c, j) => {
+        if (c.includes('đơn vị') || c.includes('don vi')) map.donVi = j;
+        else if (c.includes('họ') || c.includes('ho ten')) map.hoTen = j;
+        else if (c.includes('chức') || c.includes('chuc')) map.chucDanh = j;
+        else if (c.includes('ghi chú') || c.includes('ghi chu')) map.ghiChu = j;
+      });
+      break;
+    }
+  }
+  if (!map) map = { donVi: 0, hoTen: 1, chucDanh: 2, ghiChu: 3 };
+  const out = [];
+  rowsArr.slice(headerIdx + 1).forEach(r => {
+    const get = k => (map[k] != null && r[map[k]] != null) ? String(r[map[k]]).trim() : '';
+    const rec = { donVi: get('donVi'), hoTen: get('hoTen'), chucDanh: get('chucDanh'), ghiChu: get('ghiChu') };
+    if (rec.hoTen) out.push(rec);
+  });
+  return { list: out, usedHeader: headerIdx >= 0 };
+}
+function importRosterFile(file){
+  const msg = 'rosterFileMsg';
+  if (!file) return;
+  if (typeof XLSX === 'undefined'){ say(msg, 'Chưa tải được bộ đọc Excel (vendor/xlsx.full.min.js).', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const sh = wb.Sheets[wb.SheetNames[0]];
+      const arr = XLSX.utils.sheet_to_json(sh, { header: 1, defval: '', blankrows: false });
+      const { list, usedHeader } = parseRosterSheet(arr);
+      if (!list.length){ say(msg, 'Không đọc được người nào. Kiểm tra cột "Họ và tên" có dữ liệu không.', 'err'); return; }
+      const mode = $('rosterMode').value;
+      if (mode === 'replace') renderRosterTable(list);
+      else list.forEach(addRosterRow);
+      say(msg, `Đã đọc ${list.length} người${usedHeader ? '' : ' (không thấy dòng tiêu đề, dùng thứ tự cột mặc định)'}. Kiểm tra bảng rồi bấm Lưu danh bạ lên máy chủ.`, usedHeader ? 'ok' : 'warn');
+      $('rosterFile').value = '';
+    } catch(err){ say(msg, 'Lỗi đọc file: ' + err.message, 'err'); }
+  };
+  reader.onerror = () => say(msg, 'Không mở được file.', 'err');
+  reader.readAsArrayBuffer(file);
 }
 async function loadRoster(){
-  try { applyRoster(await api('getRoster')); say('rosterMsg', `Đã tải ${roster.length} người.`, 'ok'); $('rosterText').value = rosterToText(); }
-  catch(e){ say('rosterMsg', 'Lỗi: ' + e.message, 'err'); }
+  try {
+    const list = await api('getRoster');
+    applyRoster(list);
+    renderRosterTable(roster);
+    say('rosterMsg', `Đã tải ${roster.length} người từ máy chủ.`, 'ok');
+  } catch(e){ say('rosterMsg', 'Lỗi tải danh bạ: ' + e.message, 'err'); }
 }
 async function saveRoster(){
-  const rows = parseRosterText($('rosterText').value);
-  try { await api('saveRoster', { rows }); applyRoster(rows); say('rosterMsg', `Đã lưu ${rows.length} người.`, 'ok'); }
-  catch(e){ say('rosterMsg', 'Lỗi: ' + e.message, 'err'); }
+  const rows = readRosterTable();
+  if (!rows.length){ say('rosterMsg', 'Danh bạ đang trống, không có gì để lưu. Nếu muốn xóa hết, hãy xác nhận trong Google Sheet.', 'warn'); return; }
+  if (!confirm(`Lưu ${rows.length} người lên máy chủ? Danh bạ cũ trên máy chủ sẽ được thay bằng danh sách này.`)) return;
+  say('rosterMsg', 'Đang lưu...', '');
+  try {
+    await api('saveRoster', { rows });
+    applyRoster(rows);
+    say('rosterMsg', `Đã lưu ${rows.length} người lên máy chủ.`, 'ok');
+  } catch(e){ say('rosterMsg', 'Chưa lưu được: ' + e.message, 'err'); }
 }
 function fillTitleFromRoster(input){
   const row = input.closest('[data-kind]');
@@ -668,7 +757,7 @@ function fillTitleFromRoster(input){
 function show(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === name));
   if (name === 'list') loadList();
-  if (name === 'roster') { $('rosterText').value = rosterToText(); }
+  if (name === 'roster') renderRosterTable(roster);
   if (name === 'settings') fillSettings();
 }
 function fillSettings(){
@@ -738,6 +827,12 @@ $('fTrang').addEventListener('change', loadList);
 $('btnReload').onclick = loadList;
 $('btnRosterLoad').onclick = loadRoster;
 $('btnRosterSave').onclick = saveRoster;
+$('btnRosterAdd').onclick = () => addRosterRow({});
+$('rosterFile').addEventListener('change', e => importRosterFile(e.target.files[0]));
+document.getElementById('rosterBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-rdel]');
+  if (b) b.closest('[data-rrow]').remove();
+});
 $('btnCfgSave').onclick = () => {
   const c = { url: $('cfgUrl').value.trim(), pin: $('cfgPin').value.trim(), nguoi: $('cfgNguoi').value.trim() };
   setCfgStore(c);
@@ -773,6 +868,7 @@ window.addEventListener('beforeunload', e => {
   const c = getCfg();
   if (!c.url || !c.pin) { show('settings'); say('cfgMsg', 'Nhập địa chỉ máy chủ và mã PIN để bắt đầu.', 'warn'); }
   else if (!roster.length) loadRoster();
+  else renderRosterTable(roster);
 })();
 </script>
 </body>
