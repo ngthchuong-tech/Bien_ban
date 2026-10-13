@@ -61,6 +61,15 @@ textarea{min-height:70px;resize:vertical}
 .msg{font-size:15px;margin-top:8px}
 .msg.ok{color:var(--ok)}.msg.err{color:var(--err)}.msg.warn{color:var(--warn)}
 .empty{font-size:14px;color:#777;font-style:italic;margin:4px 0 8px}
+/* thanh chọn cố định đầu form */
+.toolbar{position:sticky;top:-14px;z-index:6;background:#fff;margin:-14px -16px 12px;padding:10px 16px;border-bottom:2px solid var(--blue2);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.tb-row{display:grid;gap:6px;align-items:center;margin-bottom:6px}
+.tb-row.t1{grid-template-columns:86px 1fr auto auto}
+.tb-row.t2{grid-template-columns:86px 150px 1fr auto}
+.tb-lbl{font-size:13px;font-weight:700;color:var(--blue)}
+.tb-row select{padding:7px 8px}
+.pl-d{margin:4px 0 6px}
+.pl-d>summary{cursor:pointer;font-size:13px;color:var(--blue2);font-weight:600;padding:3px 0;list-style:revert}
 /* xem trước khổ A4 */
 #paper{background:#fff;width:100%;max-width:210mm;margin:0 auto;padding:6.5% 6.5% 6% 7.5%;box-shadow:0 2px 10px rgba(0,0,0,.15);font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.38;color:#000}
 #paper p{margin:3pt 0;text-align:justify}
@@ -123,6 +132,15 @@ th{background:#f5f8fb;font-size:14px}
 <!-- ============ BIÊN BẢN ============ -->
 <div class="view on" id="editor">
   <div class="form no-print" id="formBox">
+    <div class="toolbar">
+      <div class="tb-row t1"><span class="tb-lbl">Thành phần</span><select id="addTP"></select><button class="btn small" data-act="pickUnit">+ Thêm</button><button class="btn small" data-act="blankUnit">+ Khác</button></div>
+      <div class="tb-row t2"><span class="tb-lbl">Nội dung</span><select id="addKind">
+          <option value="berth">Cầu bến</option>
+          <option value="ban">Ban / bộ phận làm việc</option>
+          <option value="thue">Đơn vị thuê ngoài</option>
+          <option value="truc">Trực điều hành</option></select><select id="addND"></select><button class="btn small" data-act="pickND">+ Thêm</button></div>
+    </div>
+
 
     <div class="grid2">
       <div><label class="lb">Cảng</label><select id="cang"></select></div>
@@ -147,12 +165,6 @@ th{background:#f5f8fb;font-size:14px}
 
     <div class="sec">I. Thành phần</div>
     <div id="tpBox"></div>
-    <div class="pickrow">
-      <select id="addTP"></select>
-      <button class="btn small" data-act="pickUnit">+ Thêm đơn vị</button>
-      <div style="grid-column:1/-1"><button class="btn small" data-act="blankUnit">+ Đơn vị khác (tự nhập)</button></div>
-    </div>
-
     <div class="sec">II. Nội dung kiểm tra</div>
     <label class="lb">Các bộ phận được kiểm tra (tự lấy từ các ban đã thêm bên dưới)</label>
     <input type="text" id="bophan">
@@ -164,18 +176,6 @@ th{background:#f5f8fb;font-size:14px}
       <div><label class="lb">Đến giờ</label><input type="text" id="denGio" placeholder="vd: 0h00"></div>
     </div>
 
-    <div class="pickrow" style="margin-top:12px">
-      <div class="two">
-        <select id="addKind">
-          <option value="berth">Cầu bến</option>
-          <option value="ban">Ban / bộ phận làm việc</option>
-          <option value="thue">Đơn vị thuê ngoài</option>
-          <option value="truc">Trực điều hành</option>
-        </select>
-        <select id="addND"></select>
-      </div>
-      <button class="btn small" data-act="pickND">+ Thêm mục</button>
-    </div>
     <div id="ndBox"></div>
 
     <div class="sec">III. Tình hình an ninh trật tự</div>
@@ -618,11 +618,15 @@ function tCC(c){ return `<div class="crow" data-cc><input type="checkbox" data-i
 function tP(p){
   return `<div class="prow" data-p><label class="ck"><input type="checkbox" data-co ${p.co!==false?'checked':''}> có mặt</label><select data-xung>${['','Ông','Bà'].map(x => `<option ${x===(p.xung||'')?'selected':''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen)}" placeholder="Họ và tên"><input type="text" data-cd value="${esc(p.chucDanh)}" placeholder="Chức danh"><button class="del" data-del>✕</button></div>`;
 }
+function pplBox(arr){
+  return `<details class="pl-d"><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></details>`;
+}
+const plOf = el => el ? el.querySelector(':scope > details > .pl') : null;
 function tUnit(u){
-  return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="pl">${(u.nguoi||[]).map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></div>`;
+  return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div>${pplBox(u.nguoi||[])}</div>`;
 }
 function tItem(it){
-  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="pl">${(it.nguoi||[]).map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></div>`;
+  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}</div>`;
 }
 function tBan(g){
   return `<div class="card-b" data-ban><div class="bh"><input type="text" data-bten value="${esc(g.ten)}" placeholder="Tên ban / bộ phận"><button class="del" data-del>✕</button></div>
@@ -637,7 +641,7 @@ function tT(t){
   return `<div class="card-b" data-tn><div class="bh"><input type="text" data-congty value="${esc(t.congTy)}" placeholder="Tên công ty"><button class="del" data-del>✕</button></div><input type="text" data-intro value="${esc(t.intro||'')}" placeholder="Giới thiệu (vd: cung cấp dịch vụ cho tàu...)" style="margin-bottom:5px"><input type="text" data-tnote value="${esc(t.note||'')}" placeholder="Ghi chú (vd: không bố trí thiết bị, dịch vụ làm hàng)" style="margin-bottom:5px"><div class="svcs">${(t.dv||[]).map(x => `<div class="srow" data-svc><input type="text" data-t value="${esc(x.t)}"><button class="del" data-del>✕</button></div>`).join('')}</div><div class="addbar"><button class="btn small" data-act="addSvc">+ thiết bị / dịch vụ</button></div></div>`;
 }
 function tTruc(t){
-  return `<div class="card-b" data-truc><div class="bh"><input type="text" data-ttl value="${esc(t.ten)}" placeholder="Tên mục trực"><button class="del" data-del>✕</button></div><div class="pl">${(t.nguoi||[]).map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></div>`;
+  return `<div class="card-b" data-truc><div class="bh"><input type="text" data-ttl value="${esc(t.ten)}" placeholder="Tên mục trực"><button class="del" data-del>✕</button></div>${pplBox(t.nguoi||[])}</div>`;
 }
 
 /* ---------------- đưa dữ liệu lên form ---------------- */
@@ -688,7 +692,7 @@ function collect(){
     tieuDe: v('tieuDe'), phuDe: v('phuDe'), diaDiem: v('diaDiem'), ngayLap: v('ngayLap'), trangThai: v('trangThai'),
     canCu: kids($('canCuBox'), '[data-cc]').map(el => ({ inc: chk(el,'[data-inc]'), t: val(el,'[data-t]').trim() })),
     canCuThem: v('canCuThem'),
-    thanhPhan: kids($('tpBox'), '[data-unit]').map(el => ({ ten: val(el,'[data-uten]').trim(), nguoi: persons(el.querySelector(':scope > .pl')) })),
+    thanhPhan: kids($('tpBox'), '[data-unit]').map(el => ({ ten: val(el,'[data-uten]').trim(), nguoi: persons(plOf(el)) })),
     phamVi: { bophan: v('bophan'), manual: $('bophan').dataset.manual === '1', catruc: v('catruc'),
               tuNgay: v('tuNgay'), tuGio: v('tuGio'), denNgay: v('denNgay'), denGio: v('denGio') },
     cauBen: kids(nd, '[data-berth]').map(el => ({ ten: val(el,'[data-cbten]').trim(), phuongTien: val(el,'[data-cbpt]').trim(),
@@ -696,12 +700,12 @@ function collect(){
     ban: kids(nd, '[data-ban]').map(el => ({ ten: val(el,'[data-bten]').trim(), lead: val(el,'[data-blead]').trim(),
           items: kids(el.querySelector(':scope > .items'), '[data-item]').map(it => ({
             phan: it.dataset.phan || '', label: val(it,'[data-label]').trim(), note: val(it,'[data-note]').trim(),
-            nguoi: persons(it.querySelector(':scope > .pl')) })) })),
+            nguoi: persons(plOf(it)) })) })),
     thue: kids(nd, '[data-tn]').map(el => ({ congTy: val(el,'[data-congty]').trim(), intro: val(el,'[data-intro]').trim(),
           note: val(el,'[data-tnote]').trim(),
           dv: kids(el.querySelector(':scope > .svcs'), '[data-svc]').map(s => ({ t: val(s,'[data-t]').trim() })) })),
     truc: (() => { const el = nd.querySelector('[data-truc]');
-      return el ? { ten: val(el,'[data-ttl]').trim(), nguoi: persons(el.querySelector(':scope > .pl')) } : null; })(),
+      return el ? { ten: val(el,'[data-ttl]').trim(), nguoi: persons(plOf(el)) } : null; })(),
     antt: v('antt'), ketLuan: v('ketLuan'), ktGio: v('ktGio'), ktNgay: v('ktNgay'),
     sig: { l1: v('sigL1'), l2: v('sigL2'), r1: v('sigR1'), r2: v('sigR2') }
   };
@@ -1097,14 +1101,16 @@ document.addEventListener('click', e => {
     if (a === 'addCC') $('canCuBox').insertAdjacentHTML('beforeend', tCC({ inc: true, t: '' }));
     else if (a === 'addP'){
       const host = act.closest('[data-unit],[data-item],[data-truc]');
-      host.querySelector(':scope > .pl').insertAdjacentHTML('beforeend', tP({ co: true, hoTen: '', chucDanh: '', xung: 'Ông' }));
+      plOf(host).insertAdjacentHTML('beforeend', tP({ co: true, hoTen: '', chucDanh: '', xung: 'Ông' }));
+      host.querySelector(':scope > details').open = true;
     }
     else if (a === 'pickUnit'){
       const v = $('addTP').value; if (v === '') return;
       const u = allUnits(cang)[+v];
       $('tpBox').insertAdjacentHTML('beforeend', tUnit(u));
+      afterAdd();
     }
-    else if (a === 'blankUnit') $('tpBox').insertAdjacentHTML('beforeend', tUnit({ ten: '', nguoi: [] }));
+    else if (a === 'blankUnit'){ $('tpBox').insertAdjacentHTML('beforeend', tUnit({ ten: '', nguoi: [] })); afterAdd(); }
     else if (a === 'pickND'){
       const kind = $('addKind').value, v = $('addND').value;
       if (v === '') return;
@@ -1115,6 +1121,7 @@ document.addEventListener('click', e => {
       if (kind === 'thue') html = v === '-1' ? ND_NEW.thue() : tT(c.thue[+v]);
       if (kind === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Trực điều hành', nguoi: c.truc });
       $('ndBox').insertAdjacentHTML('beforeend', html);
+      afterAdd();
     }
     else if (a === 'pickItem' || a === 'pickAll' || a === 'blankItem'){
       const card = act.closest('[data-ban]');
