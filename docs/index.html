@@ -236,6 +236,12 @@ th{background:#f5f8fb;font-size:14px}
           <select id="s_kieuCauBen"><option value="mot">Một dòng (kiểu biên bản Long Bình Tân)</option><option value="dong">Ba dòng (kiểu biên bản Gò Dầu)</option></select></div>
         <div><label class="lb">Đánh số các mục</label>
           <select id="s_danhSo"><option value="co">Có: 1., 2., 3. ...</option><option value="khong">Không: dùng dấu *</option></select></div>
+        <div><label class="lb">Cách ghi người trong từng vị trí</label>
+          <select id="s_kieuNguoi"><option value="gach">Liệt kê: Trưởng ca: Họ tên</option><option value="dangtruc">Từng người: ông Họ tên đang trực tại vị trí</option></select></div>
+        <div><label class="lb">Cách ghi trực điều hành</label>
+          <select id="s_kieuTruc"><option value="dangco">Danh sách: Ông X - đang có mặt tại Cảng</option><option value="vang">Một dòng: ông X không có mặt tại cảng...</option></select></div>
+        <div><label class="lb">Có dòng "Chúng tôi gồm:"</label>
+          <select id="s_chungToi"><option value="khong">Không</option><option value="co">Có</option></select></div>
       </div>
 
       <label class="lb">Căn cứ mặc định</label>
@@ -356,7 +362,7 @@ const SEED = {
     phuDe: 'Về việc tuân thủ thời gian làm việc, nội quy lao động tại Cảng Long Bình Tân',
     tenTruc: 'Trực điều hành sản xuất',
     tenThue: 'Thiết bị thuê ngoài',
-    kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co',
+    kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuNguoi: 'gach', kieuTruc: 'dangco', chungToi: 'khong',
     sig: ['CẢNG LONG BÌNH TÂN|ĐẠI DIỆN BAN KSNB', 'TRƯỞNG CA|PHÒNG KV - LOGISTICS'],
     antt: 'Tình hình an ninh trật tự ổn định, không ghi nhận vụ việc bất thường.',
     canCu: `Căn cứ nội quy lao động hiện hành của công ty;
@@ -421,7 +427,7 @@ Bà Lưu Thị Mỹ Chi | Phó GĐ Kho vận - logistics`
     phuDe: 'Về việc kiểm tra thời gian làm việc, tuân thủ nội quy lao động tại Cảng Gò Dầu',
     tenTruc: 'Trực chỉ huy cảng Gò Dầu',
     tenThue: 'Đơn vị thuê ngoài',
-    kieuChucVu: 'chucvu', kieuCauBen: 'dong', danhSo: 'khong',
+    kieuChucVu: 'chucvu', kieuCauBen: 'dong', danhSo: 'khong', kieuNguoi: 'dangtruc', kieuTruc: 'vang', chungToi: 'co',
     sig: ['ĐẠI DIỆN CẢNG GÒ DẦU|BAN KIỂM SOÁT NỘI BỘ', ''],
     antt: 'Tình hình an ninh trật tự ổn định.',
     canCu: `Căn cứ nội quy lao động hiện hành của công ty;
@@ -720,12 +726,19 @@ function html(d){
   const st = settingsOf(d.cang);
   const kieu = st.kieuChucVu || 'gach';
   const kieuCB = st.kieuCauBen || 'mot';
+  const kieuNg = st.kieuNguoi || 'gach';
+  const kieuTr = st.kieuTruc || 'dangco';
   const danhSo = (st.danhSo || 'co') === 'co';
+  const chungToi = st.chungToi === 'co';
   const H = [];
   const p = (c, t) => H.push(`<p class="${c||''}">${t}</p>`);
   let n = 0;
   const head = t => danhSo ? `${++n}. ${esc(t)}` : `* ${esc(t)}`;
+  const roman = (r, t) => { if (danhSo) p('b', `${r}. ${t}`); };
   const inc = arr => arr.filter(x => x.inc !== false);
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const xl = s => esc(String(s || '').toLowerCase());
+  const pre = x => x.xung ? xl(x.xung) + ' ' : '';
 
   H.push(`<div class="hdr"><div class="l"><p class="b">CÔNG TY CP CẢNG ĐỒNG NAI</p><p class="b">BAN KIỂM SOÁT NỘI BỘ</p></div>
     <div class="r"><p class="b">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p><p class="b"><u>Độc lập - Tự do - Hạnh phúc</u></p>
@@ -737,20 +750,22 @@ function html(d){
   lines(d.canCuThem).forEach(c => p('i', '- ' + esc(c.replace(/^[-–•]\s*/, ''))));
 
   n = 0;
-  p('b', 'I. THÀNH PHẦN');
+  roman('I', 'THÀNH PHẦN');
   const ks = inc(d.ksnb);
   if (ks.length){
-    p('b', 'Đại diện Ban Kiểm soát nội bộ:');
+    if (chungToi) p('', 'Chúng tôi gồm:');
+    p(danhSo ? 'b' : 'b u', danhSo ? 'Đại diện Ban Kiểm soát nội bộ:' : 'ĐẠI DIỆN BAN KIỂM SOÁT NỘI BỘ:');
     ks.forEach((x, i) => p('ind', `${i+1}/ ${memberLine(x, kieu)}`));
   }
   inc(d.dv).forEach(b => {
     const nguoi = inc(b.nguoi);
     if (!b.ten || !nguoi.length) return;
-    p('b', esc(b.ten).replace(/:\s*$/, '') + ':');
+    const ten = esc(b.ten).replace(/:\s*$/, '') + ':';
+    p(danhSo ? 'b' : 'b u', chungToi && !danhSo ? ten.toUpperCase() : ten);
     nguoi.forEach((x, i) => p('ind', `${i+1}/ ${memberLine(x, kieu)}`));
   });
 
-  p('b', 'II. NỘI DUNG KIỂM TRA');
+  roman('II', 'NỘI DUNG KIỂM TRA');
   const bp = d.phamVi.bophan.trim();
   p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
 
@@ -782,6 +797,10 @@ function html(d){
         const ppl = inc(it.nguoi);
         if (it.note){ p('ind', `+ ${label}: ${esc(it.note)}.`); return; }
         if (!ppl.length){ p('ind', `+ ${label}`); return; }
+        if (kieuNg === 'dangtruc'){
+          ppl.forEach(x => p('ind', `+ ${label}: ${pre(x)}${esc(x.hoTen)} ${x.co === false ? 'không có mặt.' : 'đang trực tại vị trí.'}`));
+          return;
+        }
         const suffix = x => x.co === false ? ' (không có mặt)' : '';
         if (ppl.every(x => !x.chucDanh)){
           p('ind', `+ ${label}: ${ppl.map(x => esc(x.hoTen) + suffix(x)).join(', ')}.`);
@@ -797,7 +816,7 @@ function html(d){
   if (th.length){
     p('b', danhSo ? head(st.tenThue || 'Thiết bị thuê ngoài') : `* ${esc(st.tenThue || 'Đơn vị thuê ngoài')}:`);
     th.forEach(t => {
-      if (t.note){ p('ind', `- <b>${esc(t.congTy)}</b>: ${esc(t.note)}.`); return; }
+      if (t.note){ p('ind', `- <b>${esc(t.congTy)}</b>: ${esc(cap(t.note))}.`); return; }
       p('ind', `- <b>${esc(t.congTy)}</b>${t.intro ? ': ' + esc(t.intro) : ':'}`);
       inc(t.dv).filter(x => x.t).forEach(x => p('ind2', `+ ${esc(x.t)}`));
     });
@@ -806,20 +825,24 @@ function html(d){
   const tr = inc(d.truc.nguoi);
   if (tr.length){
     const tt = d.truc.ten || st.tenTruc || 'Trực điều hành';
-    p('b', danhSo ? head(tt) : `* ${esc(tt)}:`);
-    tr.forEach(x => {
-      const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
-      p('ind', `- ${who}${x.co === false ? ' -- không có mặt tại Cảng' : ' -- đang có mặt tại Cảng'}`);
-    });
+    if (kieuTr === 'vang'){
+      tr.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
+    } else {
+      p('b', danhSo ? head(tt) : `* ${esc(tt)}:`);
+      tr.forEach(x => {
+        const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
+        p('ind', `- ${who}${x.co === false ? ' – không có mặt tại Cảng' : ' – đang có mặt tại Cảng'}`);
+      });
+    }
   }
 
-  p('b', 'III. TÌNH HÌNH AN NINH TRẬT TỰ');
+  roman('III', 'TÌNH HÌNH AN NINH TRẬT TỰ');
   p('', esc(d.antt.trim() || 'Tình hình an ninh trật tự ổn định, không ghi nhận vụ việc bất thường.'));
 
-  p('b', 'IV. KẾT LUẬN');
+  if (danhSo) p('b', 'IV. KẾT LUẬN'); else p('u', 'Kết luận:');
   const kl = lines(d.ketLuan);
   if (!kl.length) p('', '……');
-  kl.forEach((t, i) => p('', `${i+1}. ${esc(t.replace(/^[-–•]\s*/, ''))}`));
+  kl.forEach((t, i) => { const c = esc(t.replace(/^[-–•]\s*/, '')); p('', danhSo ? `${i+1}. ${c}` : `- ${c}`); });
 
   p('', 'Biên bản này được lập thành 02 bản và có giá trị như nhau, mỗi bên giữ 01 bản.');
   p('', `Biên bản kết thúc vào lúc ${dash(d.ktGio)} ngày ${d.ktNgay ? fmtLong(d.ktNgay) : '……'}. Mọi người có tên trên cùng xác nhận các nội dung trên và cùng ký tên dưới đây.`);
@@ -915,11 +938,13 @@ function showDM(cang){
   $('s_kieuChucVu').value = s.kieuChucVu || 'gach';
   $('s_kieuCauBen').value = s.kieuCauBen || 'mot';
   $('s_danhSo').value = s.danhSo || 'co';
+  $('s_kieuNguoi').value = s.kieuNguoi || 'gach'; $('s_kieuTruc').value = s.kieuTruc || 'dangco'; $('s_chungToi').value = s.chungToi || 'khong';
 }
 function readDM(){
   const o = {};
   DM_FIELDS.forEach(f => { const el = $('s_' + f); if (el) o[f] = el.value; });
   o.sig = (DM[$('dmCang').value] || {}).sig || [];
+  o.kieuNguoi = $('s_kieuNguoi').value; o.kieuTruc = $('s_kieuTruc').value; o.chungToi = $('s_chungToi').value;
   return o;
 }
 async function loadDanhMuc(){
@@ -1104,7 +1129,7 @@ $('btnDmCangMoi').onclick = () => {
   const name = $('dmCangMoi').value.trim();
   if (!name) return;
   if (DM[name]){ say('dmMsg', 'Cảng này đã có.', 'warn'); return; }
-  DM[name] = { phuDe: '', tenTruc: 'Trực điều hành sản xuất', tenThue: 'Đơn vị thuê ngoài', kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', antt: 'Tình hình an ninh trật tự ổn định.', canCu: '', ksnb: '', dvKhac: '', cauBen: '', viTri: '', thueNgoai: '', truc: '' };
+  DM[name] = { phuDe: '', tenTruc: 'Trực điều hành sản xuất', tenThue: 'Đơn vị thuê ngoài', kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuNguoi: 'gach', kieuTruc: 'dangco', chungToi: 'khong', antt: 'Tình hình an ninh trật tự ổn định.', canCu: '', ksnb: '', dvKhac: '', cauBen: '', viTri: '', thueNgoai: '', truc: '' };
   $('dmCangMoi').value = '';
   refreshCangSelects(); $('dmCang').value = name; showDM(name);
   say('dmMsg', `Đã thêm cảng ${name}. Nhập danh mục rồi bấm Lưu.`, 'ok');
