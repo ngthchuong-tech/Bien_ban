@@ -72,6 +72,9 @@ textarea{min-height:70px;resize:vertical}
 .subh:first-of-type{border-top:0;padding-top:0}
 .dock{position:sticky;bottom:-14px;z-index:6;margin:14px -16px -14px;padding:8px 16px 6px;background:#fff;border-top:2px solid var(--blue2);box-shadow:0 -3px 8px rgba(0,0,0,.10)}
 .dock:empty{display:none}
+.dockhead{display:flex;gap:6px;justify-content:flex-end;margin-bottom:5px}
+.qbar{grid-template-columns:auto 1fr 1fr auto auto}
+.qbar.qwarn{grid-template-columns:auto 1fr auto}
 .dock .qbar{margin-bottom:6px}
 .dock .qcap small{display:block;font-weight:400;color:#666;font-size:12px}
 .qbar{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;margin:0 0 8px;padding:8px;background:#eef5fc;border:1px solid #bcd6ee;border-radius:8px}
@@ -673,6 +676,7 @@ function tTruc(t){
 
 /* ---------------- đưa dữ liệu lên form ---------------- */
 function renderForm(d){
+  dockHidden.clear();
   $('cang').value = d.cang;
   $('tieuDe').value = d.tieuDe || '';
   $('phuDe').value = d.phuDe || '';
@@ -870,12 +874,13 @@ function sortItemsDom(box){
 }
 function poolFor(g, it){ const ph = (it.dataset.phan || '').trim(); return g ? g.pools.find(p => p.ten === ph) : null; }
 // thanh chọn nhanh "thiết bị > người > Thêm" cố định dưới chân form, gom cho mọi ban có danh sách chung
+const dockHidden = new Set(); let dockCollapsed = false;
 function refreshQuick(){ refreshDock(); }
 function refreshDock(){
   const dock = $('dock'), cang = $('cang').value, groups = cat(cang).groups;
   const prev = {};
   dock.querySelectorAll('[data-qbar]').forEach(b => { prev[b.dataset.qkey] = b.querySelector('[data-qdev]') ? b.querySelector('[data-qdev]').value : ''; });
-  let html = '';
+  let html = '', hiddenN = 0;
   [...$('ndBox').querySelectorAll(':scope > [data-ban]')].forEach((card, bi) => {
     const g = groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
     const items = card.querySelector(':scope > .items');
@@ -888,9 +893,10 @@ function refreshDock(){
     g.pools.forEach(pool => {
       const devs = g.items.filter(it => it.phan === pool.ten);
       const key = g.ten + '|' + pool.ten;
+      if (dockHidden.has(key)){ hiddenN++; return; }
       const cap = `<span class="qcap">${esc(pool.ten || 'Vị trí')}<small>${esc(g.ten)}</small></span>`;
-      if (!devs.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con".</span></div>`; return; }
-      if (!pool.nhanVien.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh sách nhân viên chung đang trống. Vào tab Danh mục, mục 5, nhập tên nhân viên rồi quay lại.</span></div>`; return; }
+      if (!devs.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con".</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
+      if (!pool.nhanVien.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh sách nhân viên chung đang trống. Vào tab Danh mục, mục 5, nhập tên nhân viên rồi quay lại.</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
       let dv = prev[key];
       if (dv === undefined || dv === '' || !devs[+dv]) dv = '';
       const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
@@ -898,10 +904,12 @@ function refreshDock(){
       html += `<div class="qbar" data-qbar data-qkey="${esc(key)}" data-qban="${bi}" data-qpool="${esc(pool.ten)}">${cap}` +
         `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select>` +
         `<select data-qppl><option value="">2. chọn người</option>${pool.nhanVien.map((x, i) => taken.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen)}</option>`).join('')}</select>` +
-        `<button class="btn small primary" data-act="quickAdd">Thêm</button></div>`;
+        `<button class="btn small primary" data-act="quickAdd">Thêm</button><button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button></div>`;
     });
   });
-  dock.innerHTML = html;
+  if (!html && !hiddenN){ dock.innerHTML = ''; refreshPeoplePicks(); return; }
+  const head = `<div class="dockhead">${html ? `<button class="btn small" data-act="dockToggle">${dockCollapsed ? '▲ Mở thanh chọn nhanh' : '▼ Thu gọn'}</button>` : ''}${hiddenN ? `<button class="btn small" data-act="dockReset">Hiện lại ${hiddenN} thanh đã tắt</button>` : ''}</div>`;
+  dock.innerHTML = head + (dockCollapsed ? '' : html);
   refreshPeoplePicks();
 }
 
@@ -1596,6 +1604,9 @@ document.addEventListener('click', e => {
       d.querySelector(':scope > summary').textContent = 'Danh sách người (' + persons(plOf(host)).length + ')';
       refreshPeoplePicks();
     }
+    else if (a === 'qHide'){ dockHidden.add(act.closest('[data-qbar]').dataset.qkey); refreshDock(); }
+    else if (a === 'dockToggle'){ dockCollapsed = !dockCollapsed; refreshDock(); }
+    else if (a === 'dockReset'){ dockHidden.clear(); refreshDock(); }
     else if (a === 'quickAdd'){
       const bar = act.closest('[data-qbar]'), card = $('ndBox').querySelectorAll(':scope > [data-ban]')[+bar.dataset.qban];
       const dv = bar.querySelector('[data-qdev]').value, pp = bar.querySelector('[data-qppl]').value;
