@@ -10,11 +10,13 @@
 const SHEET_BB = 'BienBan';   // mỗi biên bản một dòng
 const SHEET_PB = 'PhienBan';  // mỗi lần lưu một dòng (chỉ thêm, không sửa/xóa)
 const SHEET_NS = 'NhanSu';    // danh bạ nhân sự
+const SHEET_DM = 'DanhMuc';   // danh mục cài sẵn theo từng cảng (mỗi cảng một dòng)
 
 const HEADERS = {
   BienBan: ['id', 'loai', 'tieuDe', 'donVi', 'trangThai', 'phienBanHienTai', 'ngayTao', 'capNhat', 'nguoiLap'],
   PhienBan: ['id', 'bienBanId', 'soPhienBan', 'thoiDiem', 'nguoiLuu', 'trangThai', 'dulieu'],
-  NhanSu: ['donVi', 'hoTen', 'chucDanh', 'ghiChu']
+  NhanSu: ['donVi', 'hoTen', 'chucDanh', 'ghiChu'],
+  DanhMuc: ['cang', 'duLieu', 'capNhat']
 };
 
 // Giới hạn một ô của Google Sheet khoảng 50.000 ký tự; để dư một chút
@@ -87,6 +89,8 @@ function route_(action, p) {
     case 'saveVersion':     return saveVersion_(p);
     case 'getRoster':       return getRoster_();
     case 'saveRoster':      return saveRoster_(p.rows || []);
+    case 'getDanhMuc':      return getDanhMuc_();
+    case 'saveDanhMuc':     return saveDanhMuc_(p.cang, p.settings);
     default: throw new Error('Hành động không hợp lệ: ' + action);
   }
 }
@@ -228,6 +232,40 @@ function saveRoster_(rows) {
       .map(r => [r.donVi || '', r.hoTen || '', r.chucDanh || '', r.ghiChu || '']);
     if (data.length) sh.getRange(2, 1, data.length, h.length).setValues(data);
     return { soDong: data.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ------------------------------------------------------------
+ * DANH MỤC CÀI SẴN (theo cảng)
+ * ------------------------------------------------------------ */
+function getDanhMuc_() {
+  const { rows } = docBang_(SHEET_DM);
+  const out = {};
+  rows.filter(r => r.cang).forEach(r => {
+    try { out[String(r.cang)] = JSON.parse(r.duLieu); } catch (e) { /* bỏ qua dòng hỏng */ }
+  });
+  return out;
+}
+
+function saveDanhMuc_(cang, settings) {
+  if (!cang) throw new Error('Thiếu tên cảng.');
+  const json = JSON.stringify(settings || {});
+  if (json.length > MAX_CELL) throw new Error('Danh mục quá dài cho một ô của Sheet.');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DM);
+    const { rows } = docBang_(SHEET_DM);
+    const now = new Date().toISOString();
+    const hit = rows.find(r => String(r.cang) === String(cang));
+    if (hit) {
+      sh.getRange(hit._dong, 1, 1, 3).setValues([[cang, json, now]]);
+    } else {
+      themDong_(sh, HEADERS.DanhMuc, { cang: cang, duLieu: json, capNhat: now });
+    }
+    return { cang: cang, capNhat: now };
   } finally {
     lock.releaseLock();
   }
