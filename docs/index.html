@@ -64,6 +64,8 @@ textarea{min-height:70px;resize:vertical}
 .poolbox{background:#f5f8fb;border:1px dashed #9bbfe0;border-radius:8px;padding:8px 10px;margin:6px 0 10px}
 .poolbox textarea{min-height:70px;margin:4px 0}
 .poolbox .bh input{font-weight:400}
+.subh{font-weight:700;font-size:14px;color:var(--blue2);margin:10px 0 4px;padding-top:6px;border-top:1px dashed #cfdcea}
+.subh:first-of-type{border-top:0;padding-top:0}
 .dock{position:sticky;bottom:-14px;z-index:6;margin:14px -16px -14px;padding:8px 16px 6px;background:#fff;border-top:2px solid var(--blue2);box-shadow:0 -3px 8px rgba(0,0,0,.10)}
 .dock:empty{display:none}
 .dock .qbar{margin-bottom:6px}
@@ -995,7 +997,7 @@ const SECTIONS = [
   ['ksnb', '2. Ban Kiểm soát nội bộ'],
   ['donvi', '3. Đơn vị đại diện (thành phần)'],
   ['caubien', '4. Cầu bến'],
-  ['ban', '5. Ban, vị trí, thiết bị, nhân viên'],
+  ['ban', '5. Ban: thiết bị, vị trí, nhân viên'],
   ['thue', '6. Công ty thuê ngoài'],
   ['truc', '7. Trực điều hành'],
   ['roster', '8. Danh bạ nhân viên (gợi ý tên)']
@@ -1077,7 +1079,13 @@ const svcRow = x => `<div class="srow" data-svc><input type="text" data-tv value
 const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="shiftnote hint">Người ở vị trí này lấy từ danh sách nhân viên chung bên dưới. Khi lập biên bản, bạn chọn ai đang làm.</div><div class="only-fixed"><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div></div>`;
 const tPool = p => `<div class="prow nop" data-p><select data-xung>${['', 'Ông', 'Bà'].map(x => `<option ${x === (p.xung || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen || '')}" placeholder="Họ và tên"><button class="del" data-del>✕</button></div>`;
 const poolCard = p => `<div class="poolbox" data-pool><div class="bh"><label class="lb" style="margin:0;white-space:nowrap">Danh sách chung của bộ phận:</label><input type="text" data-pten value="${esc(p.ten || '')}" placeholder="vd: Bộ phận cơ giới (để trống nếu các vị trí không thuộc bộ phận con)"><button class="del" data-del>✕</button></div>${hintP('Nhập mỗi người một lần. Các vị trí, thiết bị thuộc bộ phận này (ghi ở ô "Bộ phận con") sẽ chọn người từ đây khi lập biên bản.')}<div class="poolrows">${(p.nhanVien || []).map(tPool).join('')}</div><div class="addbar">${addBtn('addPoolP', '+ người')}</div><details class="pl-d"><summary>Dán nhiều tên cùng lúc</summary><textarea data-paste placeholder="Mỗi dòng một người, ví dụ:&#10;Trần Văn Hưng&#10;Nguyễn Quang Tứ"></textarea>${addBtn('pastePool', 'Thêm các tên đã dán')}</details></div>`;
-const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div><details class="pl-d" ${(g.items || []).length ? '' : 'open'}><summary>Vị trí, thiết bị (${(g.items || []).length})</summary><div class="items">${(g.items || []).map(itemRow).join('')}</div>${addBtn('addItem', '+ vị trí / thiết bị')}</details><div class="pools">${(g.pools || []).map(poolCard).join('')}</div><div class="addbar"><select data-newpool></select>${addBtn('addPool', '+ Tạo danh sách nhân viên chung (theo ca)')}</div></div>`;
+const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div>
+  <div class="subh">A. Thiết bị / vị trí làm việc của ban</div>
+  <div class="items">${(g.items || []).map(itemRow).join('')}</div>
+  <div class="addbar">${addBtn('addItem', '+ thêm 1 thiết bị / vị trí')}</div>
+  <details class="pl-d"><summary>Dán nhiều thiết bị / vị trí cùng lúc</summary><label class="lb">Thuộc bộ phận con (vd: Bộ phận cơ giới; để trống nếu không có)</label><input type="text" data-pastephan placeholder="Bộ phận cơ giới"><textarea data-pasteitems placeholder="Mỗi dòng một thiết bị, ví dụ:&#10;Cẩu LH1&#10;Cẩu LH2&#10;Xe nâng Kalmar 1"></textarea>${addBtn('pasteItems', 'Thêm các dòng đã dán')}</details>
+  <div class="subh">B. Danh sách nhân viên chung (theo ca, chọn người khi lập biên bản)</div>
+  <div class="pools">${(g.pools || []).map(poolCard).join('')}</div><div class="addbar"><select data-newpool></select>${addBtn('addPool', '+ Tạo danh sách nhân viên chung')}</div></div>`;
 // bộ phận con nào có danh sách chung thì các vị trí của nó chọn người từ danh sách đó
 function applyPoolMode(card){
   const names = new Set([...card.querySelectorAll('[data-pool] [data-pten]')].map(x => x.value.trim()));
@@ -1113,7 +1121,7 @@ const SEC_HTML = {
   ksnb: s => `<div class="card-b" data-kcard>${hintP('Người của Ban Kiểm soát nội bộ. Tự có sẵn trong mục Thành phần khi lập biên bản.')}<div class="pl">${(s.ksnb || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`,
   donvi: s => `${hintP('Các đơn vị cử người cùng đi kiểm tra (vd: Cảng, Phòng Kho vận). Khi lập biên bản, chọn đơn vị từ thanh chọn ở đầu form.')}<div data-list>${(s.donVi || []).map(dvCard).join('')}</div>${addBtn('addDv', '+ thêm đơn vị')}`,
   caubien: s => `<div class="card-b">${hintP('Chỉ cần ghi tên các cầu. Phương tiện cập bến, việc đang làm, thiết bị làm hàng thì nhập khi lập biên bản, vì mỗi lần kiểm tra mỗi khác.')}<div data-list>${(s.cauBen || []).map(cbRow).join('')}</div>${addBtn('addCb', '+ thêm cầu bến')}</div>`,
-  ban: s => `${hintP('Mỗi ban có các vị trí hoặc thiết bị. Mỗi vị trí ghi người đang làm. Chức danh riêng (vd: Lái cẩu) ghi ở cột chức danh của người đó.')}<div data-list>${(s.bans || []).map(banCard).join('')}</div>${addBtn('addBan', '+ thêm ban / bộ phận')}`,
+  ban: s => `${hintP('Mỗi ban gồm: A. danh sách thiết bị / vị trí (cẩu, xe nâng, chốt bảo vệ...) và B. danh sách nhân viên chung. Bộ phận điều độ thì ghi người ngay dưới từng vị trí. Cơ giới, bảo vệ thì tạo danh sách nhân viên chung ở phần B.')}<div data-list>${(s.bans || []).map(banCard).join('')}</div>${addBtn('addBan', '+ thêm ban / bộ phận')}`,
   thue: s => `${hintP('Công ty cho thuê thiết bị, dịch vụ. Nếu công ty không bố trí gì thì ghi vào ô ghi chú.')}<div data-list>${(s.thue || []).map(tcard).join('')}</div>${addBtn('addTc', '+ thêm công ty')}`,
   truc: s => `<div class="card-b" data-truccard>${hintP('Người trực điều hành. Bỏ tick "có mặt" nếu người đó mặc định vắng.')}<div class="pl">${(s.truc || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`
 };
@@ -1170,6 +1178,14 @@ function bindDM(){
       const a = add.dataset.dm;
       const into = (sel, h) => P.querySelector(sel).insertAdjacentHTML('beforeend', h);
       if (a === 'addP') add.closest('[data-kcard],[data-dvcard],[data-item],[data-truccard]').querySelector('.pl').insertAdjacentHTML('beforeend', tP({ co: true, xung: 'Ông', hoTen: '', chucDanh: '' }));
+      else if (a === 'pasteItems'){
+        const box = add.closest('details'), card = add.closest('[data-bancard]');
+        const ph = box.querySelector('[data-pastephan]').value.trim(), ta = box.querySelector('[data-pasteitems]');
+        const have = new Set([...card.querySelectorAll('[data-item]')].map(it => val(it, '[data-phan]').trim() + '|' + val(it, '[data-label]').trim()));
+        const list = lines(ta.value).filter(l => !have.has(ph + '|' + l));
+        card.querySelector('.items').insertAdjacentHTML('beforeend', list.map(l => itemRow({ phan: ph, label: l })).join(''));
+        ta.value = '';
+      }
       else if (a === 'addPoolP') add.closest('[data-pool]').querySelector('.poolrows').insertAdjacentHTML('beforeend', tPool({ xung: 'Ông' }));
       else if (a === 'pastePool'){
         const box = add.closest('[data-pool]'), ta = box.querySelector('[data-paste]');
