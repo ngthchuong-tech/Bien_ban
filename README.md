@@ -26,7 +26,7 @@ Mỗi lần sửa `Code.gs` phải triển khai lại (Triển khai > Quản lý
 ### 3. Bật GitHub Pages
 1. Vào repo trên GitHub, chọn **Settings > Pages**.
 2. Source: **Deploy from a branch**. Branch: **main**, thư mục: **/docs**. Bấm Save.
-3. Sau vài phút trang sẽ chạy tại: `https://ngthchuong-tech.github.io/bien_ban/`
+3. Sau vài phút trang sẽ chạy tại: `https://ngthchuong-tech.github.io/Bien_ban/`
 
 ### 4. Nhập cài đặt vào trang
 1. Mở trang, vào **Cài đặt**.
