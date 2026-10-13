@@ -154,6 +154,90 @@ th{background:#f5f8fb;font-size:14px}
 .set textarea{font-family:Consolas,"Courier New",monospace;font-size:14px;min-height:120px}
 .set .help{font-size:13px;color:#555;background:#f5f8fb;border-radius:6px;padding:6px 8px;margin-top:4px;white-space:pre-line}
 .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* ===== làm nổi bật giao diện ===== */
+:root{--green:#2E7D32;--purple:#6A3FA0;--amber:#B45309;--teal:#0F766E}
+html,body{background:#e8eef5;min-height:100%}
+input[type=password]{width:100%;padding:8px 9px;border:1.5px solid #b7c6d8;border-radius:6px}
+/* thanh trên cùng: nút tab đang mở */
+.top{gap:6px;padding:8px 12px}
+.top h1{font-size:17px;margin-right:6px}
+.top .btn{padding:8px 11px}
+.top [data-go]{background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.55)}
+.top [data-go]:hover{background:rgba(255,255,255,.3)}
+.top [data-go].on{background:#fff;color:var(--blue);border-color:#fff;box-shadow:0 0 0 3px #FF8A3D}
+#btnSave{background:#FF8A3D;color:#fff}
+#btnWord{background:var(--green);color:#fff}
+#btnPrint{background:#fff;color:var(--blue)}
+/* đề mục trong form */
+.sec{background:var(--blue);color:#fff;border:0;border-left:8px solid #FF8A3D;border-radius:6px;padding:7px 10px;margin:22px 0 10px;font-size:14px;letter-spacing:.2px}
+.form{background:#fbfdff;border:2px solid #b9d0e8;box-shadow:0 2px 8px rgba(31,78,120,.12)}
+.preview{background:#cfd9e5;border:2px solid #9fb5cd}
+label.lb{font-weight:600;color:var(--blue)}
+input[type=text],input[type=date],input:not([type]),select,textarea{border-color:#b7c6d8}
+input::placeholder,textarea::placeholder{color:#9aa7b6}
+/* thẻ theo loại: màu viền khác nhau */
+.card-b[data-unit]{border-left-color:var(--green);background:#f3faf4}
+.card-b[data-ban]{border-left-color:var(--blue2);background:#f2f8fe}
+.card-b[data-berth]{border-left-color:var(--teal);background:#f0faf9}
+.card-b[data-tn]{border-left-color:var(--amber);background:#fff8ef}
+.card-b[data-truc]{border-left-color:var(--purple);background:#f7f2fc}
+.card-b[data-unit]>.bh input{color:var(--green)}
+.card-b[data-ban]>.bh input{color:var(--blue)}
+.card-b[data-truc]>.bh input,.card-b[data-tn]>.bh input{color:var(--purple)}
+.card-b[data-tn]>.bh input{color:var(--amber)}
+.card-b{box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.item{background:#fff;border:1px solid #d6e3f1;border-left:4px solid #6fa8dc;border-radius:6px;padding:6px 8px;margin:8px 0}
+.item.pooled{border-left-color:#E08A1E;background:#fffaf2}
+.ih .cap{color:var(--blue);background:#e4eefa;border-radius:4px;padding:2px 6px}
+/* dòng người: bỏ tick "có mặt" thì tô đỏ */
+.prow{padding:2px 4px;border-radius:6px}
+.prow:has([data-co]:not(:checked)){background:#fde8e8;outline:1.5px solid #f2b3b3}
+.prow:has([data-co]:not(:checked)) input[data-hoten]{text-decoration:line-through;color:var(--err)}
+.prow:has([data-co]:checked){background:#f1f9f1}
+.prow .ck{color:var(--green);font-weight:600}
+.prow:has([data-co]:not(:checked)) .ck{color:var(--err)}
+/* nút thêm nhanh trong form */
+.pickbar .btn.small,.addbar .btn.small,.ppickrow .btn.small,.ppick .btn.small,.pickrow .btn.small{background:#dff0e1;color:#1b5e20;border:1.5px solid #8cc79a;font-weight:700}
+.pickbar .btn.small:hover,.addbar .btn.small:hover,.ppickrow .btn.small:hover{background:#c9e6cd}
+.pickrow,.pickbar{border-color:#7fb0e0}
+.del{background:#fff;border-color:#e3b5b5}
+.del:hover{background:#fde8e8}
+.pl-d>summary{color:var(--green)}
+.hint{color:#5a6b7d}
+.msg.ok{background:#e6f4ea;padding:6px 10px;border-radius:6px}
+.msg.err{background:#fde8e8;padding:6px 10px;border-radius:6px}
+.msg.warn{background:#fff3df;padding:6px 10px;border-radius:6px}
+.msg:empty{display:none}
+.top .status{background:rgba(255,255,255,.18);border-radius:6px;padding:4px 10px}
+.top .status:empty{display:none}
+/* danh sách */
+.card{border:1.5px solid #b9d0e8;box-shadow:0 1px 4px rgba(31,78,120,.1)}
+th{background:var(--blue);color:#fff;font-size:14px}
+tbody tr:nth-child(even){background:#f4f8fc}
+tbody tr:hover{background:#e3effb}
+.badge{background:#fff1d6;color:var(--amber);font-weight:600;border:1px solid #f0d19b}
+.badge.ok{background:#E6F4EA;color:var(--ok);border-color:#a5d6a7}
+/* danh mục */
+.dm-nav button{border:1.5px solid #b9d0e8;font-weight:600;border-left:6px solid #b9d0e8}
+.dm-nav button:hover{border-left-color:var(--blue2)}
+.dm-nav button.on{background:var(--blue);border-color:var(--blue);border-left-color:#FF8A3D}
+.dm-head{background:linear-gradient(180deg,#eaf3fc,#d8e8f8);border-left-color:#FF8A3D;border-width:1.5px}
+.dm-head b{font-size:18px}
+.dm-side .card-b{background:#eaf3fc;border-left-color:var(--blue)}
+#dmPanel .card-b{background:#fff}
+#dmPanel .card-b[data-bancard]{border-left-color:var(--blue2);background:#f2f8fe}
+#dmPanel .card-b[data-dvcard]{border-left-color:var(--green);background:#f3faf4}
+#dmPanel .card-b[data-kcard]{border-left-color:var(--green);background:#f3faf4}
+#dmPanel .card-b[data-tcard]{border-left-color:var(--amber);background:#fff8ef}
+#dmPanel .card-b[data-truccard]{border-left-color:var(--purple);background:#f7f2fc}
+#dmPanel .card-b[data-klcard]{border-left-color:var(--teal);background:#f0faf9}
+.poolbox{background:#fff6e8;border:1.5px dashed #E0A64E}
+.help-box{background:#eaf3fc;border-left:4px solid var(--blue2)}
+.subh{color:var(--blue);background:#eaf3fc;border:0;border-radius:4px;padding:4px 8px}
+/* kết nối */
+.set b{display:block;background:var(--blue);color:#fff;padding:6px 10px;border-radius:6px;margin-bottom:6px}
+.btn.alt{background:var(--blue2);color:#fff}
+.btn.primary{box-shadow:0 1px 3px rgba(0,0,0,.25)}
 @media print{
   body{background:#fff}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -173,7 +257,7 @@ th{background:#f5f8fb;font-size:14px}
 
 <div class="top no-print">
   <h1>Lập biên bản KSNB</h1>
-  <button class="btn" data-go="editor">✎ Biên bản</button>
+  <button class="btn on" data-go="editor">✎ Biên bản</button>
   <button class="btn" data-go="list">📂 Danh sách</button>
   <button class="btn" data-go="danhmuc">🗂 Danh mục</button>
   <button class="btn" data-go="settings">⚙ Kết nối</button>
@@ -1522,6 +1606,7 @@ function fillTitleFromRoster(input){
 function show(name){
   if (name !== 'danhmuc' && $('danhmuc').classList.contains('on')) syncDM();
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === name));
+  document.querySelectorAll('.top [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === name));
   if (name === 'editor') refreshAllMenus();
   if (name === 'list') loadList();
   if (name === 'settings') fillSettings();
