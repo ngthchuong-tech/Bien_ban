@@ -70,6 +70,8 @@ textarea{min-height:70px;resize:vertical}
 .tb-row select{padding:7px 8px}
 .pl-d{margin:4px 0 6px}
 .pl-d>summary{cursor:pointer;font-size:13px;color:var(--blue2);font-weight:600;padding:3px 0;list-style:revert}
+.sigrow{display:grid;grid-template-columns:110px 1fr;gap:6px;align-items:center;margin:-2px 0 8px}
+.sigrow span{font-size:13px;color:#555}
 /* xem trước khổ A4 */
 #paper{background:#fff;width:100%;max-width:210mm;margin:0 auto;padding:6.5% 6.5% 6% 7.5%;box-shadow:0 2px 10px rgba(0,0,0,.15);font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.38;color:#000}
 #paper p{margin:3pt 0;text-align:justify}
@@ -188,10 +190,6 @@ th{background:#f5f8fb;font-size:14px}
     <div class="grid2">
       <div><label class="lb">Kết thúc lúc</label><input type="text" id="ktGio" placeholder="vd: 23 giờ 30 phút"></div>
       <div><label class="lb">Ngày kết thúc</label><input type="date" id="ktNgay"></div>
-      <div><label class="lb">Cột trái - dòng 1</label><input type="text" id="sigL1" placeholder="vd: ĐẠI DIỆN CẢNG GÒ DẦU"></div>
-      <div><label class="lb">Cột phải - dòng 1</label><input type="text" id="sigR1" value="BAN KIỂM SOÁT NỘI BỘ"></div>
-      <div><label class="lb">Cột trái - dòng 2</label><input type="text" id="sigL2" placeholder="(có thể để trống)"></div>
-      <div><label class="lb">Cột phải - dòng 2</label><input type="text" id="sigR2" placeholder="(có thể để trống)"></div>
     </div>
   </div>
 
@@ -622,8 +620,9 @@ function pplBox(arr){
   return `<details class="pl-d"><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></details>`;
 }
 const plOf = el => el ? el.querySelector(':scope > details > .pl') : null;
+function defaultSig(ten){ return ten === KSNB_NAME ? 'ĐẠI DIỆN BAN KIỂM SOÁT NỘI BỘ' : 'ĐẠI DIỆN ' + String(ten || '').toUpperCase(); }
 function tUnit(u){
-  return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div>${pplBox(u.nguoi||[])}</div>`;
+  return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="sigrow"><span>Ghi khi ký:</span><input type="text" data-usig value="${esc(u.sig || defaultSig(u.ten))}"></div>${pplBox(u.nguoi||[])}</div>`;
 }
 function tItem(it){
   return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}</div>`;
@@ -667,8 +666,6 @@ function renderForm(d){
   $('antt').value = d.antt || '';
   $('ketLuan').value = d.ketLuan || '';
   $('ktGio').value = d.ktGio || ''; $('ktNgay').value = d.ktNgay || '';
-  $('sigL1').value = d.sig.l1 || ''; $('sigL2').value = d.sig.l2 || '';
-  $('sigR1').value = d.sig.r1 || ''; $('sigR2').value = d.sig.r2 || '';
   refreshTP(); refreshND();
   document.querySelectorAll('[data-ban]').forEach(refreshBanPick);
   render();
@@ -692,7 +689,7 @@ function collect(){
     tieuDe: v('tieuDe'), phuDe: v('phuDe'), diaDiem: v('diaDiem'), ngayLap: v('ngayLap'), trangThai: v('trangThai'),
     canCu: kids($('canCuBox'), '[data-cc]').map(el => ({ inc: chk(el,'[data-inc]'), t: val(el,'[data-t]').trim() })),
     canCuThem: v('canCuThem'),
-    thanhPhan: kids($('tpBox'), '[data-unit]').map(el => ({ ten: val(el,'[data-uten]').trim(), nguoi: persons(plOf(el)) })),
+    thanhPhan: kids($('tpBox'), '[data-unit]').map(el => ({ ten: val(el,'[data-uten]').trim(), sig: val(el,'[data-usig]').trim(), nguoi: persons(plOf(el)) })),
     phamVi: { bophan: v('bophan'), manual: $('bophan').dataset.manual === '1', catruc: v('catruc'),
               tuNgay: v('tuNgay'), tuGio: v('tuGio'), denNgay: v('denNgay'), denGio: v('denGio') },
     cauBen: kids(nd, '[data-berth]').map(el => ({ ten: val(el,'[data-cbten]').trim(), phuongTien: val(el,'[data-cbpt]').trim(),
@@ -706,8 +703,7 @@ function collect(){
           dv: kids(el.querySelector(':scope > .svcs'), '[data-svc]').map(s => ({ t: val(s,'[data-t]').trim() })) })),
     truc: (() => { const el = nd.querySelector('[data-truc]');
       return el ? { ten: val(el,'[data-ttl]').trim(), nguoi: persons(plOf(el)) } : null; })(),
-    antt: v('antt'), ketLuan: v('ketLuan'), ktGio: v('ktGio'), ktNgay: v('ktNgay'),
-    sig: { l1: v('sigL1'), l2: v('sigL2'), r1: v('sigR1'), r2: v('sigR2') }
+    antt: v('antt'), ketLuan: v('ketLuan'), ktGio: v('ktGio'), ktNgay: v('ktNgay')
   };
 }
 
@@ -784,7 +780,7 @@ function html(d){
 
   n = 0;
   roman('I', 'THÀNH PHẦN');
-  const units = d.thanhPhan.map(u => ({ ten: u.ten.trim(), nguoi: named(u.nguoi).filter(x => x.co !== false) }))
+  const units = d.thanhPhan.map(u => ({ ten: u.ten.trim(), sig: (u.sig || '').trim() || defaultSig(u.ten.trim()), nguoi: named(u.nguoi).filter(x => x.co !== false) }))
                            .filter(u => u.ten && u.nguoi.length);
   if (units.length && chungToi) p('', 'Chúng tôi gồm:');
   units.forEach(u => {
@@ -817,8 +813,9 @@ function html(d){
   d.ban.filter(g => g.ten && g.items.some(it => it.label)).forEach(g => {
     const items = g.items.filter(it => it.label);
     p('b', danhSo ? head(g.ten) : `* ${esc(g.ten)}:`);
-    // câu mở đầu chỉ viết một lần cho cả ban
-    const hasPeople = items.some(it => !it.note && named(it.nguoi).length);
+    const pres = it => named(it.nguoi).filter(x => x.co !== false);
+    const absent = it => named(it.nguoi).filter(x => x.co === false);
+    const hasPeople = items.some(it => !it.note && pres(it).length);
     if (hasPeople && g.lead) p('ind', '- ' + esc(g.lead));
     let lastPhan = '';
     items.forEach(it => {
@@ -826,12 +823,17 @@ function html(d){
       if (phan !== lastPhan){ lastPhan = phan; if (phan) p('b ind', `${danhSo ? '*' : '-'} ${esc(phan)}:`); }
       const label = esc(it.label);
       if (it.note){ p('ind2', `+ ${label}: ${esc(it.note)}.`); return; }
-      const ppl = named(it.nguoi);
-      if (!ppl.length){ p('ind2', `+ ${label}`); return; }
+      if (!named(it.nguoi).length){ p('ind2', `+ ${label}`); return; }
+      const ppl = pres(it);
       const plain = ppl.filter(x => !x.chucDanh);
-      if (plain.length) p('ind2', `+ ${label}: ${plain.map(lineName).join(', ')}.`);
-      ppl.filter(x => x.chucDanh).forEach(x => p('ind2', `+ ${label} – ${esc(x.chucDanh)}: ${lineName(x)}.`));
+      if (plain.length) p('ind2', `+ ${label}: ${plain.map(x => esc(x.hoTen)).join(', ')}.`);
+      ppl.filter(x => x.chucDanh).forEach(x => p('ind2', `+ ${label} – ${esc(x.chucDanh)}: ${esc(x.hoTen)}.`));
     });
+    const vang = items.filter(it => absent(it).length);
+    if (vang.length){
+      p('ind', '- Nhân viên không có mặt tại vị trí làm việc:');
+      vang.forEach(it => absent(it).forEach(x => p('ind2', `+ ${esc(it.label)}${x.chucDanh ? ' – ' + esc(x.chucDanh) : ''}: ${esc(x.hoTen)}.`)));
+    }
   });
 
   const th = d.thue.filter(t => t.congTy);
@@ -869,9 +871,14 @@ function html(d){
   p('', 'Biên bản này được lập thành 02 bản và có giá trị như nhau, mỗi bên giữ 01 bản.');
   p('', `Biên bản kết thúc vào lúc ${dash(d.ktGio)} ngày ${d.ktNgay ? fmtLong(d.ktNgay) : '……'}. Mọi người có tên trên cùng xác nhận các nội dung trên và cùng ký tên dưới đây.`);
 
-  H.push(`<table class="sig"><tr><td>${esc(d.sig.l1)}</td><td>${esc(d.sig.r1)}</td></tr>
-    <tr><td>${esc(d.sig.l2)}</td><td>${esc(d.sig.r2)}</td></tr>
-    <tr><td class="space"></td><td class="space"></td></tr></table>`);
+  const cells = units.map(u => u.sig);
+  if (cells.length){
+    let rows = '';
+    for (let i = 0; i < cells.length; i += 2){
+      rows += `<tr><td>${esc(cells[i])}</td><td>${cells[i+1] ? esc(cells[i+1]) : ''}</td></tr><tr><td class="space"></td><td class="space"></td></tr>`;
+    }
+    H.push(`<table class="sig">${rows}</table>`);
+  }
   return H.join('');
 }
 
