@@ -789,7 +789,7 @@ function renderForm(d){
   $('ketLuan').value = d.ketLuan || '';
   $('ktGio').value = d.ktGio || ''; $('ktNgay').value = d.ktNgay || '';
   refreshTP(); refreshND(); refreshCC(); refreshKlPick();
-  document.querySelectorAll('[data-ban]').forEach(refreshBanPick);
+  sortNdDom(); document.querySelectorAll('[data-ban]').forEach(refreshBanPick);
   refreshDock();
   render();
 }
@@ -888,7 +888,7 @@ function klAutoText(){
 }
 function refreshAllMenus(){
   refreshTP(); refreshND(); refreshCC(); refreshKlPick();
-  document.querySelectorAll('#ndBox > [data-ban]').forEach(refreshBanPick); refreshDock();
+  sortNdDom(); document.querySelectorAll('#ndBox > [data-ban]').forEach(refreshBanPick); refreshDock();
 }
 function refreshCC(){
   const have = new Set(kids($('canCuBox'), '[data-cc]').map(el => val(el, '[data-t]').trim()));
@@ -958,9 +958,30 @@ function refreshNameList(){
   $('rosterNames').innerHTML = [...names].map(n => `<option value="${esc(n)}">`).join('');
 }
 const isCG = ph => /cơ giới/i.test(ph || '');
-// bộ phận cơ giới luôn nằm cuối trong ban (giữ nguyên thứ tự các mục còn lại)
+// Thứ tự chuẩn (theo biên bản mẫu): cầu bến → các ban (Khai thác, Kế toán, Hành chính bảo vệ) → thuê ngoài → trực.
+// Trong ban: theo thứ tự thiết bị/vị trí trong Danh mục, riêng bộ phận cơ giới luôn cuối.
+const banRank = t => { t = (t || '').toLowerCase();
+  return /khai thác|điều độ/.test(t) ? 1 : /kế toán|thương vụ|tài vụ/.test(t) ? 2 : /hành chính|bảo vệ/.test(t) ? 3 : 4; };
+function itemIdx(cang, banTen){
+  const g = cat(cang).groups.find(x => x.ten === banTen), list = g ? g.items : [];
+  return (phan, label) => { const i = list.findIndex(x => (x.phan || '').trim() === (phan || '').trim() && x.label === label); return i < 0 ? 9999 : i; };
+}
+function berthIdx(cang){ const l = cat(cang).berths.map(b => b.ten); return t => { const i = l.indexOf(t); return i < 0 ? 9999 : i; }; }
 function sortItemsDom(box){
-  kids(box, '[data-item]').filter(it => isCG(it.dataset.phan)).forEach(it => box.appendChild(it));
+  const card = box.closest('[data-ban]'); if (!card) return;
+  const idx = itemIdx($('cang').value, val(card, ':scope > .bh [data-bten]').trim());
+  const key = it => (isCG(it.dataset.phan) ? 100000 : 0) + idx(it.dataset.phan, val(it, '[data-label]').trim());
+  const cur = kids(box, '[data-item]'), want = [...cur].sort((a, b) => key(a) - key(b));
+  if (want.some((x, i) => x !== cur[i])) want.forEach(it => box.appendChild(it));
+}
+function sortNdDom(){
+  const nd = $('ndBox'), cang = $('cang').value, bi = berthIdx(cang);
+  const rank = el => el.matches('[data-berth]') ? bi(val(el, '[data-cbten]').trim())
+    : el.matches('[data-ban]') ? 10000 + banRank(val(el, ':scope > .bh [data-bten]')) * 10
+    : el.matches('[data-tn]') ? 20000 : el.matches('[data-truc]') ? 30000 : 40000;
+  const cur = [...nd.children].filter(el => el.matches('[data-berth],[data-ban],[data-tn],[data-truc]'));
+  const want = [...cur].sort((a, b) => rank(a) - rank(b));
+  if (want.some((x, i) => x !== cur[i])) want.forEach(el => nd.appendChild(el));
 }
 function poolFor(g, it){ const ph = (it.dataset.phan || '').trim(); return g ? g.pools.find(p => p.ten === ph) : null; }
 // thanh chọn nhanh "thiết bị > người > Thêm" cố định dưới chân form, gom cho mọi ban có danh sách chung
@@ -1058,7 +1079,8 @@ function html(d){
   const bp = d.phamVi.bophan.trim();
   p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
 
-  const cb = d.cauBen.filter(b => b.ten);
+  const bix = berthIdx(d.cang);
+  const cb = d.cauBen.filter(b => b.ten).map((b, i) => ({ b, i })).sort((x, y) => bix(x.b.ten) - bix(y.b.ten) || x.i - y.i).map(x => x.b);
   if (cb.length){
     if (danhSo) p('b h2', head('Tình hình cầu bến'));
     cb.forEach(b => {
@@ -1075,11 +1097,10 @@ function html(d){
     });
   }
 
-  const banRank = t => { t = (t || '').toLowerCase();
-    return /khai thác|điều độ/.test(t) ? 1 : /kế toán|thương vụ/.test(t) ? 2 : /hành chính|bảo vệ/.test(t) ? 3 : 4; };
   d.ban.map((g, i) => ({ g, i })).filter(x => x.g.ten && x.g.items.some(it => it.label))
     .sort((a, b) => banRank(a.g.ten) - banRank(b.g.ten) || a.i - b.i).map(x => x.g).forEach(g => {
-    const items = [...g.items.filter(it => it.label && !isCG(it.phan)), ...g.items.filter(it => it.label && isCG(it.phan))];
+    const ix = itemIdx(d.cang, g.ten);
+    const items = g.items.map((it, i) => ({ it, i })).filter(x => x.it.label).sort((a, b) => ((isCG(a.it.phan) ? 100000 : 0) + ix(a.it.phan, a.it.label)) - ((isCG(b.it.phan) ? 100000 : 0) + ix(b.it.phan, b.it.label)) || a.i - b.i).map(x => x.it);
     p('b h2', danhSo ? head(g.ten) : `* ${esc(g.ten)}:`);
     const pres = it => named(it.nguoi).filter(x => x.co !== false);
     const absent = it => named(it.nguoi).filter(x => x.co === false);
@@ -1624,7 +1645,7 @@ const ND_NEW = {
   thue: () => tT({ congTy: '', intro: '', note: '', dv: [] }),
   truc: () => tTruc({ ten: settingsOf($('cang').value).tenTruc || 'Trực điều hành', nguoi: [] })
 };
-function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshDock(); refreshND(); refreshTP(); refreshCC(); markDirty(); }
+function afterAdd(){ sortNdDom(); document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshDock(); refreshND(); refreshTP(); refreshCC(); markDirty(); }
 
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
