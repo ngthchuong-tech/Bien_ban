@@ -470,9 +470,9 @@ Bà Lưu Thị Mỹ Chi | Phó GĐ Kho vận - logistics`
   'Gò Dầu': {
     phuDe: 'Về việc kiểm tra thời gian làm việc, tuân thủ nội quy lao động tại Cảng Gò Dầu',
     tenTruc: 'Trực chỉ huy cảng Gò Dầu',
-    tenThue: 'Đơn vị thuê ngoài',
-    kieuChucVu: 'chucvu', kieuCauBen: 'dong', danhSo: 'khong', kieuTruc: 'vang', chungToi: 'co',
-    leadIn: 'Các nhân viên đang trực tại vị trí gồm:',
+    tenThue: 'Thiết bị thuê ngoài',
+    kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong',
+    leadIn: DEFAULT_LEAD,
     sig: ['ĐẠI DIỆN CẢNG GÒ DẦU|BAN KIỂM SOÁT NỘI BỘ', ''],
     antt: 'Tình hình an ninh trật tự ổn định.',
     canCu: `Căn cứ nội quy lao động hiện hành của công ty;
@@ -1193,7 +1193,13 @@ function normalize(o){
   autoPools(out.bans);
   return out;
 }
-function DMof(c){ DM[c] = normalize(DM[c] || SEED[c] || {}); return DM[c]; }
+const KIEU_LBT = { kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong', tenThue: 'Thiết bị thuê ngoài', leadIn: DEFAULT_LEAD };
+function DMof(c){
+  DM[c] = normalize(DM[c] || SEED[c] || {});
+  // Gò Dầu: trình bày giống Long Bình Tân (áp một lần cho danh mục đã lưu từ trước)
+  if (c === 'Gò Dầu' && !DM[c].kieuLBT){ Object.assign(DM[c], KIEU_LBT, { kieuLBT: 1 }); }
+  return DM[c];
+}
 function settingsOf(c){ return DMof(c); }
 function cat(cang){
   const s = DMof(cang);
