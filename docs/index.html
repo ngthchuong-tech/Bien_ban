@@ -55,7 +55,7 @@ textarea{min-height:70px;resize:vertical}
 .brow input,.crow input[type=text],.srow input[type=text]{padding:6px 8px;font-size:15px}
 .brow{display:grid;grid-template-columns:1.1fr 1.2fr 1.2fr 1.2fr 34px;gap:6px}
 .addbar{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}
-.prow.nop{grid-template-columns:70px 1.3fr 1fr 34px}
+.prow.nop{grid-template-columns:70px 1fr 34px}
 .ppick{display:grid;grid-template-columns:1fr auto;gap:6px;margin:4px 0 2px}
 .ppick[hidden]{display:none}
 .item.byshift .only-fixed{display:none}
@@ -64,6 +64,13 @@ textarea{min-height:70px;resize:vertical}
 .poolbox{background:#f5f8fb;border:1px dashed #9bbfe0;border-radius:8px;padding:8px 10px;margin:6px 0 10px}
 .poolbox textarea{min-height:70px;margin:4px 0}
 .poolbox .bh input{font-weight:400}
+.quick:empty{display:none}
+.qbar{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;margin:0 0 8px;padding:8px;background:#eef5fc;border:1px solid #bcd6ee;border-radius:8px}
+.qbar .qcap{font-weight:700;font-size:14px;color:var(--blue2)}
+.item.pooled .prow{grid-template-columns:auto 1fr 34px}
+.item.pooled .prow select,.item.pooled .prow [data-cd]{display:none}
+.item.pooled > .pl-d > summary,.item.pooled > .pl-d > .addbar{display:none}
+.item.pooled .ih input[data-label]{font-weight:700}
 .pickbar{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;margin-top:8px}
 .del{background:none;border:1px solid var(--line);border-radius:6px;color:var(--err);width:32px;height:32px;cursor:pointer;font-size:14px;flex:none}
 .hint{font-size:13px;color:#666;margin:4px 0}
@@ -600,12 +607,12 @@ function tUnit(u){
   return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="sigrow"><span>Ghi khi ký:</span><input type="text" data-usig value="${esc(u.sig || defaultSig(u.ten))}"></div>${pplBox(u.nguoi||[])}</div>`;
 }
 function tItem(it){
-  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}<div class="ppick" data-ppickbox hidden><select data-ppick></select><button class="btn small" data-act="pickPerson">+ thêm người</button></div></div>`;
+  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}</div>`;
 }
 function tBan(g){
   return `<div class="card-b" data-ban><div class="bh"><input type="text" data-bten value="${esc(g.ten)}" placeholder="Tên ban / bộ phận"><button class="del" data-del>✕</button></div>
     <div class="lead"><input type="text" data-blead value="${esc(g.lead || DEFAULT_LEAD)}" title="Câu mở đầu, in một lần cho cả ban"></div>
-    <div class="items">${(g.items||[]).map(tItem).join('')}</div>
+    <div class="quick" data-quick></div><div class="items">${(g.items||[]).map(tItem).join('')}</div>
     <div class="pickbar"><select data-pick></select><button class="btn small" data-act="pickItem">+ thêm vị trí</button><button class="btn small" data-act="pickAll">+ tất cả</button><button class="btn small" data-act="blankItem">+ khác</button></div></div>`;
 }
 function tB(b){
@@ -709,22 +716,36 @@ function refreshBanPick(card){
   const name = val(card, ':scope > .bh [data-bten]').trim();
   const g = cat($('cang').value).groups.find(x => x.ten === name);
   const have = new Set(kids(card.querySelector(':scope > .items'), '[data-item]').map(it => val(it,'[data-label]').trim()));
-  const opts = g ? g.items.map((it,i) => have.has(it.label) ? '' : `<option value="${i}">${esc((it.phan ? it.phan + ' › ' : '') + it.label)}</option>`).join('') : '';
+  const pooled = new Set(g ? g.pools.map(p => p.ten) : []);
+  const opts = g ? g.items.map((it,i) => (have.has(it.label) || pooled.has(it.phan)) ? '' : `<option value="${i}">${esc((it.phan ? it.phan + ' › ' : '') + it.label)}</option>`).join('') : '';
   card.querySelector('[data-pick]').innerHTML = '<option value="">— chọn vị trí trong danh mục —</option>' + opts;
-  refreshPersonPick(card, g);
+  const pb = card.querySelector('.pickbar');
+  ['[data-pick]', '[data-act="pickItem"]', '[data-act="pickAll"]'].forEach(sel => { pb.querySelector(sel).hidden = !opts; });
+  refreshQuick(card, g);
 }
-// ban theo ca: mỗi vị trí/thiết bị có thêm ô chọn người từ danh sách chung của ban
 function poolFor(g, it){ const ph = (it.dataset.phan || '').trim(); return g ? g.pools.find(p => p.ten === ph) : null; }
-function refreshPersonPick(card, g){
-  kids(card.querySelector(':scope > .items'), '[data-item]').forEach(it => {
-    const box = it.querySelector(':scope > [data-ppickbox]'); if (!box) return;
+// ban có danh sách chung theo ca: một thanh duy nhất "chọn thiết bị > chọn người > Thêm"
+function refreshQuick(card, g){
+  const box = card.querySelector(':scope > .quick'), items = card.querySelector(':scope > .items');
+  const prev = {};
+  box.querySelectorAll('[data-qbar]').forEach(b => { prev[b.dataset.qpool] = b.querySelector('[data-qdev]').value; });
+  kids(items, '[data-item]').forEach(it => {
     const pool = poolFor(g, it);
-    box.hidden = !pool;
-    if (!pool) return;
-    const have = new Set(persons(plOf(it)).map(x => x.hoTen));
-    box.querySelector('[data-ppick]').innerHTML = '<option value="">— chọn người trong danh sách —</option>' +
-      pool.nhanVien.map((x, i) => have.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen + (x.chucDanh ? ' — ' + x.chucDanh : ''))}</option>`).join('');
+    it.classList.toggle('pooled', !!pool);
+    if (pool){ const d = it.querySelector(':scope > details'); if (d) d.open = true; }
   });
+  box.innerHTML = (g ? g.pools : []).map(pool => {
+    const devs = g.items.filter(it => it.phan === pool.ten);
+    if (!devs.length || !pool.nhanVien.length) return '';
+    let dv = prev[pool.ten];
+    if (dv === undefined || dv === '' || !devs[+dv]) dv = '';
+    const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
+    const taken = new Set(cur ? persons(plOf(cur)).map(x => x.hoTen) : []);
+    return `<div class="qbar" data-qbar data-qpool="${esc(pool.ten)}"><span class="qcap">${esc(pool.ten || 'Vị trí')}</span>` +
+      `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select>` +
+      `<select data-qppl><option value="">2. chọn người</option>${pool.nhanVien.map((x, i) => taken.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen)}</option>`).join('')}</select>` +
+      `<button class="btn small primary" data-act="quickAdd">Thêm</button></div>`;
+  }).join('');
 }
 
 /* ---------------- xem trước khổ A4 ---------------- */
@@ -1005,8 +1026,8 @@ const czRow = t => `<div class="crow" data-cz><input type="text" data-cztxt valu
 const cbRow = b => `<div class="brow" data-cbrow><input type="text" data-cbten value="${esc(b.ten || '')}" placeholder="Cầu (vd: K1-K2)"><input type="text" data-cbpt value="${esc(b.phuongTien || '')}" placeholder="Phương tiện cập bến"><input type="text" data-cbtk value="${esc(b.thucHien || '')}" placeholder="Thực hiện làm hàng"><input type="text" data-cbtb value="${esc(b.thietBi || '')}" placeholder="Thiết bị làm hàng"><button class="del" data-del>✕</button></div>`;
 const svcRow = x => `<div class="srow" data-svc><input type="text" data-tv value="${esc(x)}"><button class="del" data-del>✕</button></div>`;
 const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="shiftnote hint">Người ở vị trí này lấy từ danh sách nhân viên chung bên dưới. Khi lập biên bản, bạn chọn ai đang làm.</div><div class="only-fixed"><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div></div>`;
-const tPool = p => `<div class="prow nop" data-p><select data-xung>${['', 'Ông', 'Bà'].map(x => `<option ${x === (p.xung || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen || '')}" placeholder="Họ và tên"><input type="text" data-cd value="${esc(p.chucDanh || '')}" placeholder="Chức danh (vd: Lái cẩu)"><button class="del" data-del>✕</button></div>`;
-const poolCard = p => `<div class="poolbox" data-pool><div class="bh"><label class="lb" style="margin:0;white-space:nowrap">Danh sách chung của bộ phận:</label><input type="text" data-pten value="${esc(p.ten || '')}" placeholder="vd: Bộ phận cơ giới (để trống nếu các vị trí không thuộc bộ phận con)"><button class="del" data-del>✕</button></div>${hintP('Nhập mỗi người một lần. Các vị trí, thiết bị thuộc bộ phận này (ghi ở ô "Bộ phận con") sẽ chọn người từ đây khi lập biên bản.')}<div class="poolrows">${(p.nhanVien || []).map(tPool).join('')}</div><div class="addbar">${addBtn('addPoolP', '+ người')}</div><details class="pl-d"><summary>Dán nhiều tên cùng lúc</summary><textarea data-paste placeholder="Mỗi dòng một người, ví dụ:&#10;Trần Văn Hưng | Lái cẩu&#10;Nguyễn Quang Tứ | Lái cẩu"></textarea>${addBtn('pastePool', 'Thêm các tên đã dán')}</details></div>`;
+const tPool = p => `<div class="prow nop" data-p><select data-xung>${['', 'Ông', 'Bà'].map(x => `<option ${x === (p.xung || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen || '')}" placeholder="Họ và tên"><button class="del" data-del>✕</button></div>`;
+const poolCard = p => `<div class="poolbox" data-pool><div class="bh"><label class="lb" style="margin:0;white-space:nowrap">Danh sách chung của bộ phận:</label><input type="text" data-pten value="${esc(p.ten || '')}" placeholder="vd: Bộ phận cơ giới (để trống nếu các vị trí không thuộc bộ phận con)"><button class="del" data-del>✕</button></div>${hintP('Nhập mỗi người một lần. Các vị trí, thiết bị thuộc bộ phận này (ghi ở ô "Bộ phận con") sẽ chọn người từ đây khi lập biên bản.')}<div class="poolrows">${(p.nhanVien || []).map(tPool).join('')}</div><div class="addbar">${addBtn('addPoolP', '+ người')}</div><details class="pl-d"><summary>Dán nhiều tên cùng lúc</summary><textarea data-paste placeholder="Mỗi dòng một người, ví dụ:&#10;Trần Văn Hưng&#10;Nguyễn Quang Tứ"></textarea>${addBtn('pastePool', 'Thêm các tên đã dán')}</details></div>`;
 const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div><details class="pl-d" ${(g.items || []).length ? '' : 'open'}><summary>Vị trí, thiết bị (${(g.items || []).length})</summary><div class="items">${(g.items || []).map(itemRow).join('')}</div>${addBtn('addItem', '+ vị trí / thiết bị')}</details><div class="pools">${(g.pools || []).map(poolCard).join('')}</div><div class="addbar"><select data-newpool></select>${addBtn('addPool', '+ Tạo danh sách nhân viên chung (theo ca)')}</div></div>`;
 // bộ phận con nào có danh sách chung thì các vị trí của nó chọn người từ danh sách đó
 function applyPoolMode(card){
@@ -1333,19 +1354,23 @@ document.addEventListener('click', e => {
         box.insertAdjacentHTML('beforeend', tItem(g.items[+sel.value]));
       } else if (g){
         const have = new Set(kids(box, '[data-item]').map(it => val(it,'[data-label]').trim()));
-        g.items.filter(it => !have.has(it.label)).forEach(it => box.insertAdjacentHTML('beforeend', tItem(it)));
+        const pooled = new Set(g.pools.map(p => p.ten));
+        g.items.filter(it => !have.has(it.label) && !pooled.has(it.phan)).forEach(it => box.insertAdjacentHTML('beforeend', tItem(it)));
       }
       refreshBanPick(card);
     }
-    else if (a === 'pickPerson'){
-      const it = act.closest('[data-item]'), card = act.closest('[data-ban]');
-      const sel = it.querySelector('[data-ppick]'); if (sel.value === '') return;
+    else if (a === 'quickAdd'){
+      const bar = act.closest('[data-qbar]'), card = act.closest('[data-ban]');
+      const dv = bar.querySelector('[data-qdev]').value, pp = bar.querySelector('[data-qppl]').value;
+      if (dv === '' || pp === ''){ bar.querySelector(dv === '' ? '[data-qdev]' : '[data-qppl]').focus(); return; }
       const g = cat(cang).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
-      const pool = poolFor(g, it), p = pool && pool.nhanVien[+sel.value]; if (!p) return;
-      plOf(it).insertAdjacentHTML('beforeend', tP({ co: true, xung: p.xung, hoTen: p.hoTen, chucDanh: p.chucDanh }));
-      it.querySelector(':scope > details').open = true;
-      it.querySelector(':scope > details > summary').textContent = 'Danh sách người (' + persons(plOf(it)).length + ')';
-      refreshPersonPick(card, g);
+      const pool = g.pools.find(x => x.ten === bar.dataset.qpool);
+      const dev = g.items.filter(x => x.phan === pool.ten)[+dv], who = pool.nhanVien[+pp];
+      const box = card.querySelector(':scope > .items');
+      let it = kids(box, '[data-item]').find(x => (x.dataset.phan || '') === pool.ten && val(x,'[data-label]').trim() === dev.label);
+      if (!it){ box.insertAdjacentHTML('beforeend', tItem({ ...dev, nguoi: [] })); it = box.lastElementChild; }
+      plOf(it).insertAdjacentHTML('beforeend', tP({ co: true, xung: who.xung, hoTen: who.hoTen, chucDanh: '' }));
+      refreshBanPick(card);
     }
     else if (a === 'addSvc') act.closest('[data-tn]').querySelector(':scope > .svcs').insertAdjacentHTML('beforeend', `<div class="srow" data-svc><input type="text" data-t value=""><button class="del" data-del>✕</button></div>`);
     markDirty();
@@ -1370,6 +1395,8 @@ document.getElementById('formBox').addEventListener('change', e => {
   if (e.target.id === 'cang'){ changeCang(e.target.value); return; }
   if (e.target.id === 'addKind'){ refreshND(); return; }
   if (e.target.matches('[data-hoten]')) fillTitleFromRoster(e.target);
+  if (e.target.matches('[data-qdev]')){ refreshBanPick(e.target.closest('[data-ban]')); return; }
+  if (e.target.matches('[data-qppl]')) return;
   if (e.target.matches('[data-bten]')){ const card = e.target.closest('[data-ban]'); refreshBanPick(card); }
   markDirty();
 });
