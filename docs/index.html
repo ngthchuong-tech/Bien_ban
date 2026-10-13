@@ -58,6 +58,8 @@ textarea{min-height:70px;resize:vertical}
 .prow.nop{grid-template-columns:70px 1fr 34px}
 .ppick{display:grid;grid-template-columns:1fr auto;gap:6px;margin:4px 0 2px}
 .ppick[hidden]{display:none}
+.ppickrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin:4px 0 2px}
+.item.pooled .ppickrow{display:none}
 .item.byshift .only-fixed{display:none}
 .item .shiftnote{display:none;margin:2px 0}
 .item.byshift .shiftnote{display:block}
@@ -607,7 +609,7 @@ function tP(p){
   return `<div class="prow" data-p><label class="ck"><input type="checkbox" data-co ${p.co!==false?'checked':''}> có mặt</label><select data-xung>${['','Ông','Bà'].map(x => `<option ${x===(p.xung||'')?'selected':''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen)}" placeholder="Họ và tên"><input type="text" data-cd value="${esc(p.chucDanh)}" placeholder="Chức danh"><button class="del" data-del>✕</button></div>`;
 }
 function pplBox(arr){
-  return `<details class="pl-d"><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="addbar"><button class="btn small" data-act="addP">+ người</button></div></details>`;
+  return `<details class="pl-d"><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="ppickrow"><select data-pplpick></select><button class="btn small" data-act="pplAdd">+ Thêm</button><button class="btn small" data-act="addP">+ Khác</button></div></details>`;
 }
 const plOf = el => el ? el.querySelector(':scope > details > .pl') : null;
 function defaultSig(ten){ return ten === KSNB_NAME ? 'ĐẠI DIỆN BAN KIỂM SOÁT NỘI BỘ' : 'ĐẠI DIỆN ' + String(ten || '').toUpperCase(); }
@@ -739,6 +741,49 @@ function refreshBanPick(card){
   sortItemsDom(card.querySelector(':scope > .items'));
   refreshDock();
 }
+// danh sách người gợi ý cho từng nơi nhập người, lấy từ Danh mục
+function candidatesFor(host){
+  const cang = $('cang').value, c = cat(cang);
+  if (host.matches('[data-unit]')){
+    const u = allUnits(cang).find(x => x.ten === val(host, '[data-uten]').trim());
+    return { own: u ? u.nguoi : [], more: [] };
+  }
+  if (host.matches('[data-truc]')) return { own: c.truc, more: [] };
+  if (host.matches('[data-item]')){
+    const card = host.closest('[data-ban]');
+    const g = c.groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
+    if (!g) return { own: [], more: [] };
+    const ph = (host.dataset.phan || '').trim(), lb = val(host, '[data-label]').trim();
+    const own = g.items.filter(it => it.phan === ph && it.label === lb).flatMap(it => it.nguoi);
+    const more = g.items.flatMap(it => it.nguoi);
+    g.pools.forEach(pl => pl.nhanVien.forEach(x => more.push(x)));
+    return { own, more };
+  }
+  return { own: [], more: [] };
+}
+function refreshPeoplePicks(){
+  $('formBox').querySelectorAll('[data-unit],[data-item],[data-truc]').forEach(host => {
+    const sel = host.querySelector(':scope > details [data-pplpick]'); if (!sel) return;
+    const have = new Set(persons(plOf(host)).map(x => x.hoTen));
+    const { own, more } = candidatesFor(host);
+    const seen = new Set(have);
+    const opt = x => `<option data-x="${esc(x.xung || '')}" data-n="${esc(x.hoTen)}" data-c="${esc(x.chucDanh || '')}">${esc(x.hoTen)}</option>`;
+    const a = own.filter(x => x.hoTen && !seen.has(x.hoTen) && seen.add(x.hoTen));
+    const b = more.filter(x => x.hoTen && !seen.has(x.hoTen) && seen.add(x.hoTen));
+    sel.innerHTML = '<option value="">— chọn người trong danh mục —</option>' + a.map(opt).join('') +
+      (b.length ? `<optgroup label="Người khác trong ban">${b.map(opt).join('')}</optgroup>` : '');
+  });
+}
+// gợi ý tên khi gõ: gồm mọi người trong Danh mục của cảng đang chọn và danh bạ (bỏ các dòng là tên ban / đội)
+function refreshNameList(){
+  const names = new Set();
+  const cang = $('cang').value; if (cang && DM[cang]){
+    const c = cat(cang);
+    [...c.ks, ...c.truc, ...c.dv.flatMap(u => u.nguoi), ...c.groups.flatMap(g => [...g.items.flatMap(it => it.nguoi), ...g.pools.flatMap(pl => pl.nhanVien)])].forEach(x => x.hoTen && names.add(x.hoTen));
+  }
+  roster.forEach(r => { if (r.hoTen && !/^(Ban|Đội|Phòng|Bộ phận|Tổ|Cảng|Công ty)\s/i.test(r.hoTen)) names.add(r.hoTen); });
+  $('rosterNames').innerHTML = [...names].map(n => `<option value="${esc(n)}">`).join('');
+}
 const isCG = ph => /cơ giới/i.test(ph || '');
 // bộ phận cơ giới luôn nằm cuối trong ban (giữ nguyên thứ tự các mục còn lại)
 function sortItemsDom(box){
@@ -778,6 +823,7 @@ function refreshDock(){
     });
   });
   dock.innerHTML = html;
+  refreshPeoplePicks();
 }
 
 /* ---------------- xem trước khổ A4 ---------------- */
@@ -1286,7 +1332,7 @@ function readRosterTable(){
 function applyRoster(list){
   roster = list || [];
   try { localStorage.setItem(LS.roster, JSON.stringify(roster)); } catch(e){}
-  $('rosterNames').innerHTML = [...new Set(roster.map(r => r.hoTen))].map(n => `<option value="${esc(n)}">`).join('');
+  refreshNameList();
 }
 function parseRosterSheet(rowsArr){
   const norm = x => String(x == null ? '' : x).trim().toLowerCase();
@@ -1430,6 +1476,15 @@ document.addEventListener('click', e => {
       }
       refreshBanPick(card);
     }
+    else if (a === 'pplAdd'){
+      const host = act.closest('[data-unit],[data-item],[data-truc]');
+      const sel = host.querySelector(':scope > details [data-pplpick]'), o = sel.selectedOptions[0];
+      if (!o || !o.dataset.n){ sel.focus(); return; }
+      plOf(host).insertAdjacentHTML('beforeend', tP({ co: true, xung: o.dataset.x, hoTen: o.dataset.n, chucDanh: o.dataset.c }));
+      const d = host.querySelector(':scope > details'); d.open = true;
+      d.querySelector(':scope > summary').textContent = 'Danh sách người (' + persons(plOf(host)).length + ')';
+      refreshPeoplePicks();
+    }
     else if (a === 'quickAdd'){
       const bar = act.closest('[data-qbar]'), card = $('ndBox').querySelectorAll(':scope > [data-ban]')[+bar.dataset.qban];
       const dv = bar.querySelector('[data-qdev]').value, pp = bar.querySelector('[data-qppl]').value;
@@ -1458,6 +1513,7 @@ document.addEventListener('click', e => {
     return;
   }
 });
+document.addEventListener('focusin', e => { if (e.target.matches && e.target.matches('[data-hoten]')) refreshNameList(); });
 document.getElementById('formBox').addEventListener('input', e => {
   if (e.target.matches('[data-hoten]')) fillTitleFromRoster(e.target);
   if (e.target.id === 'bophan') $('bophan').dataset.manual = '1';
@@ -1468,6 +1524,8 @@ document.getElementById('formBox').addEventListener('change', e => {
   if (e.target.id === 'addKind'){ refreshND(); return; }
   if (e.target.matches('[data-hoten]')) fillTitleFromRoster(e.target);
   if (e.target.matches('[data-qdev]')){ refreshDock(); return; }
+  if (e.target.matches('[data-uten],[data-label],[data-bten]')) setTimeout(refreshPeoplePicks, 0);
+  if (e.target.matches('[data-pplpick]')) return;
   if (e.target.matches('[data-qppl]')) return;
   if (e.target.matches('[data-bten]')){ const card = e.target.closest('[data-ban]'); refreshBanPick(card); }
   markDirty();
