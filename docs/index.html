@@ -985,7 +985,10 @@ function html(d){
     });
   }
 
-  d.ban.filter(g => g.ten && g.items.some(it => it.label)).forEach(g => {
+  const banRank = t => { t = (t || '').toLowerCase();
+    return /khai thác|điều độ/.test(t) ? 1 : /kế toán|thương vụ/.test(t) ? 2 : /hành chính|bảo vệ/.test(t) ? 3 : 4; };
+  d.ban.map((g, i) => ({ g, i })).filter(x => x.g.ten && x.g.items.some(it => it.label))
+    .sort((a, b) => banRank(a.g.ten) - banRank(b.g.ten) || a.i - b.i).map(x => x.g).forEach(g => {
     const items = [...g.items.filter(it => it.label && !isCG(it.phan)), ...g.items.filter(it => it.label && isCG(it.phan))];
     p('b h2', danhSo ? head(g.ten) : `* ${esc(g.ten)}:`);
     const pres = it => named(it.nguoi).filter(x => x.co !== false);
