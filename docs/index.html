@@ -55,6 +55,15 @@ textarea{min-height:70px;resize:vertical}
 .brow input,.crow input[type=text],.srow input[type=text]{padding:6px 8px;font-size:15px}
 .brow{display:grid;grid-template-columns:1.1fr 1.2fr 1.2fr 1.2fr 34px;gap:6px}
 .addbar{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}
+.prow.nop{grid-template-columns:70px 1.3fr 1fr 34px}
+.ppick{display:grid;grid-template-columns:1fr auto;gap:6px;margin:4px 0 2px}
+.ppick[hidden]{display:none}
+.item.byshift .only-fixed{display:none}
+.item .shiftnote{display:none;margin:2px 0}
+.item.byshift .shiftnote{display:block}
+.poolbox{background:#f5f8fb;border:1px dashed #9bbfe0;border-radius:8px;padding:8px 10px;margin:6px 0 10px}
+.poolbox textarea{min-height:70px;margin:4px 0}
+.poolbox .bh input{font-weight:400}
 .pickbar{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;margin-top:8px}
 .del{background:none;border:1px solid var(--line);border-radius:6px;color:var(--err);width:32px;height:32px;cursor:pointer;font-size:14px;flex:none}
 .hint{font-size:13px;color:#666;margin:4px 0}
@@ -591,7 +600,7 @@ function tUnit(u){
   return `<div class="card-b" data-unit><div class="bh"><input type="text" data-uten value="${esc(u.ten)}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="sigrow"><span>Ghi khi ký:</span><input type="text" data-usig value="${esc(u.sig || defaultSig(u.ten))}"></div>${pplBox(u.nguoi||[])}</div>`;
 }
 function tItem(it){
-  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}</div>`;
+  return `<div class="item" data-item data-phan="${esc(it.phan||'')}"><div class="ih">${it.phan?`<span class="cap">${esc(it.phan)} ›</span>`:''}<input type="text" data-label value="${esc(it.label)}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note||'')}" placeholder="ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div>${pplBox(it.nguoi||[])}<div class="ppick" data-ppickbox hidden><select data-ppick></select><button class="btn small" data-act="pickPerson">+ thêm người</button></div></div>`;
 }
 function tBan(g){
   return `<div class="card-b" data-ban><div class="bh"><input type="text" data-bten value="${esc(g.ten)}" placeholder="Tên ban / bộ phận"><button class="del" data-del>✕</button></div>
@@ -702,6 +711,20 @@ function refreshBanPick(card){
   const have = new Set(kids(card.querySelector(':scope > .items'), '[data-item]').map(it => val(it,'[data-label]').trim()));
   const opts = g ? g.items.map((it,i) => have.has(it.label) ? '' : `<option value="${i}">${esc((it.phan ? it.phan + ' › ' : '') + it.label)}</option>`).join('') : '';
   card.querySelector('[data-pick]').innerHTML = '<option value="">— chọn vị trí trong danh mục —</option>' + opts;
+  refreshPersonPick(card, g);
+}
+// ban theo ca: mỗi vị trí/thiết bị có thêm ô chọn người từ danh sách chung của ban
+function poolFor(g, it){ const ph = (it.dataset.phan || '').trim(); return g ? g.pools.find(p => p.ten === ph) : null; }
+function refreshPersonPick(card, g){
+  kids(card.querySelector(':scope > .items'), '[data-item]').forEach(it => {
+    const box = it.querySelector(':scope > [data-ppickbox]'); if (!box) return;
+    const pool = poolFor(g, it);
+    box.hidden = !pool;
+    if (!pool) return;
+    const have = new Set(persons(plOf(it)).map(x => x.hoTen));
+    box.querySelector('[data-ppick]').innerHTML = '<option value="">— chọn người trong danh sách —</option>' +
+      pool.nhanVien.map((x, i) => have.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen + (x.chucDanh ? ' — ' + x.chucDanh : ''))}</option>`).join('');
+  });
 }
 
 /* ---------------- xem trước khổ A4 ---------------- */
@@ -958,7 +981,7 @@ function cat(cang){
     ks: pp(s.ksnb),
     dv: (s.donVi || []).map(u => ({ ten: u.ten, nguoi: pp(u.nguoi) })),
     berths: s.cauBen || [],
-    groups: (s.bans || []).map(g => ({ ten: g.ten, items: (g.items || []).map(it => ({ phan: it.phan || '', label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
+    groups: (s.bans || []).map(g => ({ ten: g.ten, pools: (g.pools || []).map(p => ({ ten: (p.ten || '').trim(), nhanVien: pp(p.nhanVien) })), items: (g.items || []).map(it => ({ phan: it.phan || '', label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
     thue: (s.thue || []).map(t => ({ congTy: t.congTy, intro: t.intro || '', note: t.note || '', dv: (t.dv || []).map(x => ({ t: x })) })),
     truc: pp(s.truc)
   };
@@ -981,8 +1004,25 @@ const hintP = t => `<p class="hint">${t}</p>`;
 const czRow = t => `<div class="crow" data-cz><input type="text" data-cztxt value="${esc(t)}"><button class="del" data-del>✕</button></div>`;
 const cbRow = b => `<div class="brow" data-cbrow><input type="text" data-cbten value="${esc(b.ten || '')}" placeholder="Cầu (vd: K1-K2)"><input type="text" data-cbpt value="${esc(b.phuongTien || '')}" placeholder="Phương tiện cập bến"><input type="text" data-cbtk value="${esc(b.thucHien || '')}" placeholder="Thực hiện làm hàng"><input type="text" data-cbtb value="${esc(b.thietBi || '')}" placeholder="Thiết bị làm hàng"><button class="del" data-del>✕</button></div>`;
 const svcRow = x => `<div class="srow" data-svc><input type="text" data-tv value="${esc(x)}"><button class="del" data-del>✕</button></div>`;
-const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`;
-const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div><details class="pl-d" ${(g.items || []).length ? '' : 'open'}><summary>Vị trí, thiết bị và nhân viên (${(g.items || []).length})</summary><div class="items">${(g.items || []).map(itemRow).join('')}</div>${addBtn('addItem', '+ vị trí / thiết bị')}</details></div>`;
+const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="shiftnote hint">Người ở vị trí này lấy từ danh sách nhân viên chung bên dưới. Khi lập biên bản, bạn chọn ai đang làm.</div><div class="only-fixed"><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div></div>`;
+const tPool = p => `<div class="prow nop" data-p><select data-xung>${['', 'Ông', 'Bà'].map(x => `<option ${x === (p.xung || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen || '')}" placeholder="Họ và tên"><input type="text" data-cd value="${esc(p.chucDanh || '')}" placeholder="Chức danh (vd: Lái cẩu)"><button class="del" data-del>✕</button></div>`;
+const poolCard = p => `<div class="poolbox" data-pool><div class="bh"><label class="lb" style="margin:0;white-space:nowrap">Danh sách chung của bộ phận:</label><input type="text" data-pten value="${esc(p.ten || '')}" placeholder="vd: Bộ phận cơ giới (để trống nếu các vị trí không thuộc bộ phận con)"><button class="del" data-del>✕</button></div>${hintP('Nhập mỗi người một lần. Các vị trí, thiết bị thuộc bộ phận này (ghi ở ô "Bộ phận con") sẽ chọn người từ đây khi lập biên bản.')}<div class="poolrows">${(p.nhanVien || []).map(tPool).join('')}</div><div class="addbar">${addBtn('addPoolP', '+ người')}</div><details class="pl-d"><summary>Dán nhiều tên cùng lúc</summary><textarea data-paste placeholder="Mỗi dòng một người, ví dụ:&#10;Trần Văn Hưng | Lái cẩu&#10;Nguyễn Quang Tứ | Lái cẩu"></textarea>${addBtn('pastePool', 'Thêm các tên đã dán')}</details></div>`;
+const banCard = g => `<div class="card-b" data-bancard><div class="bh"><input type="text" data-bten value="${esc(g.ten || '')}" placeholder="Tên ban / bộ phận (vd: Ban Khai thác điều độ)"><button class="del" data-del>✕</button></div><details class="pl-d" ${(g.items || []).length ? '' : 'open'}><summary>Vị trí, thiết bị (${(g.items || []).length})</summary><div class="items">${(g.items || []).map(itemRow).join('')}</div>${addBtn('addItem', '+ vị trí / thiết bị')}</details><div class="pools">${(g.pools || []).map(poolCard).join('')}</div><div class="addbar"><select data-newpool></select>${addBtn('addPool', '+ Tạo danh sách nhân viên chung (theo ca)')}</div></div>`;
+// bộ phận con nào có danh sách chung thì các vị trí của nó chọn người từ danh sách đó
+function applyPoolMode(card){
+  const names = new Set([...card.querySelectorAll('[data-pool] [data-pten]')].map(x => x.value.trim()));
+  const phans = [];
+  card.querySelectorAll('[data-item]').forEach(it => {
+    const ph = val(it, '[data-phan]').trim();
+    it.classList.toggle('byshift', names.has(ph));
+    if (!phans.includes(ph)) phans.push(ph);
+  });
+  const sel = card.querySelector('[data-newpool]'), keep = sel.value;
+  sel.innerHTML = '<option value="">— chọn bộ phận để tạo danh sách chung —</option>' +
+    phans.filter(ph => !names.has(ph)).map(ph => `<option value="p:${esc(ph)}">${esc(ph || '(các vị trí không thuộc bộ phận con)')}</option>`).join('') +
+    '<option value="n">Bộ phận khác (tự đặt tên)</option>';
+  if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
 const dvCard = u => `<div class="card-b" data-dvcard><div class="bh"><input type="text" data-dvten value="${esc(u.ten || '')}" placeholder="Tên đơn vị (vd: Cảng Gò Dầu)"><button class="del" data-del>✕</button></div><div class="pl">${(u.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`;
 const tcard = t => `<div class="card-b" data-tcard><div class="bh"><input type="text" data-congty value="${esc(t.congTy || '')}" placeholder="Tên công ty"><button class="del" data-del>✕</button></div><input type="text" data-intro value="${esc(t.intro || '')}" placeholder="Giới thiệu (tùy chọn, vd: cung cấp dịch vụ cho tàu...)" style="margin-bottom:5px"><input type="text" data-tnote value="${esc(t.note || '')}" placeholder="Ghi chú (vd: không bố trí thiết bị, dịch vụ làm hàng)" style="margin-bottom:6px"><div class="svcs">${(t.dv || []).map(svcRow).join('')}</div>${addBtn('addSvc', '+ thiết bị / dịch vụ')}</div>`;
 
@@ -1020,6 +1060,7 @@ function renderDM(){
   const P = $('dmPanel');
   if (DM_SEC === 'roster'){ P.innerHTML = ''; RH.hidden = false; P.appendChild(RH); renderRosterTable(roster); return; }
   P.innerHTML = SEC_HTML[DM_SEC](s);
+  if (DM_SEC === 'ban') P.querySelectorAll('[data-bancard]').forEach(applyPoolMode);
 }
 
 // đọc lại mục đang mở trên màn hình vào dữ liệu, rồi lưu tạm trên máy
@@ -1035,8 +1076,9 @@ function syncDM(){
   if (DM_SEC === 'ksnb') s.ksnb = pv(P);
   if (DM_SEC === 'donvi') s.donVi = [...P.querySelectorAll('[data-dvcard]')].map(c => ({ ten: g(c, '[data-dvten]'), nguoi: pv(c) }));
   if (DM_SEC === 'caubien') s.cauBen = [...P.querySelectorAll('[data-cbrow]')].map(r => ({ ten: g(r, '[data-cbten]'), phuongTien: g(r, '[data-cbpt]'), thucHien: g(r, '[data-cbtk]'), thietBi: g(r, '[data-cbtb]') }));
-  if (DM_SEC === 'ban') s.bans = [...P.querySelectorAll('[data-bancard]')].map(c => ({ ten: g(c, '[data-bten]'),
-    items: [...c.querySelectorAll('[data-item]')].map(it => ({ phan: g(it, '[data-phan]'), label: g(it, '[data-label]'), note: g(it, '[data-note]'), nguoi: pv(it) })) }));
+  if (DM_SEC === 'ban') s.bans = [...P.querySelectorAll('[data-bancard]')].map(c => ({ ten: g(c, '[data-bten]'), pools: [...c.querySelectorAll('[data-pool]')].map(pe => ({ ten: g(pe, '[data-pten]'), nhanVien: pv(pe) })),
+    items: [...c.querySelectorAll('[data-item]')].map(it => ({ phan: g(it, '[data-phan]'), label: g(it, '[data-label]'), note: g(it, '[data-note]'), nguoi: it.classList.contains('byshift') ? [] : pv(it) })) }));
+  if (DM_SEC === 'ban') P.querySelectorAll('[data-bancard]').forEach(applyPoolMode);
   if (DM_SEC === 'thue') s.thue = [...P.querySelectorAll('[data-tcard]')].map(c => ({ congTy: g(c, '[data-congty]'), intro: g(c, '[data-intro]'), note: g(c, '[data-tnote]'),
     dv: [...c.querySelectorAll('[data-tv]')].map(x => x.value.trim()).filter(Boolean) }));
   if (DM_SEC === 'truc') s.truc = pv(P);
@@ -1057,7 +1099,30 @@ function bindDM(){
     if (add){
       const a = add.dataset.dm;
       const into = (sel, h) => P.querySelector(sel).insertAdjacentHTML('beforeend', h);
-      if (a === 'addP') add.closest('[data-kcard],[data-dvcard],[data-item],[data-truccard]').querySelector(':scope > .pl').insertAdjacentHTML('beforeend', tP({ co: true, xung: 'Ông', hoTen: '', chucDanh: '' }));
+      if (a === 'addP') add.closest('[data-kcard],[data-dvcard],[data-item],[data-truccard]').querySelector('.pl').insertAdjacentHTML('beforeend', tP({ co: true, xung: 'Ông', hoTen: '', chucDanh: '' }));
+      else if (a === 'addPoolP') add.closest('[data-pool]').querySelector('.poolrows').insertAdjacentHTML('beforeend', tPool({ xung: 'Ông' }));
+      else if (a === 'pastePool'){
+        const box = add.closest('[data-pool]'), ta = box.querySelector('[data-paste]');
+        const list = lines(ta.value).map(parsePerson).filter(x => x.hoTen);
+        box.querySelector('.poolrows').insertAdjacentHTML('beforeend', list.map(x => tPool({ ...x, xung: x.xung || 'Ông' })).join(''));
+        ta.value = '';
+      }
+      else if (a === 'addPool'){
+        const card = add.closest('[data-bancard]'), v = card.querySelector('[data-newpool]').value;
+        if (v === ''){ say('dmMsg', 'Chọn bộ phận ở ô bên cạnh trước.', 'warn'); return; }
+        let ten = '', moved = [];
+        if (v !== 'n'){
+          ten = v.slice(2);
+          // gom người đang ghi ở từng vị trí của bộ phận này vào danh sách chung (bỏ trùng tên)
+          const seen = new Set();
+          card.querySelectorAll('[data-item]').forEach(it => {
+            if (val(it, '[data-phan]').trim() !== ten) return;
+            it.querySelectorAll('[data-p]').forEach(r => { const x = readP(r); if (x.hoTen && !seen.has(x.hoTen)){ seen.add(x.hoTen); moved.push(x); } });
+            const pl = it.querySelector('.pl'); if (pl) pl.innerHTML = '';
+          });
+        }
+        card.querySelector('.pools').insertAdjacentHTML('beforeend', poolCard({ ten, nhanVien: moved }));
+      }
       else if (a === 'addDv') into('[data-list]', dvCard({ ten: '', nguoi: [] }));
       else if (a === 'addBan') into('[data-list]', banCard({ ten: '', items: [] }));
       else if (a === 'addItem') add.closest('[data-bancard]').querySelector('.items').insertAdjacentHTML('beforeend', itemRow({}));
@@ -1070,9 +1135,9 @@ function bindDM(){
     }
     const del = e.target.closest('[data-del]');
     if (del){
-      const host = del.closest('[data-p],[data-item],[data-dvcard],[data-bancard],[data-cbrow],[data-tcard],[data-svc],[data-cz]');
+      const host = del.closest('[data-p],[data-item],[data-dvcard],[data-bancard],[data-pool],[data-cbrow],[data-tcard],[data-svc],[data-cz]');
       if (!host) return;
-      if (host.matches('[data-dvcard],[data-bancard],[data-tcard]') && !confirm('Xóa cả mục này và mọi thứ bên trong?')) return;
+      if (host.matches('[data-dvcard],[data-bancard],[data-tcard],[data-pool]') && !confirm('Xóa cả mục này và mọi thứ bên trong?')) return;
       host.remove(); syncDM();
     }
   });
@@ -1271,6 +1336,16 @@ document.addEventListener('click', e => {
         g.items.filter(it => !have.has(it.label)).forEach(it => box.insertAdjacentHTML('beforeend', tItem(it)));
       }
       refreshBanPick(card);
+    }
+    else if (a === 'pickPerson'){
+      const it = act.closest('[data-item]'), card = act.closest('[data-ban]');
+      const sel = it.querySelector('[data-ppick]'); if (sel.value === '') return;
+      const g = cat(cang).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
+      const pool = poolFor(g, it), p = pool && pool.nhanVien[+sel.value]; if (!p) return;
+      plOf(it).insertAdjacentHTML('beforeend', tP({ co: true, xung: p.xung, hoTen: p.hoTen, chucDanh: p.chucDanh }));
+      it.querySelector(':scope > details').open = true;
+      it.querySelector(':scope > details > summary').textContent = 'Danh sách người (' + persons(plOf(it)).length + ')';
+      refreshPersonPick(card, g);
     }
     else if (a === 'addSvc') act.closest('[data-tn]').querySelector(':scope > .svcs').insertAdjacentHTML('beforeend', `<div class="srow" data-svc><input type="text" data-t value=""><button class="del" data-del>✕</button></div>`);
     markDirty();
