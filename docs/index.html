@@ -825,13 +825,13 @@ function html(d){
     cb.forEach(b => {
       if (kieuCB === 'dong'){
         p('u', `Cầu bến ${esc(b.ten)}:`);
-        p('ind2', `- Tên phương tiện cập bến: ${esc(b.phuongTien)}`);
-        p('ind2', `- Thực hiện làm hàng: ${esc(b.thucHien)}`);
-        p('ind2', `- Thiết bị làm hàng: ${esc(b.thietBi)}`);
+        p('ind2', `- Tên phương tiện cập bến: ${esc(b.phuongTien || '……')}`);
+        p('ind2', `- Thực hiện làm hàng: ${esc(b.thucHien || '……')}`);
+        p('ind2', `- Thiết bị làm hàng: ${esc(b.thietBi || '……')}`);
       } else {
         const tk = b.thucHien && b.thucHien !== 'không' ? ' ' + esc(b.thucHien) : '';
         const tb = b.thietBi && b.thietBi !== 'không' ? ' Thiết bị làm hàng: ' + esc(b.thietBi) + '.' : '';
-        p('ind', `- Cầu bến ${esc(b.ten)} - ${esc(b.phuongTien)}${tk}.${tb}`);
+        p('ind', `- Cầu bến ${esc(b.ten)} - ${esc(b.phuongTien || '……')}${tk}.${tb}`);
       }
     });
   }
@@ -1036,7 +1036,7 @@ function cat(cang){
   return {
     ks: pp(s.ksnb),
     dv: (s.donVi || []).map(u => ({ ten: u.ten, nguoi: pp(u.nguoi) })),
-    berths: s.cauBen || [],
+    berths: (s.cauBen || []).map(b => ({ ten: b.ten, phuongTien: '', thucHien: '', thietBi: '' })),
     groups: (s.bans || []).map(g => ({ ten: g.ten, pools: (g.pools || []).map(p => ({ ten: (p.ten || '').trim(), nhanVien: pp(p.nhanVien) })), items: (g.items || []).map(it => ({ phan: String(it.phan || '').trim(), label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
     thue: (s.thue || []).map(t => ({ congTy: t.congTy, intro: t.intro || '', note: t.note || '', dv: (t.dv || []).map(x => ({ t: x })) })),
     truc: pp(s.truc)
@@ -1058,7 +1058,7 @@ const dmSel = (k, label, opts, v) => `<div><label class="lb">${label}</label><se
 const addBtn = (a, t) => `<button class="btn small" data-dm="${a}">${t}</button>`;
 const hintP = t => `<p class="hint">${t}</p>`;
 const czRow = t => `<div class="crow" data-cz><input type="text" data-cztxt value="${esc(t)}"><button class="del" data-del>✕</button></div>`;
-const cbRow = b => `<div class="brow" data-cbrow><input type="text" data-cbten value="${esc(b.ten || '')}" placeholder="Cầu (vd: K1-K2)"><input type="text" data-cbpt value="${esc(b.phuongTien || '')}" placeholder="Phương tiện cập bến"><input type="text" data-cbtk value="${esc(b.thucHien || '')}" placeholder="Thực hiện làm hàng"><input type="text" data-cbtb value="${esc(b.thietBi || '')}" placeholder="Thiết bị làm hàng"><button class="del" data-del>✕</button></div>`;
+const cbRow = b => `<div class="crow" data-cbrow><input type="text" data-cbten value="${esc(b.ten || '')}" placeholder="Tên cầu (vd: K1-K2)"><button class="del" data-del>✕</button></div>`;
 const svcRow = x => `<div class="srow" data-svc><input type="text" data-tv value="${esc(x)}"><button class="del" data-del>✕</button></div>`;
 const itemRow = it => `<div class="item" data-item><div class="ih3"><input type="text" data-phan value="${esc(it.phan || '')}" placeholder="Bộ phận con (nếu có)"><input type="text" data-label value="${esc(it.label || '')}" placeholder="Vị trí / thiết bị"><input type="text" data-note value="${esc(it.note || '')}" placeholder="Ghi chú (vd: không bố trí làm hàng)"><button class="del" data-del>✕</button></div><div class="shiftnote hint">Người ở vị trí này lấy từ danh sách nhân viên chung bên dưới. Khi lập biên bản, bạn chọn ai đang làm.</div><div class="only-fixed"><div class="pl">${(it.nguoi || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div></div>`;
 const tPool = p => `<div class="prow nop" data-p><select data-xung>${['', 'Ông', 'Bà'].map(x => `<option ${x === (p.xung || '') ? 'selected' : ''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen || '')}" placeholder="Họ và tên"><button class="del" data-del>✕</button></div>`;
@@ -1098,7 +1098,7 @@ const SEC_HTML = {
     <div class="card-b"><label class="lb" style="margin-top:0">Tình hình an ninh trật tự (mặc định)</label><textarea data-m="antt" style="min-height:60px">${esc(s.antt)}</textarea></div>`,
   ksnb: s => `<div class="card-b" data-kcard>${hintP('Người của Ban Kiểm soát nội bộ. Tự có sẵn trong mục Thành phần khi lập biên bản.')}<div class="pl">${(s.ksnb || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`,
   donvi: s => `${hintP('Các đơn vị cử người cùng đi kiểm tra (vd: Cảng, Phòng Kho vận). Khi lập biên bản, chọn đơn vị từ thanh chọn ở đầu form.')}<div data-list>${(s.donVi || []).map(dvCard).join('')}</div>${addBtn('addDv', '+ thêm đơn vị')}`,
-  caubien: s => `<div class="card-b">${hintP('Mỗi dòng một cầu bến. Khi lập biên bản, chọn cầu từ danh sách rồi chỉnh phương tiện, thiết bị nếu khác.')}<div data-list>${(s.cauBen || []).map(cbRow).join('')}</div>${addBtn('addCb', '+ thêm cầu bến')}</div>`,
+  caubien: s => `<div class="card-b">${hintP('Chỉ cần ghi tên các cầu. Phương tiện cập bến, việc đang làm, thiết bị làm hàng thì nhập khi lập biên bản, vì mỗi lần kiểm tra mỗi khác.')}<div data-list>${(s.cauBen || []).map(cbRow).join('')}</div>${addBtn('addCb', '+ thêm cầu bến')}</div>`,
   ban: s => `${hintP('Mỗi ban có các vị trí hoặc thiết bị. Mỗi vị trí ghi người đang làm. Chức danh riêng (vd: Lái cẩu) ghi ở cột chức danh của người đó.')}<div data-list>${(s.bans || []).map(banCard).join('')}</div>${addBtn('addBan', '+ thêm ban / bộ phận')}`,
   thue: s => `${hintP('Công ty cho thuê thiết bị, dịch vụ. Nếu công ty không bố trí gì thì ghi vào ô ghi chú.')}<div data-list>${(s.thue || []).map(tcard).join('')}</div>${addBtn('addTc', '+ thêm công ty')}`,
   truc: s => `<div class="card-b" data-truccard>${hintP('Người trực điều hành. Bỏ tick "có mặt" nếu người đó mặc định vắng.')}<div class="pl">${(s.truc || []).map(tP).join('')}</div>${addBtn('addP', '+ người')}</div>`
@@ -1131,7 +1131,7 @@ function syncDM(){
   }
   if (DM_SEC === 'ksnb') s.ksnb = pv(P);
   if (DM_SEC === 'donvi') s.donVi = [...P.querySelectorAll('[data-dvcard]')].map(c => ({ ten: g(c, '[data-dvten]'), nguoi: pv(c) }));
-  if (DM_SEC === 'caubien') s.cauBen = [...P.querySelectorAll('[data-cbrow]')].map(r => ({ ten: g(r, '[data-cbten]'), phuongTien: g(r, '[data-cbpt]'), thucHien: g(r, '[data-cbtk]'), thietBi: g(r, '[data-cbtb]') }));
+  if (DM_SEC === 'caubien') s.cauBen = [...P.querySelectorAll('[data-cbrow]')].map(r => ({ ten: g(r, '[data-cbten]') })).filter(x => x.ten);
   if (DM_SEC === 'ban') s.bans = [...P.querySelectorAll('[data-bancard]')].map(c => ({ ten: g(c, '[data-bten]'), pools: [...c.querySelectorAll('[data-pool]')].map(pe => ({ ten: g(pe, '[data-pten]'), nhanVien: pv(pe) })),
     items: [...c.querySelectorAll('[data-item]')].map(it => ({ phan: g(it, '[data-phan]'), label: g(it, '[data-label]'), note: g(it, '[data-note]'), nguoi: it.classList.contains('byshift') ? [] : pv(it) })) }));
   if (DM_SEC === 'ban') P.querySelectorAll('[data-bancard]').forEach(applyPoolMode);
@@ -1334,7 +1334,7 @@ function fillSettings(){
 
 /* ---------------- sự kiện ---------------- */
 const ND_NEW = {
-  berth: () => tB({ ten: '', phuongTien: 'không có phương tiện', thucHien: 'không', thietBi: 'không' }),
+  berth: () => tB({ ten: '', phuongTien: '', thucHien: '', thietBi: '' }),
   ban: () => tBan({ ten: '', lead: settingsOf($('cang').value).leadIn || DEFAULT_LEAD, items: [] }),
   thue: () => tT({ congTy: '', intro: '', note: '', dv: [] }),
   truc: () => tTruc({ ten: settingsOf($('cang').value).tenTruc || 'Trực điều hành', nguoi: [] })
