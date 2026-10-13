@@ -66,6 +66,7 @@ textarea{min-height:70px;resize:vertical}
 .poolbox .bh input{font-weight:400}
 .quick:empty{display:none}
 .qbar{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;margin:0 0 8px;padding:8px;background:#eef5fc;border:1px solid #bcd6ee;border-radius:8px}
+.qbar.qwarn{grid-template-columns:auto 1fr;background:#fff7e6;border-color:#f0d9a8}
 .qbar .qcap{font-weight:700;font-size:14px;color:var(--blue2)}
 .item.pooled .prow{grid-template-columns:auto 1fr 34px}
 .item.pooled .prow select,.item.pooled .prow [data-cd]{display:none}
@@ -721,7 +722,13 @@ function refreshBanPick(card){
   card.querySelector('[data-pick]').innerHTML = '<option value="">— chọn vị trí trong danh mục —</option>' + opts;
   const pb = card.querySelector('.pickbar');
   ['[data-pick]', '[data-act="pickItem"]', '[data-act="pickAll"]'].forEach(sel => { pb.querySelector(sel).hidden = !opts; });
+  sortItemsDom(card.querySelector(':scope > .items'));
   refreshQuick(card, g);
+}
+const isCG = ph => /cơ giới/i.test(ph || '');
+// bộ phận cơ giới luôn nằm cuối trong ban (giữ nguyên thứ tự các mục còn lại)
+function sortItemsDom(box){
+  kids(box, '[data-item]').filter(it => isCG(it.dataset.phan)).forEach(it => box.appendChild(it));
 }
 function poolFor(g, it){ const ph = (it.dataset.phan || '').trim(); return g ? g.pools.find(p => p.ten === ph) : null; }
 // ban có danh sách chung theo ca: một thanh duy nhất "chọn thiết bị > chọn người > Thêm"
@@ -736,7 +743,9 @@ function refreshQuick(card, g){
   });
   box.innerHTML = (g ? g.pools : []).map(pool => {
     const devs = g.items.filter(it => it.phan === pool.ten);
-    if (!devs.length || !pool.nhanVien.length) return '';
+    const cap = esc(pool.ten || 'Vị trí');
+    if (!devs.length) return `<div class="qbar qwarn"><span class="qcap">${cap}</span><span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con" của các thiết bị.</span></div>`;
+    if (!pool.nhanVien.length) return `<div class="qbar qwarn"><span class="qcap">${cap}</span><span class="hint">Danh sách nhân viên chung của bộ phận này đang trống. Vào tab Danh mục, mục 5, nhập tên nhân viên rồi quay lại.</span></div>`;
     let dv = prev[pool.ten];
     if (dv === undefined || dv === '' || !devs[+dv]) dv = '';
     const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
@@ -821,7 +830,7 @@ function html(d){
   }
 
   d.ban.filter(g => g.ten && g.items.some(it => it.label)).forEach(g => {
-    const items = g.items.filter(it => it.label);
+    const items = [...g.items.filter(it => it.label && !isCG(it.phan)), ...g.items.filter(it => it.label && isCG(it.phan))];
     p('b', danhSo ? head(g.ten) : `* ${esc(g.ten)}:`);
     const pres = it => named(it.nguoi).filter(x => x.co !== false);
     const absent = it => named(it.nguoi).filter(x => x.co === false);
@@ -1002,7 +1011,7 @@ function cat(cang){
     ks: pp(s.ksnb),
     dv: (s.donVi || []).map(u => ({ ten: u.ten, nguoi: pp(u.nguoi) })),
     berths: s.cauBen || [],
-    groups: (s.bans || []).map(g => ({ ten: g.ten, pools: (g.pools || []).map(p => ({ ten: (p.ten || '').trim(), nhanVien: pp(p.nhanVien) })), items: (g.items || []).map(it => ({ phan: it.phan || '', label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
+    groups: (s.bans || []).map(g => ({ ten: g.ten, pools: (g.pools || []).map(p => ({ ten: (p.ten || '').trim(), nhanVien: pp(p.nhanVien) })), items: (g.items || []).map(it => ({ phan: String(it.phan || '').trim(), label: it.label, note: it.note || '', nguoi: pp(it.nguoi) })) })),
     thue: (s.thue || []).map(t => ({ congTy: t.congTy, intro: t.intro || '', note: t.note || '', dv: (t.dv || []).map(x => ({ t: x })) })),
     truc: pp(s.truc)
   };
@@ -1370,6 +1379,7 @@ document.addEventListener('click', e => {
       let it = kids(box, '[data-item]').find(x => (x.dataset.phan || '') === pool.ten && val(x,'[data-label]').trim() === dev.label);
       if (!it){ box.insertAdjacentHTML('beforeend', tItem({ ...dev, nguoi: [] })); it = box.lastElementChild; }
       plOf(it).insertAdjacentHTML('beforeend', tP({ co: true, xung: who.xung, hoTen: who.hoTen, chucDanh: '' }));
+      const nt = it.querySelector('[data-note]'); if (nt) nt.value = '';   // đã có người làm thì bỏ ghi chú "không bố trí"
       refreshBanPick(card);
     }
     else if (a === 'addSvc') act.closest('[data-tn]').querySelector(':scope > .svcs').insertAdjacentHTML('beforeend', `<div class="srow" data-svc><input type="text" data-t value=""><button class="del" data-del>✕</button></div>`);
