@@ -190,9 +190,9 @@ th{background:#f5f8fb;font-size:14px}
       <div><label class="lb">Địa điểm</label><input type="text" id="diaDiem" value="Đồng Nai"></div>
       <div><label class="lb">Ngày lập</label><input type="date" id="ngayLap"></div>
     </div>
-    <label class="lb">Căn cứ (bỏ tick nếu không dùng)</label>
+    <label class="lb">Căn cứ (chọn trong danh mục)</label>
     <div id="canCuBox"></div>
-    <div class="addbar"><button class="btn small" data-act="addCC">+ căn cứ khác</button></div>
+    <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="ccPick"></select><button class="btn small" data-act="pickCC">+ Thêm</button><button class="btn small" data-act="addCC">+ Khác</button></div>
     <label class="lb">Căn cứ thêm cho biên bản này (mỗi dòng một căn cứ)</label>
     <textarea id="canCuThem" style="min-height:50px"></textarea>
 
@@ -213,6 +213,7 @@ th{background:#f5f8fb;font-size:14px}
 
     <div class="sec">III. Tình hình an ninh trật tự</div>
     <textarea id="antt"></textarea>
+    <div class="addbar"><button class="btn small" data-act="anttMau">+ Dùng câu mặc định của cảng</button></div>
 
     <div class="sec">IV. Kết luận (mỗi ý một dòng, máy tự đánh số)</div>
     <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
@@ -585,11 +586,11 @@ function buildNew(cang){
   return {
     v: VERSION, cang,
     tieuDe: 'BIÊN BẢN KIỂM TRA', phuDe: s.phuDe || '', diaDiem: 'Đồng Nai', ngayLap: todayIso(), trangThai: 'nháp',
-    canCu: (s.canCu || []).map(t => ({ inc: true, t })), canCuThem: '',
-    thanhPhan: [{ ten: KSNB_NAME, nguoi: c.ks }],
+    canCu: [], canCuThem: '',
+    thanhPhan: [],
     phamVi: { bophan: '', manual: false, catruc: '', tuNgay: '', tuGio: '', denNgay: '', denGio: '' },
     cauBen: [], ban: [], thue: [], truc: null,
-    antt: s.antt || '', ketLuan: '', ktGio: '', ktNgay: '',
+    antt: '', ketLuan: '', ktGio: '', ktNgay: '',
     sig: sigOf(s)
   };
 }
@@ -649,7 +650,7 @@ function renderForm(d){
   $('antt').value = d.antt || '';
   $('ketLuan').value = d.ketLuan || '';
   $('ktGio').value = d.ktGio || ''; $('ktNgay').value = d.ktNgay || '';
-  refreshTP(); refreshND();
+  refreshTP(); refreshND(); refreshCC();
   document.querySelectorAll('[data-ban]').forEach(refreshBanPick);
   render();
 }
@@ -706,6 +707,12 @@ function refreshND(){
   if (kind === 'truc') opts = present.has('__truc') ? '' : `<option value="0">${esc(settingsOf($('cang').value).tenTruc || 'Trực điều hành')}</option>`;
   const khac = kind === 'truc' ? '' : '<option value="-1">+ Mục khác (tự nhập)</option>';
   $('addND').innerHTML = '<option value="">— chọn trong danh mục —</option>' + opts + khac;
+}
+function refreshCC(){
+  const have = new Set(kids($('canCuBox'), '[data-cc]').map(el => val(el, '[data-t]').trim()));
+  const list = settingsOf($('cang').value).canCu || [];
+  $('ccPick').innerHTML = '<option value="">— chọn căn cứ trong danh mục —</option>' +
+    list.map((t, i) => have.has(t) ? '' : `<option value="${i}">${esc(t)}</option>`).join('');
 }
 function refreshTP(){
   const present = new Set([...$('tpBox').querySelectorAll('[data-uten]')].map(e => e.value.trim()));
@@ -880,7 +887,7 @@ function html(d){
   }
 
   roman('III', 'TÌNH HÌNH AN NINH TRẬT TỰ');
-  p('', esc(d.antt.trim() || 'Tình hình an ninh trật tự ổn định, không ghi nhận vụ việc bất thường.'));
+  p('', esc(d.antt.trim() || '……'));
 
   if (danhSo) p('b', 'IV. KẾT LUẬN'); else p('u', 'Kết luận:');
   const kl = lines(d.ketLuan);
@@ -984,10 +991,27 @@ let DM_CUR = null;
 const RH = document.getElementById('rosterHolder');
 
 // đổi dữ liệu kiểu cũ (văn bản) sang kiểu mới (danh sách có cấu trúc)
+// Lần đầu (ban chưa có mục "pools"): tự gom người của bộ phận cơ giới và ban bảo vệ thành danh sách chung
+function autoPools(bans){
+  (bans || []).forEach(g => {
+    if (g.pools !== undefined) return;
+    g.pools = [];
+    const isBV = /bảo vệ/i.test(g.ten || '');
+    const byPhan = new Map();
+    (g.items || []).forEach(it => {
+      const ph = String(it.phan || '').trim();
+      if (!(/cơ giới/i.test(ph) || (isBV && ph === ''))) return;
+      if (!byPhan.has(ph)) byPhan.set(ph, []);
+      (it.nguoi || []).forEach(x => { if (x.hoTen && !byPhan.get(ph).some(y => y.hoTen === x.hoTen)) byPhan.get(ph).push({ xung: x.xung || '', hoTen: x.hoTen, chucDanh: '' }); });
+      it.nguoi = [];
+    });
+    byPhan.forEach((list, ph) => g.pools.push({ ten: ph, nhanVien: list }));
+  });
+}
 function normalize(o){
   o = o || {};
-  if (o.schema === 2) return o;
-  return {
+  if (o.schema === 2){ autoPools(o.bans); return o; }
+  const out = {
     schema: 2,
     phuDe: o.phuDe || '', tenTruc: o.tenTruc || 'Trực điều hành', tenThue: o.tenThue || 'Đơn vị thuê ngoài',
     leadIn: o.leadIn || DEFAULT_LEAD, kieuChucVu: o.kieuChucVu || 'gach', kieuCauBen: o.kieuCauBen || 'mot',
@@ -1001,6 +1025,8 @@ function normalize(o){
     thue: parseThue(o.thueNgoai || '').map(t => ({ congTy: t.congTy, intro: t.intro, note: t.note, dv: t.dv.map(x => x.t) })),
     truc: parseTruc(o.truc || '')
   };
+  autoPools(out.bans);
+  return out;
 }
 function DMof(c){ DM[c] = normalize(DM[c] || SEED[c] || {}); return DM[c]; }
 function settingsOf(c){ return DMof(c); }
@@ -1313,7 +1339,7 @@ const ND_NEW = {
   thue: () => tT({ congTy: '', intro: '', note: '', dv: [] }),
   truc: () => tTruc({ ten: settingsOf($('cang').value).tenTruc || 'Trực điều hành', nguoi: [] })
 };
-function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshND(); refreshTP(); markDirty(); }
+function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshND(); refreshTP(); refreshCC(); markDirty(); }
 
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
@@ -1328,6 +1354,12 @@ document.addEventListener('click', e => {
   if (act){
     const a = act.dataset.act, cang = $('cang').value;
     if (a === 'addCC') $('canCuBox').insertAdjacentHTML('beforeend', tCC({ inc: true, t: '' }));
+    else if (a === 'pickCC'){
+      const v = $('ccPick').value; if (v === '') return;
+      $('canCuBox').insertAdjacentHTML('beforeend', tCC({ inc: true, t: settingsOf(cang).canCu[+v] }));
+      refreshCC();
+    }
+    else if (a === 'anttMau') $('antt').value = settingsOf(cang).antt || '';
     else if (a === 'addP'){
       const host = act.closest('[data-unit],[data-item],[data-truc]');
       plOf(host).insertAdjacentHTML('beforeend', tP({ co: true, hoTen: '', chucDanh: '', xung: 'Ông' }));
