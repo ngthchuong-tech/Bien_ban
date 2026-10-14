@@ -1108,7 +1108,8 @@ function html(d){
   d.ban.map((g, i) => ({ g, i })).filter(x => x.g.ten && x.g.items.some(it => it.label))
     .sort((a, b) => banRank(a.g.ten) - banRank(b.g.ten) || a.i - b.i).map(x => x.g).forEach(g => {
     const ix = itemIdx(d.cang, g.ten);
-    const items = g.items.map((it, i) => ({ it, i })).filter(x => x.it.label).sort((a, b) => ((isCG(a.it.phan) ? 100000 : 0) + ix(a.it.phan, a.it.label)) - ((isCG(b.it.phan) ? 100000 : 0) + ix(b.it.phan, b.it.label)) || a.i - b.i).map(x => x.it);
+    const items = g.items.map((it, i) => ({ it, i })).filter(x => x.it.label).sort((a, b) => ((isCG(a.it.phan) ? 100000 : 0) + ix(a.it.phan, a.it.label)) - ((isCG(b.it.phan) ? 100000 : 0) + ix(b.it.phan, b.it.label)) || a.i - b.i).map(x => x.it)
+      .map(it => (it.phan || '').trim() && it.label.trim().toLowerCase() === it.phan.trim().toLowerCase() ? { ...it, label: 'Nhân viên trực' } : it);   // vị trí trùng tên bộ phận (vd. Trạm cân) ghi là "Nhân viên trực"
     p('b h2', danhSo ? head(g.ten) : `* ${esc(g.ten)}:`);
     const pres = it => named(it.nguoi).filter(x => x.co !== false);
     const absent = it => named(it.nguoi).filter(x => x.co === false);
