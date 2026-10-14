@@ -495,7 +495,7 @@ const KL_MAU = [
 const SEED = {
   'Long Bình Tân': {
     phuDe: 'Về việc tuân thủ thời gian làm việc, nội quy lao động tại Cảng Long Bình Tân',
-    tenTruc: 'Trực điều hành sản xuất',
+    tenTruc: 'Công tác trực điều hành sản xuất',
     tenThue: 'Thiết bị thuê ngoài',
     kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong',
     leadIn: DEFAULT_LEAD,
@@ -852,6 +852,7 @@ function refreshND(){
   if (kind === 'ban') opts = c.groups.map((g,i) => present.has(g.ten) ? '' : `<option value="${i}">${esc(g.ten)}</option>`).join('');
   if (kind === 'thue') opts = c.thue.map((t,i) => present.has(t.congTy) ? '' : `<option value="${i}">${esc(t.congTy)}</option>`).join('');
   if (kind === 'truc') opts = present.has('__truc') ? '' : `<option value="0">${esc(settingsOf($('cang').value).tenTruc || 'Trực điều hành')}</option>`;
+  if (kind === 'ban' && !$('ndBox').querySelector('[data-truc]')) opts += `<option value="truc">${esc(settingsOf($('cang').value).tenTruc || 'Công tác trực điều hành sản xuất')}</option>`;
   const khac = kind === 'truc' ? '' : '<option value="-1">+ Mục khác (tự nhập)</option>';
   $('addND').innerHTML = '<option value="">— chọn trong danh mục —</option>' + opts + khac;
 }
@@ -1148,12 +1149,12 @@ function html(d){
   if (trN.length){
     const tt = d.truc.ten || st.tenTruc || 'Trực điều hành';
     if (kieuTr === 'vang'){
-      trN.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
+      trN.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
     } else {
       p('b h2', danhSo ? head(tt) : `* ${esc(tt)}:`);
       trN.forEach(x => {
         const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
-        p('ind', `- ${who}${x.co === false ? ' – không có mặt tại Cảng' : ' – đang có mặt tại Cảng'}`);
+        p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'không có mặt' : 'có mặt'} tại cảng tại thời điểm kiểm tra.`);
       });
     }
   }
@@ -1703,7 +1704,8 @@ document.addEventListener('click', e => {
       const c = cat(cang);
       let html;
       if (kind === 'berth') html = v === '-1' ? ND_NEW.berth() : tB(c.berths[+v]);
-      if (kind === 'ban') html = v === '-1' ? ND_NEW.ban() : tBan({ ten: c.groups[+v].ten, lead: settingsOf(cang).leadIn || DEFAULT_LEAD, items: [] });
+      if (kind === 'ban' && v === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Công tác trực điều hành sản xuất', nguoi: c.truc });
+      else if (kind === 'ban') html = v === '-1' ? ND_NEW.ban() : tBan({ ten: c.groups[+v].ten, lead: settingsOf(cang).leadIn || DEFAULT_LEAD, items: [] });
       if (kind === 'thue') html = v === '-1' ? ND_NEW.thue() : tT(c.thue[+v]);
       if (kind === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Trực điều hành', nguoi: c.truc });
       $('ndBox').insertAdjacentHTML('beforeend', html);
