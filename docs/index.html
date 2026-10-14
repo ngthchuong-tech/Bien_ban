@@ -142,6 +142,7 @@ textarea{min-height:70px;resize:vertical}
 #paper .hdr .l{width:210pt;flex:none;text-align:center}
 #paper .hdr .r{width:265pt;flex:none;text-align:center}
 #paper .title{text-align:center;margin:14pt 0 10pt}
+#paper .title p{text-align:center}
 #paper .sig{width:100%;border-collapse:collapse;margin-top:14pt;break-inside:avoid}
 #paper .sig td{width:50%;text-align:center;vertical-align:top;font-weight:700;padding:2pt}
 #paper .sig .space{height:70pt}
@@ -2017,7 +2018,7 @@ $('btnWipe').onclick = () => {
 /* ---- khổ giấy: thu phóng bản xem trước cho vừa khung; khi in bọc bảng để lề trên/dưới lặp ở mọi trang ---- */
 function fitPaper(){
   const pv = document.querySelector('.preview'); if (!pv || !pv.clientWidth) return;
-  const z = Math.max(0.3, Math.min(1.3, (pv.clientWidth - 30) / (210 * 96 / 25.4)));
+  const z = Math.max(0.3, Math.min(0.8, (pv.clientWidth - 30) / (210 * 96 / 25.4)));
   $('paper').style.setProperty('--pz', z.toFixed(3));
 }
 window.addEventListener('resize', fitPaper);
