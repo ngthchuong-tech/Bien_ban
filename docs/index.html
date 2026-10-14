@@ -247,6 +247,44 @@ tbody tr:hover{background:#e3effb}
 .working .prow:has([data-co]:checked){background:#fffbe6}
 .working-in{border-color:#F59E0B!important;box-shadow:0 0 0 2px rgba(245,158,11,.5)!important;position:relative}
 .working-in>.bh{background:#ffe9a8;border-radius:6px}
+/* ===== hướng dẫn từng bước ===== */
+.steps{position:sticky;top:-14px;z-index:8;display:flex;gap:4px;margin:-14px -16px 12px;padding:8px 10px;background:#143c5f;overflow-x:auto;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+.steps button{flex:1 0 auto;display:flex;align-items:center;gap:6px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:5px 9px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.steps button i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.25);font-size:12px;font-weight:800}
+.steps button.done i{background:#43A047}
+.steps button.on{background:#FF8A3D;border-color:#fff;box-shadow:0 0 0 2px #fff}
+.steps button.on i{background:#fff;color:#FF8A3D}
+.steps .stepall{flex:0 0 auto;background:transparent;border-style:dashed;font-weight:500}
+.step{display:none}
+.step.on,.form.allmode .step{display:block}
+.form.allmode .step{margin-bottom:10px}
+.stephead{background:#fff4e0;border:2px solid #FF8A3D;border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.stephead>b{display:block;font-size:17px;color:#B45309;margin-bottom:4px}
+.stephead p{margin:3px 0;font-size:15px;line-height:1.5;color:#333}
+.stephead ol{margin:4px 0 0;padding-left:20px;font-size:15px;line-height:1.55}
+.stepnav{display:flex;gap:8px;justify-content:space-between;margin:18px 0 6px;padding-top:12px;border-top:2px dashed #b9d0e8}
+.stepnav .btn{min-height:44px;font-size:16px}
+.stepnav .btn.next{background:#FF8A3D;color:#fff;margin-left:auto;box-shadow:0 2px 6px rgba(180,83,9,.35)}
+.stepnav .btn.back{background:#e4eefa;color:var(--blue)}
+.form.allmode .stephead,.form.allmode .stepnav{display:none}
+.form:not(.allmode) .step>.sec{display:none}
+.form:not(.allmode)[data-cur="1"] .dock,.form:not(.allmode)[data-cur="2"] .dock,.form:not(.allmode)[data-cur="3"] .dock,.form:not(.allmode)[data-cur="5"] .dock,.form:not(.allmode)[data-cur="6"] .dock,.form:not(.allmode)[data-cur="7"] .dock{display:none}
+.toolbar{top:28px}
+.finish{margin-top:14px}
+.finish .chk{background:#f5f8fb;border:1.5px solid #b9d0e8;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:15px;line-height:1.7}
+.finish .chk .ok{color:var(--ok);font-weight:700}
+.finish .chk .miss{color:var(--err);font-weight:700}
+.finish .chk a{color:var(--blue2);cursor:pointer;text-decoration:underline;margin-left:6px}
+.bigbtns{display:grid;gap:8px}
+.bigbtns .btn{min-height:50px;font-size:17px;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#helpModal{position:fixed;inset:0;background:rgba(10,30,50,.65);z-index:50;display:none;align-items:center;justify-content:center;padding:16px}
+#helpModal.on{display:flex}
+#helpModal .box{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px;border-top:8px solid #FF8A3D}
+#helpModal h2{margin:0 0 8px;color:var(--blue);font-size:20px}
+#helpModal ol{padding-left:22px;line-height:1.7;font-size:16px}
+#helpModal li b{color:#B45309}
+#helpModal .tip{background:#eaf3fc;border-left:4px solid var(--blue2);padding:8px 10px;border-radius:6px;margin:10px 0;font-size:15px}
+.intro{background:#eaf3fc;border-left:5px solid var(--blue2);border-radius:6px;padding:9px 12px;margin:0 0 12px;font-size:15px;line-height:1.55;color:#234}
 @media print{
   html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -271,10 +309,11 @@ tbody tr:hover{background:#e3effb}
 
 <div class="top no-print">
   <h1>Lập biên bản KSNB</h1>
-  <button class="btn on" data-go="editor">✎ Biên bản</button>
-  <button class="btn" data-go="list">📂 Danh sách</button>
-  <button class="btn" data-go="danhmuc">🗂 Danh mục</button>
-  <button class="btn" data-go="settings">⚙ Kết nối</button>
+  <button class="btn on" data-go="editor" title="Lập biên bản mới hoặc sửa biên bản đang mở">✎ Lập biên bản</button>
+  <button class="btn" data-go="list" title="Các biên bản đã lưu lên máy chủ">📂 Biên bản đã lưu</button>
+  <button class="btn" data-go="danhmuc" title="Dữ liệu mẫu để chọn nhanh: người, vị trí, thiết bị, câu mẫu">🗂 Danh mục</button>
+  <button class="btn" data-go="settings" title="Địa chỉ máy chủ, mã PIN, logo">⚙ Kết nối</button>
+  <button class="btn" id="btnHelp" title="Xem hướng dẫn">❓ Hướng dẫn</button>
   <span class="grow"></span>
   <span class="status" id="status"></span>
   <button class="btn" id="btnNew">Biên bản mới</button>
@@ -285,66 +324,92 @@ tbody tr:hover{background:#e3effb}
 
 <!-- ============ BIÊN BẢN ============ -->
 <div class="view on" id="editor">
-  <div class="form no-print" id="formBox">
-    <div class="toolbar">
-      <div class="tb-row t1"><span class="tb-lbl">Thành phần</span><select id="addTP"></select><button class="btn small" data-act="pickUnit">+ Thêm</button><button class="btn small" data-act="blankUnit">+ Khác</button></div>
-      <div class="tb-row t2"><span class="tb-lbl">Nội dung</span><select id="addKind">
-          <option value="berth">Cầu bến</option>
-          <option value="ban">Ban / bộ phận làm việc</option>
-          <option value="thue">Đơn vị thuê ngoài</option>
-          <option value="truc">Trực điều hành</option></select><select id="addND"></select><button class="btn small" data-act="pickND">+ Thêm</button></div>
+  <div class="form no-print" id="formBox" data-cur="1">
+    <div class="steps" id="stepBar"></div>
+
+    <!-- BƯỚC 1 -->
+    <div class="step on" data-step="1">
+      <div class="grid2">
+        <div><label class="lb">Cảng cần kiểm tra</label><select id="cang"></select></div>
+        <div><label class="lb">Trạng thái</label>
+          <select id="trangThai"><option value="nháp">Nháp</option><option value="đã ký">Đã ký</option></select></div>
+      </div>
+      <div class="sec">Thông tin chung</div>
+      <label class="lb">Tiêu đề</label>
+      <input type="text" id="tieuDe" value="BIÊN BẢN KIỂM TRA">
+      <label class="lb">Phụ đề trong ngoặc</label>
+      <input type="text" id="phuDe">
+      <div class="grid2">
+        <div><label class="lb">Địa điểm</label><input type="text" id="diaDiem" value="Đồng Nai"></div>
+        <div><label class="lb">Ngày lập</label><input type="date" id="ngayLap"></div>
+      </div>
+      <label class="lb">Căn cứ (chọn trong danh mục)</label>
+      <div id="canCuBox"></div>
+      <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="ccPick"></select><button class="btn small" data-act="pickCC">+ Thêm</button><button class="btn small" data-act="addCC">+ Khác</button></div>
+      <label class="lb">Căn cứ thêm cho biên bản này (mỗi dòng một căn cứ)</label>
+      <textarea id="canCuThem" style="min-height:50px"></textarea>
     </div>
 
-
-    <div class="grid2">
-      <div><label class="lb">Cảng</label><select id="cang"></select></div>
-      <div><label class="lb">Trạng thái</label>
-        <select id="trangThai"><option value="nháp">Nháp</option><option value="đã ký">Đã ký</option></select></div>
+    <!-- BƯỚC 2 -->
+    <div class="step" data-step="2">
+      <div class="toolbar">
+        <div class="tb-row t1"><span class="tb-lbl">Thêm người</span><select id="addTP"></select><button class="btn small" data-act="pickUnit">+ Thêm</button><button class="btn small" data-act="blankUnit">+ Khác</button></div>
+      </div>
+      <div class="sec">I. Thành phần</div>
+      <div id="tpBox"></div>
     </div>
 
-    <div class="sec">Thông tin chung</div>
-    <label class="lb">Tiêu đề</label>
-    <input type="text" id="tieuDe" value="BIÊN BẢN KIỂM TRA">
-    <label class="lb">Phụ đề trong ngoặc</label>
-    <input type="text" id="phuDe">
-    <div class="grid2">
-      <div><label class="lb">Địa điểm</label><input type="text" id="diaDiem" value="Đồng Nai"></div>
-      <div><label class="lb">Ngày lập</label><input type="date" id="ngayLap"></div>
-    </div>
-    <label class="lb">Căn cứ (chọn trong danh mục)</label>
-    <div id="canCuBox"></div>
-    <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="ccPick"></select><button class="btn small" data-act="pickCC">+ Thêm</button><button class="btn small" data-act="addCC">+ Khác</button></div>
-    <label class="lb">Căn cứ thêm cho biên bản này (mỗi dòng một căn cứ)</label>
-    <textarea id="canCuThem" style="min-height:50px"></textarea>
-
-    <div class="sec">I. Thành phần</div>
-    <div id="tpBox"></div>
-    <div class="sec">II. Nội dung kiểm tra</div>
-    <label class="lb">Các bộ phận được kiểm tra (tự lấy từ các ban đã thêm bên dưới)</label>
-    <input type="text" id="bophan">
-    <div class="grid3">
-      <div><label class="lb">Ca trực</label><input type="text" id="catruc" placeholder="vd: 2"></div>
-      <div><label class="lb">Từ ngày</label><input type="date" id="tuNgay"></div>
-      <div><label class="lb">Từ giờ</label><input type="text" id="tuGio" placeholder="vd: 20h00"></div>
-      <div><label class="lb">Đến ngày</label><input type="date" id="denNgay"></div>
-      <div><label class="lb">Đến giờ</label><input type="text" id="denGio" placeholder="vd: 0h00"></div>
+    <!-- BƯỚC 3 -->
+    <div class="step" data-step="3">
+      <div class="sec">II. Nội dung kiểm tra: thời gian</div>
+      <label class="lb">Các bộ phận được kiểm tra (tự điền theo bước 4, có thể sửa tay)</label>
+      <input type="text" id="bophan">
+      <div class="grid3">
+        <div><label class="lb">Ca trực</label><input type="text" id="catruc" placeholder="vd: 2"></div>
+        <div><label class="lb">Từ ngày</label><input type="date" id="tuNgay"></div>
+        <div><label class="lb">Từ giờ</label><input type="text" id="tuGio" placeholder="vd: 20h00"></div>
+        <div><label class="lb">Đến ngày</label><input type="date" id="denNgay"></div>
+        <div><label class="lb">Đến giờ</label><input type="text" id="denGio" placeholder="vd: 0h00"></div>
+      </div>
     </div>
 
-    <div id="ndBox"></div>
-
-    <div class="sec">III. Tình hình an ninh trật tự</div>
-    <textarea id="antt"></textarea>
-    <div class="addbar"><button class="btn small" data-act="anttMau">+ Dùng câu mặc định của cảng</button></div>
-
-    <div class="sec">IV. Kết luận (chọn câu mẫu hoặc bấm Soạn tự động; mỗi ý một dòng, máy tự đánh số)</div>
-    <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="klPick"></select><button class="btn small" data-act="klAdd">+ Thêm</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
-    <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
-
-    <div class="sec">Kết thúc và chữ ký</div>
-    <div class="grid2">
-      <div><label class="lb">Kết thúc lúc</label><input type="text" id="ktGio" placeholder="vd: 23 giờ 30 phút"></div>
-      <div><label class="lb">Ngày kết thúc</label><input type="date" id="ktNgay"></div>
+    <!-- BƯỚC 4 -->
+    <div class="step" data-step="4">
+      <div class="toolbar">
+        <div class="tb-row t2"><span class="tb-lbl">Thêm mục</span><select id="addKind">
+            <option value="berth">Cầu bến</option>
+            <option value="ban">Ban / bộ phận làm việc</option>
+            <option value="thue">Đơn vị thuê ngoài</option>
+            <option value="truc">Trực điều hành</option></select><select id="addND"></select><button class="btn small" data-act="pickND">+ Thêm</button></div>
+      </div>
+      <div class="sec">II. Nội dung kiểm tra: kết quả từng nơi</div>
+      <div id="ndBox"></div>
     </div>
+
+    <!-- BƯỚC 5 -->
+    <div class="step" data-step="5">
+      <div class="sec">III. Tình hình an ninh trật tự</div>
+      <textarea id="antt"></textarea>
+      <div class="addbar"><button class="btn small" data-act="anttMau">+ Dùng câu mặc định của cảng</button></div>
+    </div>
+
+    <!-- BƯỚC 6 -->
+    <div class="step" data-step="6">
+      <div class="sec">IV. Kết luận</div>
+      <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="klPick"></select><button class="btn small" data-act="klAdd">+ Thêm</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
+      <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
+    </div>
+
+    <!-- BƯỚC 7 -->
+    <div class="step" data-step="7">
+      <div class="sec">Kết thúc và chữ ký</div>
+      <div class="grid2">
+        <div><label class="lb">Kết thúc lúc</label><input type="text" id="ktGio" placeholder="vd: 23 giờ 30 phút"></div>
+        <div><label class="lb">Ngày kết thúc</label><input type="date" id="ktNgay"></div>
+      </div>
+      <div class="finish" id="finishBox"></div>
+    </div>
+
     <div class="dock" id="dock"></div>
   </div>
 
@@ -354,6 +419,7 @@ tbody tr:hover{background:#e3effb}
 <!-- ============ DANH SÁCH ============ -->
 <div class="view" id="list">
   <div class="page">
+    <div class="intro"><b>Biên bản đã lưu.</b> Bấm <b>Mở</b> để sửa tiếp một biên bản. Bấm <b>Làm mẫu</b> để tạo biên bản mới từ biên bản cũ. Muốn lập biên bản mới hoàn toàn, vào <b>✎ Lập biên bản</b> rồi bấm <b>Biên bản mới</b>.</div>
     <div class="card no-print">
       <div class="grid3">
         <input type="text" id="qList" placeholder="Tìm theo tiêu đề hoặc cảng...">
@@ -386,6 +452,7 @@ tbody tr:hover{background:#e3effb}
       <nav class="dm-nav" id="dmNav"></nav>
     </aside>
     <section>
+      <div class="intro"><b>Danh mục là dữ liệu mẫu để chọn nhanh</b> khi lập biên bản (tên người, vị trí, thiết bị, câu mẫu). Bình thường bạn không cần vào đây; chỉ vào khi có người mới, thiết bị mới hoặc muốn đổi câu mẫu. Sửa xong nhớ bấm <b>Lưu lên máy chủ</b>.</div>
       <div class="card-b dm-head">
         <b id="dmTitle"></b>
         <div class="top-actions">
@@ -469,6 +536,21 @@ tbody tr:hover{background:#e3effb}
 
 <datalist id="rosterNames"></datalist>
 
+<div id="helpModal"><div class="box">
+  <h2>Cách lập biên bản (7 bước)</h2>
+  <p>Làm lần lượt từ bước 1 đến bước 7. Thanh màu xanh phía trên khung nhập cho biết bạn đang ở bước nào. Bước đã làm xong có dấu ✓. Bấm <b>Tiếp theo</b> ở cuối mỗi bước để sang bước sau. Bên phải là bản biên bản hiện ra ngay khi bạn nhập.</p>
+  <ol>
+    <li><b>Thông tin chung:</b> chọn cảng, kiểm tra ngày lập, chọn căn cứ.</li>
+    <li><b>Thành phần:</b> chọn những người tham gia kiểm tra.</li>
+    <li><b>Thời gian:</b> ca trực, giờ và ngày bắt đầu, kết thúc kiểm tra.</li>
+    <li><b>Kết quả từng nơi:</b> cầu bến, các ban, ai đang làm việc ở vị trí nào.</li>
+    <li><b>An ninh trật tự:</b> bấm câu mặc định hoặc tự gõ.</li>
+    <li><b>Kết luận:</b> bấm "Soạn tự động" rồi sửa lại nếu cần.</li>
+    <li><b>Hoàn tất:</b> nhập giờ kết thúc, rồi bấm <b>Lưu</b> và <b>Xuất Word</b>.</li>
+  </ol>
+  <div class="tip">Quên bấm <b>Lưu</b> thì biên bản chỉ nằm trong máy này. Muốn mở lại ở máy khác, phải bấm Lưu.</div>
+  <div class="top-actions"><button class="btn primary" id="btnHelpClose">Đã hiểu, bắt đầu</button></div>
+</div></div>
 <script>
 /* =====================================================================
  * Lập biên bản KSNB — trang một file (GitHub Pages).
@@ -1063,6 +1145,7 @@ function render(){
   d.phamVi.bophan = $('bophan').value;
   $('paper').innerHTML = html(d);
   paginate();
+  updateSteps();
 }
 function memberLine(p, kieu){
   const who = (p.xung ? esc(p.xung) + ': ' : '') + esc(p.hoTen);
@@ -2064,6 +2147,70 @@ function wrapForPrint(){
 }
 window.addEventListener('beforeprint', wrapForPrint);
 window.addEventListener('afterprint', () => { delete $('paper').dataset.wrapped; render(); });
+
+/* ---- hướng dẫn từng bước ---- */
+const STEPS = [
+  { t: 'Thông tin chung', short: 'Thông tin', h: ['Chọn <b>cảng</b> cần kiểm tra ở ô đầu tiên.', 'Xem lại tiêu đề, địa điểm, ngày lập.', 'Ở phần <b>Căn cứ</b>: chọn căn cứ trong danh sách rồi bấm <b>+ Thêm</b>.'] },
+  { t: 'Thành phần tham gia', short: 'Thành phần', h: ['Chọn <b>đơn vị</b> (ví dụ Ban KSNB, Cảng) ở ô bên dưới rồi bấm <b>+ Thêm</b>.', 'Trong từng đơn vị, chọn người tham gia kiểm tra.'] },
+  { t: 'Thời gian kiểm tra', short: 'Thời gian', h: ['Nhập <b>ca trực</b>, giờ và ngày bắt đầu, giờ và ngày kết thúc kiểm tra.', 'Ô "các bộ phận được kiểm tra" tự điền ở bước sau, không cần nhập.'] },
+  { t: 'Kết quả từng nơi', short: 'Kết quả', h: ['Ở ô <b>Thêm mục</b>: chọn loại (Cầu bến, Ban / bộ phận, Thuê ngoài, Trực điều hành), chọn tên mục, bấm <b>+ Thêm</b>.', 'Trong mỗi ban: chọn <b>vị trí</b> rồi bấm <b>+ thêm vị trí</b> (hoặc <b>+ tất cả</b>), sau đó chọn người đang làm việc.', 'Bộ phận cơ giới và bảo vệ: dùng <b>thanh xanh dưới cùng</b>: chọn thiết bị, chọn người, bấm <b>Thêm</b>.', 'Người vắng mặt: bỏ dấu tick ở ô "có mặt".'] },
+  { t: 'An ninh trật tự', short: 'An ninh', h: ['Bấm <b>+ Dùng câu mặc định</b>, hoặc tự gõ tình hình an ninh trật tự.'] },
+  { t: 'Kết luận', short: 'Kết luận', h: ['Bấm <b>Soạn tự động</b> để máy viết kết luận từ các bước trước, rồi sửa lại nếu cần.', 'Cũng có thể chọn câu mẫu rồi bấm <b>+ Thêm</b>.'] },
+  { t: 'Hoàn tất', short: 'Hoàn tất', h: ['Nhập giờ và ngày kết thúc.', 'Xem lại biên bản ở khung bên phải.', 'Bấm <b>Lưu biên bản</b> rồi <b>Xuất file Word</b> (hoặc In / PDF).'] }
+];
+let stepCur = 1;
+function stepDone(n){
+  const v = id => ($(id).value || '').trim();
+  switch (n){
+    case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
+    case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
+    case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
+    case 4: return !!$('ndBox').querySelector('[data-berth],[data-ban],[data-tn],[data-truc]');
+    case 5: return !!v('antt');
+    case 6: return !!v('ketLuan');
+    case 7: return !!(v('ktGio') || v('ktNgay'));
+  }
+  return false;
+}
+function buildSteps(){
+  $('stepBar').innerHTML = STEPS.map((s, i) => `<button data-sg="${i + 1}" title="${s.t}"><i>${i + 1}</i><span>${s.short}</span></button>`).join('') + '<button class="stepall" data-sgall="1" title="Hiện tất cả các phần cùng lúc">☰ Tất cả</button>';
+  document.querySelectorAll('.step').forEach(el => {
+    const n = +el.dataset.step, s = STEPS[n - 1];
+    el.insertAdjacentHTML('afterbegin', `<div class="stephead"><b>Bước ${n}/${STEPS.length}: ${s.t}</b><p>Việc cần làm:</p><ol>${s.h.map(x => '<li>' + x + '</li>').join('')}</ol></div>`);
+    const nxt = STEPS[n];
+    el.insertAdjacentHTML('beforeend', `<div class="stepnav">${n > 1 ? '<button class="btn back" data-sg="' + (n - 1) + '">‹ Quay lại</button>' : '<span></span>'}${nxt ? '<button class="btn next" data-sg="' + (n + 1) + '">Tiếp theo: ' + nxt.short + ' ›</button>' : ''}</div>`);
+  });
+}
+function gotoStep(n, quiet){
+  stepCur = n;
+  const f = $('formBox'); f.dataset.cur = n;
+  document.querySelectorAll('.step').forEach(el => el.classList.toggle('on', +el.dataset.step === n));
+  updateSteps();
+  if (!quiet) f.scrollTop = 0;
+  if (n === 4) refreshDock();
+}
+function updateSteps(){
+  const bar = $('stepBar'); if (!bar || !bar.children.length) return;
+  bar.querySelectorAll('[data-sg]').forEach(b => { const n = +b.dataset.sg; b.classList.toggle('on', n === stepCur && !$('formBox').classList.contains('allmode')); b.classList.toggle('done', stepDone(n)); });
+  const fb = $('finishBox'); if (!fb) return;
+  const miss = [];
+  for (let n = 1; n <= 6; n++) if (!stepDone(n)) miss.push(n);
+  fb.innerHTML = '<div class="chk"><b>Kiểm tra trước khi lưu:</b><br>' + STEPS.slice(0, 6).map((s, i) => stepDone(i + 1)
+    ? `<span class="ok">✓</span> ${s.t}<br>` : `<span class="miss">⚠</span> ${s.t} chưa có nội dung <a data-sg="${i + 1}">mở bước này</a><br>`).join('') + '</div>'
+    + '<div class="bigbtns"><button class="btn" style="background:#FF8A3D" data-proxy="btnSave">💾 Lưu biên bản</button><button class="btn" style="background:#2E7D32" data-proxy="btnWord">⬇ Xuất file Word</button><button class="btn" style="background:#2E75B6" data-proxy="btnPrint">🖨 In / PDF</button></div>';
+}
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-sg]');
+  if (g){ $('formBox').classList.remove('allmode'); gotoStep(+g.dataset.sg); return; }
+  if (e.target.closest('[data-sgall]')){ const f = $('formBox'); f.classList.toggle('allmode'); updateSteps(); return; }
+  const px = e.target.closest('[data-proxy]'); if (px){ $(px.dataset.proxy).click(); return; }
+});
+function showHelp(on){ $('helpModal').classList.toggle('on', on); if (!on){ try { localStorage.setItem('bb_help', '1'); } catch(e){} } }
+$('btnHelp').onclick = () => showHelp(true);
+$('btnHelpClose').onclick = () => showHelp(false);
+$('helpModal').addEventListener('click', e => { if (e.target.id === 'helpModal') showHelp(false); });
+buildSteps();
+try { if (!localStorage.getItem('bb_help')) setTimeout(() => showHelp(true), 400); } catch(e){}
 
 window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefault(); e.returnValue = ''; } });
 
