@@ -1039,6 +1039,8 @@ function refreshBanPick(card){
   card.querySelector('[data-pick]').innerHTML = '<option value="">— chọn vị trí trong danh mục —</option>' + opts;
   const pb = card.querySelector('.pickbar');
   ['[data-pick]', '[data-act="pickItem"]', '[data-act="pickAll"]'].forEach(sel => { pb.querySelector(sel).hidden = !opts; });
+  // "+ khác" chỉ dành cho vị trí không thuộc danh sách chung (vd điều độ - thủ tục); ban toàn cơ giới / bảo vệ thì dùng thanh xanh dưới cùng
+  pb.querySelector('[data-act="blankItem"]').hidden = !!(g && g.items.length && g.items.every(it => pooled.has(it.phan)));
   sortItemsDom(card.querySelector(':scope > .items'));
   refreshDock();
 }
@@ -1846,7 +1848,11 @@ document.addEventListener('click', e => {
       const name = val(card, ':scope > .bh [data-bten]').trim();
       const g = cat(cang).groups.find(x => x.ten === name);
       const box = card.querySelector(':scope > .items');
-      if (a === 'blankItem') box.insertAdjacentHTML('beforeend', tItem({ phan: '', label: '', note: '', nguoi: [] }));
+      if (a === 'blankItem'){
+        const pl = new Set(g ? g.pools.map(p => p.ten) : []);
+        const free = [...new Set((g ? g.items : []).filter(it => !pl.has(it.phan) && it.phan).map(it => it.phan))];
+        box.insertAdjacentHTML('beforeend', tItem({ phan: free.length === 1 ? free[0] : '', label: '', note: '', nguoi: [] }));
+      }
       else if (a === 'pickItem'){
         const sel = card.querySelector('[data-pick]'); if (sel.value === '' || !g) return;
         box.insertAdjacentHTML('beforeend', tItem(g.items[+sel.value]));
