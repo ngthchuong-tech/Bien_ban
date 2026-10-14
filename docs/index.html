@@ -285,7 +285,8 @@ tbody tr:hover{background:#e3effb}
 #helpModal li b{color:#B45309}
 #helpModal .tip{background:#eaf3fc;border-left:4px solid var(--blue2);padding:8px 10px;border-radius:6px;margin:10px 0;font-size:15px}
 .intro{background:#eaf3fc;border-left:5px solid var(--blue2);border-radius:6px;padding:9px 12px;margin:0 0 12px;font-size:15px;line-height:1.55;color:#234}
-.subbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.subbar{position:sticky;top:var(--stepbar-h,48px);z-index:7;display:flex;flex-wrap:wrap;gap:6px;margin:0 -16px 8px;padding:7px 16px;background:#eef4fb;border-bottom:2px solid #9bb8d6;box-shadow:0 3px 6px rgba(0,0,0,.12)}
+.step[data-step="4"] .toolbar{position:static}
 .subbar button{border:2px solid #9bb8d6;background:#fff;color:#143c5f;border-radius:18px;padding:5px 12px;font-size:14px;font-weight:600;cursor:pointer}
 .subbar button.done{border-color:#43A047;background:#edf7ee}
 .subbar button.done::before{content:"✓ ";color:#2E7D32}
@@ -2212,6 +2213,7 @@ function gotoStep(n, quiet){
   if (n === 4) refreshDock();
 }
 function updateSteps(){
+  try { const sb = $('stepBar'); if (sb && sb.offsetHeight) $('formBox').style.setProperty('--stepbar-h', (sb.offsetHeight - 14) + 'px'); } catch(e){}
   const bar = $('stepBar'); if (!bar || !bar.children.length) return;
   bar.querySelectorAll('[data-sg]').forEach(b => { const n = +b.dataset.sg; b.classList.toggle('on', n === stepCur && !$('formBox').classList.contains('allmode')); b.classList.toggle('done', stepDone(n)); });
   const fb = $('finishBox'); if (!fb) return;
