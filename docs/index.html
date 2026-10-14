@@ -124,7 +124,7 @@ textarea{min-height:70px;resize:vertical}
 .sigrow span{font-size:13px;color:#555}
 /* xem trước khổ A4 */
 /* khổ A4 thật, lề giống file Word (trên 20,6 / phải 19,5 / dưới 19 / trái 22,9 mm); trên màn hình thu phóng cho vừa khung */
-#paper{background:#fff;width:210mm;max-width:none;min-height:297mm;margin:0 auto;padding:20.64mm 19.5mm 19.05mm 22.93mm;box-sizing:border-box;zoom:var(--pz,1);box-shadow:0 2px 10px rgba(0,0,0,.15);font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.436;color:#000}
+#paper{background:#fff;width:210mm;max-width:none;min-height:297mm;margin:0 auto;padding:20.64mm 19.5mm 19.05mm 22.93mm;box-sizing:border-box;zoom:var(--pz,1);box-shadow:0 2px 10px rgba(0,0,0,.15);background:linear-gradient(to bottom,#fff 0,#fff 297mm,#cfd9e5 297mm,#cfd9e5 307mm) 0 0/100% 307mm repeat-y;font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.436;color:#000}
 #paper p{margin:2pt 0 3pt;text-align:justify}
 #paper .c{text-align:center}
 #paper .b{font-weight:700}
@@ -253,7 +253,7 @@ tbody tr:hover{background:#e3effb}
   #editor.on{display:block!important;padding:0}
   .preview{position:static;max-height:none;overflow:visible;background:#fff;border:0;padding:0}
   /* lề trên/dưới lặp lại ở mọi trang (qua bảng bọc, xem beforeprint), lề trái/phải bằng padding; @page không lề nên trình duyệt không in đầu/chân trang */
-  #paper{box-shadow:none;margin:0;width:210mm;min-height:0;zoom:1!important;padding:0 19.5mm 0 22.93mm}
+  #paper{background:#fff!important;box-shadow:none;margin:0;width:210mm;min-height:0!important;zoom:1!important;padding:0 19.5mm 0 22.93mm}
   #paper table.pg{width:100%;border-collapse:collapse}
   #paper table.pg>thead>tr>td,#paper table.pg>tfoot>tr>td,#paper table.pg>tbody>tr>td.pgb{padding:0;border:0}
   #paper .pgt{height:20.64mm}#paper .pgf{height:19.05mm}
@@ -1062,6 +1062,7 @@ function render(){
   if (!$('bophan').dataset.manual) $('bophan').value = autoBophan(d);
   d.phamVi.bophan = $('bophan').value;
   $('paper').innerHTML = html(d);
+  paginate();
 }
 function memberLine(p, kieu){
   const who = (p.xung ? esc(p.xung) + ': ' : '') + esc(p.hoTen);
@@ -2016,15 +2017,49 @@ $('btnWipe').onclick = () => {
 };
 
 /* ---- khổ giấy: thu phóng bản xem trước cho vừa khung; khi in bọc bảng để lề trên/dưới lặp ở mọi trang ---- */
+
+/* ---- phân trang xem trước như Word: đẩy khối nào bị cắt qua ranh giới trang xuống đầu trang kế ---- */
+function clearPagination(){
+  const p = $('paper');
+  [...p.children].forEach(e => { if (e.dataset.pg){ e.style.marginTop = ''; delete e.dataset.pg; } });
+  p.style.minHeight = '';
+}
+function paginate(){
+  const p = $('paper'); if (!p || p.dataset.wrapped || !p.children.length) return;
+  const mm = 96 / 25.4, T = 20.64 * mm, B = 19.05 * mm, H = 297 * mm, G = 10 * mm, stride = H + G;
+  clearPagination();
+  p.style.zoom = '1';
+  const els = [...p.children], pt = () => p.getBoundingClientRect().top;
+  const top = e => e.getBoundingClientRect().top - pt();
+  const keep = e => /\b(h1|h2|sub)\b/.test(e.className) || (e.classList.contains('u') && e.tagName === 'P');
+  for (let i = 0; i < els.length; i++){
+    const e = els[i], y = top(e), h = e.getBoundingClientRect().height;
+    const k = Math.floor((y + 1) / stride), E = k * stride + H - B, S = k * stride + T;
+    let need = h;
+    if (keep(e) && els[i + 1]) need = top(els[i + 1]) + Math.min(els[i + 1].getBoundingClientRect().height, 60) - y;
+    if (y + need > E + 0.5 && h < E - S){
+      const target = (k + 1) * stride + T, base = parseFloat(getComputedStyle(e).marginTop) || 0;
+      e.dataset.pg = '1';
+      e.style.marginTop = (base + target - y) + 'px';
+      const d2 = target - top(e);
+      if (Math.abs(d2) > 0.5) e.style.marginTop = (base + target - y + d2) + 'px';
+    }
+  }
+  const last = els[els.length - 1], total = top(last) + last.getBoundingClientRect().height + B;
+  const n = Math.max(1, Math.ceil((total + 1) / stride));
+  p.style.minHeight = (n * stride - G) + 'px';
+  p.style.zoom = '';
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { try { paginate(); } catch(e){} });
 function fitPaper(){
   const pv = document.querySelector('.preview'); if (!pv || !pv.clientWidth) return;
-  const z = Math.max(0.3, Math.min(0.8, (pv.clientWidth - 30) / (210 * 96 / 25.4)));
+  const z = Math.max(0.3, Math.min(0.9, (pv.clientWidth - 30) / (210 * 96 / 25.4)));
   $('paper').style.setProperty('--pz', z.toFixed(3));
 }
 window.addEventListener('resize', fitPaper);
 try { new ResizeObserver(fitPaper).observe(document.querySelector('.preview')); } catch(e){}
 function wrapForPrint(){
-  const p = $('paper'); if (p.dataset.wrapped) return; p.dataset.wrapped = '1';
+  const p = $('paper'); if (p.dataset.wrapped) return; clearPagination(); p.dataset.wrapped = '1';
   p.innerHTML = '<table class="pg"><thead><tr><td><div class="pgt"></div></td></tr></thead><tbody><tr><td class="pgb">' + p.innerHTML + '</td></tr></tbody><tfoot><tr><td><div class="pgf"></div></td></tr></tfoot></table>';
 }
 window.addEventListener('beforeprint', wrapForPrint);
