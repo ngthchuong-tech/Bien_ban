@@ -285,6 +285,23 @@ tbody tr:hover{background:#e3effb}
 #helpModal li b{color:#B45309}
 #helpModal .tip{background:#eaf3fc;border-left:4px solid var(--blue2);padding:8px 10px;border-radius:6px;margin:10px 0;font-size:15px}
 .intro{background:#eaf3fc;border-left:5px solid var(--blue2);border-radius:6px;padding:9px 12px;margin:0 0 12px;font-size:15px;line-height:1.55;color:#234}
+.subbar{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.subbar button{border:2px solid #9bb8d6;background:#fff;color:#143c5f;border-radius:18px;padding:5px 12px;font-size:14px;font-weight:600;cursor:pointer}
+.subbar button.done{border-color:#43A047;background:#edf7ee}
+.subbar button.done::before{content:"✓ ";color:#2E7D32}
+.subbar button.on{background:#143c5f;color:#fff;border-color:#143c5f;box-shadow:0 0 0 2px #FF8A3D}
+.subbar button.add{border-style:dashed;color:#B45309;border-color:#FF8A3D;background:#fff8ef}
+.subbar button.add.on{background:#FF8A3D;color:#fff}
+.subhelp{background:#eaf3fc;border-left:5px solid var(--blue2);border-radius:6px;padding:7px 11px;margin:0 0 10px;font-size:14.5px;line-height:1.5}
+.subhide{display:none!important}
+.form.allmode .subhide{display:block!important}
+.form:not(.allmode) .step[data-step="4"]:not(.subadd) #addToolbar{display:none}
+.form.allmode .subbar,.form.allmode .subhelp,.form.allmode .subnav{display:none}
+.form.nosubdock:not(.allmode) .dock{display:none}
+.subnav{display:flex;justify-content:space-between;gap:8px;margin:12px 0 0}
+.subnav .btn{min-height:42px;font-size:15px;font-weight:600;border:2px solid #9bb8d6;background:#e4eefa;color:#143c5f}
+.subnav .btn.next,.subnav .btn.add{background:#FF8A3D;border-color:#FF8A3D;color:#fff;margin-left:auto}
+.qbar.qhide{display:none}
 @media print{
   html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -375,7 +392,9 @@ tbody tr:hover{background:#e3effb}
 
     <!-- BƯỚC 4 -->
     <div class="step" data-step="4">
-      <div class="toolbar">
+      <div class="subbar" id="subBar"></div>
+      <div class="subhelp" id="subHelp"></div>
+      <div class="toolbar" id="addToolbar">
         <div class="tb-row t2"><span class="tb-lbl">Thêm mục</span><select id="addKind">
             <option value="berth">Cầu bến</option>
             <option value="ban">Ban / bộ phận làm việc</option>
@@ -384,6 +403,7 @@ tbody tr:hover{background:#e3effb}
       </div>
       <div class="sec">II. Nội dung kiểm tra: kết quả từng nơi</div>
       <div id="ndBox"></div>
+      <div class="subnav" id="subNav"></div>
     </div>
 
     <!-- BƯỚC 5 -->
@@ -1131,6 +1151,7 @@ function refreshDock(){
   const head = `<div class="dockhead">${html ? `<button class="btn small" data-act="dockToggle">${dockCollapsed ? '▲ Mở thanh chọn nhanh' : '▼ Thu gọn'}</button>` : ''}${hiddenN ? `<button class="btn small" data-act="dockReset">Hiện lại ${hiddenN} thanh đã tắt</button>` : ''}</div>`;
   dock.innerHTML = head + (dockCollapsed ? '' : html);
   refreshPeoplePicks();
+  if (typeof refreshSub === 'function') refreshSub();
 }
 
 /* ---------------- xem trước khổ A4 ---------------- */
@@ -1145,6 +1166,7 @@ function render(){
   d.phamVi.bophan = $('bophan').value;
   $('paper').innerHTML = html(d);
   paginate();
+  refreshSub();
   updateSteps();
 }
 function memberLine(p, kieu){
@@ -2153,7 +2175,7 @@ const STEPS = [
   { t: 'Thông tin chung', short: 'Thông tin', h: ['Chọn <b>cảng</b> cần kiểm tra ở ô đầu tiên.', 'Xem lại tiêu đề, địa điểm, ngày lập.', 'Ở phần <b>Căn cứ</b>: chọn căn cứ trong danh sách rồi bấm <b>+ Thêm</b>.'] },
   { t: 'Thành phần tham gia', short: 'Thành phần', h: ['Chọn <b>đơn vị</b> (ví dụ Ban KSNB, Cảng) ở ô bên dưới rồi bấm <b>+ Thêm</b>.', 'Trong từng đơn vị, chọn người tham gia kiểm tra.'] },
   { t: 'Thời gian kiểm tra', short: 'Thời gian', h: ['Nhập <b>ca trực</b>, giờ và ngày bắt đầu, giờ và ngày kết thúc kiểm tra.', 'Ô "các bộ phận được kiểm tra" tự điền ở bước sau, không cần nhập.'] },
-  { t: 'Kết quả từng nơi', short: 'Kết quả', h: ['Ở ô <b>Thêm mục</b>: chọn loại (Cầu bến, Ban / bộ phận, Thuê ngoài, Trực điều hành), chọn tên mục, bấm <b>+ Thêm</b>.', 'Trong mỗi ban: chọn <b>vị trí</b> rồi bấm <b>+ thêm vị trí</b> (hoặc <b>+ tất cả</b>), sau đó chọn người đang làm việc.', 'Bộ phận cơ giới và bảo vệ: dùng <b>thanh xanh dưới cùng</b>: chọn thiết bị, chọn người, bấm <b>Thêm</b>.', 'Người vắng mặt: bỏ dấu tick ở ô "có mặt".'] },
+  { t: 'Kết quả từng nơi', short: 'Kết quả', h: ['Mỗi cầu bến, mỗi ban, mục trực là <b>một thẻ nhỏ</b> ngay bên dưới. Bấm thẻ nào thì chỉ hiện việc của thẻ đó.', 'Chưa có mục nào: bấm thẻ <b>＋ Thêm mục</b>, chọn loại, chọn tên rồi bấm <b>+ Thêm</b>. Thêm xong máy tự mở mục đó.', 'Làm xong một mục, bấm <b>Mục tiếp theo</b> ở cuối. Người vắng mặt: bỏ dấu tick ở ô "có mặt".'] },
   { t: 'An ninh trật tự', short: 'An ninh', h: ['Bấm <b>+ Dùng câu mặc định</b>, hoặc tự gõ tình hình an ninh trật tự.'] },
   { t: 'Kết luận', short: 'Kết luận', h: ['Bấm <b>Soạn tự động</b> để máy viết kết luận từ các bước trước, rồi sửa lại nếu cần.', 'Cũng có thể chọn câu mẫu rồi bấm <b>+ Thêm</b>.'] },
   { t: 'Hoàn tất', short: 'Hoàn tất', h: ['Nhập giờ và ngày kết thúc.', 'Xem lại biên bản ở khung bên phải.', 'Bấm <b>Lưu biên bản</b> rồi <b>Xuất file Word</b> (hoặc In / PDF).'] }
@@ -2209,6 +2231,67 @@ function showHelp(on){ $('helpModal').classList.toggle('on', on); if (!on){ try 
 $('btnHelp').onclick = () => showHelp(true);
 $('btnHelpClose').onclick = () => showHelp(false);
 $('helpModal').addEventListener('click', e => { if (e.target.id === 'helpModal') showHelp(false); });
+/* ---- thẻ nhỏ trong bước 4 ---- */
+var subCur = null, subKnown = null, subCnt = {}, subUid = 0;
+function subGroups(){
+  const g = [];
+  const add = (key, label, els, done) => { let o = g.find(x => x.key === key); if (!o){ o = { key, label, els: [], done: false }; g.push(o); } o.els.push(...els); o.done = o.done || done; };
+  const nd = $('ndBox'), ch = [...nd.children];
+  const berths = ch.filter(e => e.matches('[data-berth]'));
+  if (berths.length) add('berth', 'Cầu bến', berths, berths.some(e => e.querySelector('[data-cbpt]') && (e.querySelector('[data-cbpt]').value || '').trim()));
+  ch.forEach(e => {
+    if (!e.dataset.uid) e.dataset.uid = 'u' + (++subUid);
+    if (e.matches('[data-ban]')) add(e.dataset.uid, (e.querySelector('[data-bten]').value || 'Ban').trim() || 'Ban', [e], !!e.querySelector('[data-p] [data-hoten]') && [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
+    else if (e.matches('[data-tn]')) add(e.dataset.uid, (e.querySelector('[data-congty]').value || 'Thuê ngoài').trim() || 'Thuê ngoài', [e], !!(e.querySelector('[data-congty]').value || '').trim());
+    else if (e.matches('[data-truc]')) add(e.dataset.uid, (e.querySelector('[data-ttl]').value || 'Trực điều hành').trim() || 'Trực điều hành', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
+  });
+  return g;
+}
+const SUBHELP = {
+  berth: 'Điền thông tin cho từng cầu: phương tiện đang làm hàng, thiết bị, người thực hiện. Cầu không hoạt động thì ghi "Không có phương tiện".',
+  ban: 'Chọn <b>vị trí</b> rồi bấm <b>+ thêm vị trí</b> (hoặc <b>+ tất cả</b>), sau đó chọn người đang làm việc. Bộ phận cơ giới, bảo vệ: dùng <b>thanh xanh dưới cùng</b> (chọn thiết bị, chọn người, bấm Thêm).',
+  truc: 'Nhập họ tên, chức danh người trực điều hành. Bỏ dấu tick ở ô "có mặt" nếu người đó không có mặt.',
+  tn: 'Ghi tên công ty thuê ngoài và nội dung dịch vụ đang thực hiện.',
+  add: 'Chọn <b>loại mục</b>, chọn <b>tên</b> trong danh sách rồi bấm <b>+ Thêm</b>. Thêm xong máy tự mở mục đó cho bạn nhập.'
+};
+function refreshSub(){
+  const bar = $('subBar'); if (!bar) return;
+  const g = subGroups(), keys = g.map(x => x.key);
+  // mục mới xuất hiện hoặc thêm cầu bến mới -> tự chuyển tới
+  const cnt = {}; g.forEach(x => cnt[x.key] = x.els.length);
+  if (subKnown){
+    const nw = keys.find(k => !subKnown.includes(k) ) || keys.find(k => k === 'berth' && cnt[k] > (subCnt[k] || 0));
+    if (nw) subCur = nw;
+  }
+  subKnown = keys; subCnt = cnt;
+  if (subCur !== 'add' && !keys.includes(subCur)) subCur = keys.length ? keys[0] : 'add';
+  if (!keys.length) subCur = 'add';
+  bar.innerHTML = g.map(x => `<button data-sub="${esc(x.key)}" class="${x.done ? 'done' : ''} ${x.key === subCur ? 'on' : ''}">${esc(x.label)}</button>`).join('') +
+    `<button data-sub="add" class="add ${subCur === 'add' ? 'on' : ''}">＋ Thêm mục</button>`;
+  $('ndBox').querySelectorAll(':scope > *').forEach(e => e.classList.add('subhide'));
+  const cur = g.find(x => x.key === subCur);
+  if (cur) cur.els.forEach(e => e.classList.remove('subhide'));
+  const st4 = document.querySelector('.step[data-step="4"]'); st4.classList.toggle('subadd', subCur === 'add');
+  const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : (cur && cur.els[0].matches('[data-ban]') ? 'ban' : (cur && cur.els[0].matches('[data-truc]') ? 'truc' : 'tn')));
+  $('subHelp').innerHTML = SUBHELP[kind];
+  const idx = keys.indexOf(subCur);
+  const nxt = idx >= 0 && idx < keys.length - 1 ? g[idx + 1].label : null;
+  $('subNav').innerHTML = subCur === 'add' ? (keys.length ? `<button class="btn back" data-sub="${esc(keys[0])}">‹ Về các mục đã thêm</button>` : '') :
+    `${idx > 0 ? `<button class="btn back" data-sub="${esc(keys[idx - 1])}">‹ ${esc(g[idx - 1].label)}</button>` : '<span></span>'}` +
+    (nxt ? `<button class="btn next" data-sub="${esc(keys[idx + 1])}">Mục tiếp theo: ${esc(nxt)} ›</button>` : `<button class="btn add" data-sub="add">＋ Thêm mục khác</button>`);
+  // thanh xanh dưới cùng chỉ hiện cho ban đang mở
+  const banEl = kind === 'ban' ? cur.els[0] : null;
+  const bans = [...$('ndBox').querySelectorAll(':scope > [data-ban]')];
+  const bi = banEl ? bans.indexOf(banEl) : -1;
+  $('dock').querySelectorAll('[data-qbar]').forEach(b => b.classList.toggle('qhide', +b.dataset.qban !== bi));
+  $('formBox').classList.toggle('nosubdock', bi < 0 || !$('dock').querySelector('[data-qbar]:not(.qhide)'));
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-sub]'); if (!b) return;
+  subCur = b.dataset.sub; refreshSub(); if (subCur === 'add') refreshND();
+  const f = $('formBox'); f.scrollTop = 0;
+});
+
 buildSteps();
 try { if (!localStorage.getItem('bb_help')) setTimeout(() => showHelp(true), 400); } catch(e){}
 
