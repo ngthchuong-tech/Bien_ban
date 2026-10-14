@@ -439,6 +439,14 @@ tbody tr:hover{background:#e3effb}
         <button class="btn primary" id="btnCfgSave">Lưu</button>
         <button class="btn alt" id="btnPing">Kiểm tra kết nối</button>
       </div>
+      <div class="help-box" style="margin-top:14px">
+        <b>Dùng trên máy mượn:</b> bấm "Tạo link mở nhanh", gửi link vào email / Zalo của bạn. Ở máy mượn chỉ cần mở link đó, rồi nhập mã PIN (link không chứa PIN). Xong việc, bấm "Xóa dữ liệu trên máy này".
+      </div>
+      <div class="top-actions" style="margin-top:8px">
+        <button class="btn alt" id="btnLink">🔗 Tạo link mở nhanh</button>
+        <button class="btn" id="btnWipe" style="background:#fde8e8;color:#B91C1C;border:1.5px solid #e3b5b5">🗑 Xóa dữ liệu trên máy này</button>
+      </div>
+      <input type="text" id="linkOut" readonly style="display:none;margin-top:8px" onclick="this.select()">
       <div class="msg" id="cfgMsg"></div>
     </div>
     <div class="card set">
@@ -1982,6 +1990,23 @@ $('btnPing').onclick = async () => {
   catch(e){ say('cfgMsg', 'Lỗi: ' + e.message, 'err'); }
 };
 
+
+// link mở nhanh: #k=<địa chỉ máy chủ + tên>, không chứa PIN
+$('btnLink').onclick = () => {
+  const u = $('cfgUrl').value.trim(); if (!u){ say('cfgMsg', 'Nhập địa chỉ máy chủ trước.', 'warn'); return; }
+  const k = btoa(unescape(encodeURIComponent(JSON.stringify({ u, n: $('cfgNguoi').value.trim() }))));
+  const link = location.origin + location.pathname + '#k=' + k, o = $('linkOut');
+  o.style.display = 'block'; o.value = link; o.select();
+  try { navigator.clipboard.writeText(link); say('cfgMsg', 'Đã tạo và sao chép link. Gửi link này vào email / Zalo của bạn.', 'ok'); }
+  catch(e){ say('cfgMsg', 'Đã tạo link, hãy copy ở ô bên dưới.', 'ok'); }
+};
+$('btnWipe').onclick = () => {
+  if (!confirm('Xóa toàn bộ thông tin kết nối, bản nháp, danh mục lưu tạm và logo trên máy này? (Dữ liệu trên máy chủ không bị mất.)')) return;
+  state.dirty = false;
+  try { Object.values(LS).forEach(k => localStorage.removeItem(k)); } catch(e){}
+  location.href = location.pathname;
+};
+
 window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------------- khởi động ---------------- */
@@ -2005,8 +2030,18 @@ window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefaul
   } else {
     newBienBan(Object.keys(DM)[0]);
   }
+  let gotLink = false;
+  try {
+    const m = /[#&]k=([^&]+)/.exec(location.hash);
+    if (m){
+      const o = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+      if (o && o.u){ const c0 = getCfg(); setCfgStore({ ...c0, url: o.u, nguoi: o.n || c0.nguoi || '' }); gotLink = true; }
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  } catch(e){}
   const c = getCfg();
-  if (!c.url || !c.pin){ show('settings'); say('cfgMsg', 'Nhập địa chỉ máy chủ và mã PIN để bắt đầu.', 'warn'); }
+  if (gotLink && !c.pin){ show('settings'); fillSettings(); say('cfgMsg', 'Đã nhận địa chỉ máy chủ từ link. Bây giờ chỉ cần nhập mã PIN rồi bấm Lưu.', 'ok'); setTimeout(() => $('cfgPin').focus(), 50); }
+  else if (!c.url || !c.pin){ show('settings'); say('cfgMsg', 'Nhập địa chỉ máy chủ và mã PIN để bắt đầu.', 'warn'); }
   else { loadDanhMuc(); if (!roster.length) loadRoster(); else renderRosterTable(roster); }
 })();
 </script>
