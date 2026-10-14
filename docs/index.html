@@ -967,6 +967,8 @@ function refreshNameList(){
   $('rosterNames').innerHTML = [...names].map(n => `<option value="${esc(n)}">`).join('');
 }
 const isCG = ph => /cơ giới/i.test(ph || '');
+// bộ phận cơ giới: thêm chữ "Lái" đầu dòng, tên thiết bị viết thường (vd. Lái cẩu LH1, Lái xe nâng cont Kalmar 1)
+const driverLabel = it => (isCG(it.phan) && it.label && !/^lái\b/i.test(it.label.trim())) ? 'Lái ' + it.label.trim().charAt(0).toLowerCase() + it.label.trim().slice(1) : it.label;
 // Thứ tự chuẩn (theo biên bản mẫu): cầu bến → các ban (Khai thác, Kế toán, Hành chính bảo vệ) → thuê ngoài → trực.
 // Trong ban: theo thứ tự thiết bị/vị trí trong Danh mục, riêng bộ phận cơ giới luôn cuối.
 const banRank = t => { t = (t || '').toLowerCase();
@@ -1034,7 +1036,11 @@ function refreshDock(){
 }
 
 /* ---------------- xem trước khổ A4 ---------------- */
-function autoBophan(d){ return d.ban.filter(g => g.ten).map(g => g.ten).join(', '); }
+function autoBophan(d){
+  const l = d.ban.filter(g => g.ten).map(g => g.ten);
+  if (d.truc && (d.truc.nguoi || []).some(x => x.hoTen)) l.push('Công tác điều hành sản xuất');
+  return l.join(', ');
+}
 function render(){
   const d = collect();
   if (!$('bophan').dataset.manual) $('bophan').value = autoBophan(d);
@@ -1086,7 +1092,7 @@ function html(d){
 
   roman('II', 'NỘI DUNG KIỂM TRA');
   const bp = d.phamVi.bophan.trim();
-  p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
+  p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)}${d.cang ? ' tại ' + (/^cảng/i.test(d.cang) ? d.cang : 'Cảng ' + d.cang) : ''} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
 
   const bix = berthIdx(d.cang);
   const cb = d.cauBen.filter(b => b.ten).map((b, i) => ({ b, i })).sort((x, y) => bix(x.b.ten) - bix(y.b.ten) || x.i - y.i).map(x => x.b);
@@ -1124,14 +1130,15 @@ function html(d){
       if (it.note){ p('ind2', `+ ${label}: ${esc(it.note)}.`); return; }
       if (!named(it.nguoi).length){ p('ind2', `+ ${label}`); return; }
       const ppl = pres(it);
+      const dl = esc(driverLabel(it));
       const plain = ppl.filter(x => !x.chucDanh);
-      if (plain.length) p('ind2', `+ ${label}: ${plain.map(x => esc(x.hoTen)).join(', ')}.`);
-      ppl.filter(x => x.chucDanh).forEach(x => p('ind2', `+ ${label} – ${esc(x.chucDanh)}: ${esc(x.hoTen)}.`));
+      if (plain.length) p('ind2', `+ ${dl}: ${plain.map(x => esc(x.hoTen)).join(', ')}.`);
+      ppl.filter(x => x.chucDanh).forEach(x => p('ind2', `+ ${dl} – ${esc(x.chucDanh)}: ${esc(x.hoTen)}.`));
     });
     const vang = items.filter(it => absent(it).length);
     if (vang.length){
       p('ind', '- Nhân viên không có mặt tại vị trí làm việc:');
-      vang.forEach(it => absent(it).forEach(x => p('ind2', `+ ${esc(it.label)}${x.chucDanh ? ' – ' + esc(x.chucDanh) : ''}: ${esc(x.hoTen)}.`)));
+      vang.forEach(it => absent(it).forEach(x => p('ind2', `+ ${esc(driverLabel(it))}${x.chucDanh ? ' – ' + esc(x.chucDanh) : ''}: ${esc(x.hoTen)}.`)));
     }
   });
 
