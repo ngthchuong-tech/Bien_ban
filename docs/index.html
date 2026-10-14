@@ -1154,7 +1154,7 @@ function html(d){
       p('b h2', danhSo ? head(tt) : `* ${esc(tt)}:`);
       trN.forEach(x => {
         const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
-        p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'không có mặt' : 'có mặt'} tại cảng tại thời điểm kiểm tra.`);
+        p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'Không có mặt' : 'Có mặt'} ở cảng tại thời điểm kiểm tra.`);
       });
     }
   }
