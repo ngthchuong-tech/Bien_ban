@@ -123,24 +123,26 @@ textarea{min-height:70px;resize:vertical}
 .sigrow{display:grid;grid-template-columns:110px 1fr;gap:6px;align-items:center;margin:-2px 0 8px}
 .sigrow span{font-size:13px;color:#555}
 /* xem trước khổ A4 */
-#paper{background:#fff;width:100%;max-width:210mm;margin:0 auto;padding:6.5% 6.5% 6% 7.5%;box-shadow:0 2px 10px rgba(0,0,0,.15);font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.38;color:#000}
-#paper p{margin:3pt 0;text-align:justify}
+/* khổ A4 thật, lề giống file Word (trên 20,6 / phải 19,5 / dưới 19 / trái 22,9 mm); trên màn hình thu phóng cho vừa khung */
+#paper{background:#fff;width:210mm;max-width:none;min-height:297mm;margin:0 auto;padding:20.64mm 19.5mm 19.05mm 22.93mm;box-sizing:border-box;zoom:var(--pz,1);box-shadow:0 2px 10px rgba(0,0,0,.15);font-family:"Times New Roman",Times,serif;font-size:13.5pt;line-height:1.436;color:#000}
+#paper p{margin:2pt 0 3pt;text-align:justify}
 #paper .c{text-align:center}
 #paper .b{font-weight:700}
 #paper .i{font-style:italic}
 #paper .u{text-decoration:underline;font-weight:700}
-#paper .ind{margin-left:20pt}
-#paper .ind2{margin-left:30pt}
-#paper .h1{margin-top:14pt;margin-bottom:7pt}
-#paper .h2{margin-left:10pt;margin-top:9pt;margin-bottom:4pt}
-#paper .sub{margin-left:10pt;margin-top:5pt}
+#paper .ind{margin:0 0 1pt 20pt}
+#paper .ind2{margin:0 0 1pt 30pt}
+#paper .h1{margin-top:14pt;margin-bottom:7pt;break-after:avoid}
+#paper .h2{margin-left:10pt;margin-top:9pt;margin-bottom:4pt;break-after:avoid}
+#paper .sub{margin-left:10pt;margin-top:5pt;break-after:avoid}
+#paper p{orphans:2;widows:2}
 #paper .hdr .logo{display:block;margin:0 auto 3pt;height:44px;width:auto}
-#paper .hdr{display:flex;justify-content:space-between;gap:10px}
-#paper .hdr p{text-align:center}
-#paper .hdr .l{width:48%;text-align:center}
-#paper .hdr .r{width:52%;text-align:center}
+#paper .hdr{display:flex;justify-content:space-between;gap:0}
+#paper .hdr p{text-align:center;font-size:12pt;margin:0 0 2pt}
+#paper .hdr .l{width:210pt;flex:none;text-align:center}
+#paper .hdr .r{width:265pt;flex:none;text-align:center}
 #paper .title{text-align:center;margin:14pt 0 10pt}
-#paper .sig{width:100%;border-collapse:collapse;margin-top:14pt}
+#paper .sig{width:100%;border-collapse:collapse;margin-top:14pt;break-inside:avoid}
 #paper .sig td{width:50%;text-align:center;vertical-align:top;font-weight:700;padding:2pt}
 #paper .sig .space{height:70pt}
 /* danh sách, danh bạ, danh mục */
@@ -245,12 +247,17 @@ tbody tr:hover{background:#e3effb}
 .working-in{border-color:#F59E0B!important;box-shadow:0 0 0 2px rgba(245,158,11,.5)!important;position:relative}
 .working-in>.bh{background:#ffe9a8;border-radius:6px}
 @media print{
-  body{background:#fff}
+  html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
   #editor.on{display:block!important;padding:0}
   .preview{position:static;max-height:none;overflow:visible;background:#fff;border:0;padding:0}
-  #paper{box-shadow:none;margin:0;max-width:none;padding:20mm 20mm 19mm 23mm}
+  /* lề trên/dưới lặp lại ở mọi trang (qua bảng bọc, xem beforeprint), lề trái/phải bằng padding; @page không lề nên trình duyệt không in đầu/chân trang */
+  #paper{box-shadow:none;margin:0;width:210mm;min-height:0;zoom:1!important;padding:0 19.5mm 0 22.93mm}
+  #paper table.pg{width:100%;border-collapse:collapse}
+  #paper table.pg>thead>tr>td,#paper table.pg>tfoot>tr>td,#paper table.pg>tbody>tr>td.pgb{padding:0;border:0}
+  #paper .pgt{height:20.64mm}#paper .pgf{height:19.05mm}
   @page{size:A4;margin:0}
+}
 }
 @media (max-width:980px){
   #editor{grid-template-columns:1fr}
@@ -1653,7 +1660,7 @@ function show(name){
   if (name !== 'danhmuc' && $('danhmuc').classList.contains('on')) syncDM();
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === name));
   document.querySelectorAll('.top [data-go]').forEach(b => b.classList.toggle('on', b.dataset.go === name));
-  if (name === 'editor') refreshAllMenus();
+  if (name === 'editor'){ refreshAllMenus(); fitPaper(); }
   if (name === 'list') loadList();
   if (name === 'settings') fillSettings();
   if (name === 'danhmuc') renderDM();
@@ -2006,6 +2013,21 @@ $('btnWipe').onclick = () => {
   try { Object.values(LS).forEach(k => localStorage.removeItem(k)); } catch(e){}
   location.href = location.pathname;
 };
+
+/* ---- khổ giấy: thu phóng bản xem trước cho vừa khung; khi in bọc bảng để lề trên/dưới lặp ở mọi trang ---- */
+function fitPaper(){
+  const pv = document.querySelector('.preview'); if (!pv || !pv.clientWidth) return;
+  const z = Math.max(0.3, Math.min(1.3, (pv.clientWidth - 30) / (210 * 96 / 25.4)));
+  $('paper').style.setProperty('--pz', z.toFixed(3));
+}
+window.addEventListener('resize', fitPaper);
+try { new ResizeObserver(fitPaper).observe(document.querySelector('.preview')); } catch(e){}
+function wrapForPrint(){
+  const p = $('paper'); if (p.dataset.wrapped) return; p.dataset.wrapped = '1';
+  p.innerHTML = '<table class="pg"><thead><tr><td><div class="pgt"></div></td></tr></thead><tbody><tr><td class="pgb">' + p.innerHTML + '</td></tr></tbody><tfoot><tr><td><div class="pgf"></div></td></tr></tfoot></table>';
+}
+window.addEventListener('beforeprint', wrapForPrint);
+window.addEventListener('afterprint', () => { delete $('paper').dataset.wrapped; render(); });
 
 window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefault(); e.returnValue = ''; } });
 
