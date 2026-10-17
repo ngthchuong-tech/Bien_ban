@@ -2407,7 +2407,7 @@ function stepDone(n){
     case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
     case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
     case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
-    case 4: { const g = subGroups().filter(x => !x.virtual); return g.some(x => x.done); }   // có ít nhất một mục đã có nội dung là được; mục nào còn trống thì mục lục bên trái vẫn báo riêng
+    case 4: { const g = subGroups().filter(x => !x.virtual); return g.length > 0 && g.every(x => x.done); }
     case 5: return !!v('antt');
     case 6: return !!v('ketLuan');
     case 7: return !!(v('ktGio') || v('ktNgay'));
@@ -2428,6 +2428,12 @@ function gotoStep(n, quiet){
   if (!quiet) f.scrollTop = 0;
   if (n === 4) refreshDock();
 }
+// Bước 4 chưa đủ: nêu rõ mục nào còn trống, bấm vào là mở đúng mục đó
+function miss4(){
+  const bad = subGroups().filter(x => !x.virtual && !x.done);
+  if (!bad.length) return `<span class="miss">⚠</span> Kết quả từng nơi chưa có nội dung <a data-sub="add">mở bước này</a><br>`;
+  return `<span class="miss">⚠</span> Kết quả từng nơi còn trống: ` + bad.map(x => `<a data-sub="${esc(x.key)}">${esc(x.label)}</a>`).join(', ') + '<br>';
+}
 function updateSteps(){
   renderToc();
   try { const nb = $('navBar'); if (nb && nb.offsetHeight) $('formBox').style.setProperty('--nav-h', nb.offsetHeight + 'px'); } catch(e){}
@@ -2435,7 +2441,7 @@ function updateSteps(){
   const miss = [];
   for (let n = 1; n <= 6; n++) if (!stepDone(n)) miss.push(n);
   fb.innerHTML = '<div class="chk"><b>Kiểm tra trước khi lưu:</b><br>' + STEPS.slice(0, 6).map((s, i) => stepDone(i + 1)
-    ? `<span class="ok">✓</span> ${s.t}<br>` : `<span class="miss">⚠</span> ${s.t} chưa có nội dung <a data-sg="${i + 1}">mở bước này</a><br>`).join('') + '</div>'
+    ? `<span class="ok">✓</span> ${s.t}<br>` : (i + 1 === 4 ? miss4() : `<span class="miss">⚠</span> ${s.t} chưa có nội dung <a data-sg="${i + 1}">mở bước này</a><br>`)).join('') + '</div>'
     + '<div class="bigbtns"><button class="btn" style="background:#FF8A3D" data-proxy="btnSave">💾 Lưu biên bản</button><button class="btn" style="background:#2E7D32" data-proxy="btnWord">⬇ Xuất file Word</button><button class="btn" style="background:#2E75B6" data-proxy="btnPrint">🖨 In / PDF</button></div>';
 }
 document.addEventListener('click', e => {
