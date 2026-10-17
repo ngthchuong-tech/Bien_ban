@@ -561,14 +561,14 @@ tbody tr:hover{background:#e3effb}
 
     <!-- BƯỚC 5 -->
     <div class="step" data-step="5">
-      <div class="sec">III. Tình hình an ninh trật tự</div>
+      <div class="sec">IV. Tình hình an ninh trật tự</div>
       <textarea id="antt"></textarea>
       <div class="addbar"><button class="btn small" data-act="anttMau">+ Dùng câu mặc định của cảng</button></div>
     </div>
 
     <!-- BƯỚC 6 -->
     <div class="step" data-step="6">
-      <div class="sec">IV. Kết luận</div>
+      <div class="sec">V. Kết luận</div>
       <div class="pickrow" style="grid-template-columns:1fr auto"><select id="klPick"></select><button class="autobtn" data-act="klAdd">+</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
       <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
     </div>
@@ -1428,14 +1428,31 @@ function html(d){
     });
   }
 
-  trucArr(d.truc).forEach(tb => {
+  const trB = trucArr(d.truc).filter(tb => named(tb.nguoi).length);
+  roman('III', 'CÔNG TÁC TRỰC ĐIỀU HÀNH SẢN XUẤT');
+  if (danhSo && !trB.length) p('', '……');
+  n = 0;
+  const isCh = tb => tb.kind === 'vp' || tb.kind === 'cang';
+  const chB = trB.filter(isCh);
+  trB.forEach(tb => {
     const trN = named(tb.nguoi);
-    if (!trN.length) return;
     const tt = tb.ten || st.tenTruc || 'Trực điều hành';
+    if (kieuTr !== 'vang' && isCh(tb)){
+      // Trực chỉ huy: MỘT mục, bên trong có các nội dung con (Văn phòng Công ty / Cảng)
+      if (tb === chB[0]) p('b h2', danhSo ? head('Trực chỉ huy') : '* Trực chỉ huy:');
+      p('b ind', `- ${esc(tt)}:`);
+      trN.forEach(x => {
+        const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
+        p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'Không có mặt' : 'Có mặt'} ở cảng tại thời điểm kiểm tra.`);
+      });
+      return;
+    }
     if (kieuTr === 'vang'){
       trN.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
     } else {
-      p('b h2', danhSo ? head(tt) : `* ${esc(tt)}:`);
+      // Mục III đã có tiêu đề riêng: chỉ ghi tên khối khi là trực chỉ huy hoặc có nhiều khối
+      if (!danhSo) p('b h2', `* ${esc(tt)}:`);
+      else if (tb.kind !== 'dh' || trB.length > 1) p('b h2', head(tt));
       trN.forEach(x => {
         const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
         p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'Không có mặt' : 'Có mặt'} ở cảng tại thời điểm kiểm tra.`);
@@ -1443,10 +1460,10 @@ function html(d){
     }
   });
 
-  roman('III', 'TÌNH HÌNH AN NINH TRẬT TỰ');
+  roman('IV', 'TÌNH HÌNH AN NINH TRẬT TỰ');
   p('', esc(d.antt.trim() || '……'));
 
-  if (danhSo) p('b h1', 'IV. KẾT LUẬN'); else p('u', 'Kết luận:');
+  if (danhSo) p('b h1', 'V. KẾT LUẬN'); else p('u', 'Kết luận:');
   const kl = lines(d.ketLuan);
   if (!kl.length) p('', '……');
   let kn = 0;
@@ -2614,8 +2631,8 @@ function renderTrucPanel(){
   if (subCur !== 'truc'){ box.innerHTML = ''; box.dataset.sig = ''; return; }
   const m = trucMode(), bl = trucBlocks(), has = k => bl.some(b => b.dataset.tkind === k);
   let h = `<div class="tmode"><button class="tm ${m === 'dh' ? 'on' : ''}" data-tmode="dh"><i>${m === 'dh' ? '●' : '○'}</i><span><b>Trực điều hành sản xuất</b><small>Ngày thường: gồm người ở mục Thành phần (trừ Ban KSNB) và Trưởng ca</small></span></button>` +
-    `<button class="tm ${m === 'ch' ? 'on' : ''}" data-tmode="ch"><i>${m === 'ch' ? '●' : '○'}</i><span><b>Trực chỉ huy</b><small>Ngày lễ, tết: chọn trực chỉ huy Văn phòng và / hoặc Cảng</small></span></button></div>`;
-  if (m === 'ch') h += `<div class="tsub"><b>Chọn một hoặc cả hai:</b>` +
+    `<button class="tm ${m === 'ch' ? 'on' : ''}" data-tmode="ch"><i>${m === 'ch' ? '●' : '○'}</i><span><b>Trực chỉ huy</b><small>Ngày lễ, tết: một mục, gồm 2 nội dung con (Văn phòng Công ty / Cảng)</small></span></button></div>`;
+  if (m === 'ch') h += `<div class="tsub"><b>Trực chỉ huy gồm các nội dung con (chọn một hoặc cả hai):</b>` +
     (isLBT() ? `<label><input type="checkbox" data-tch="vp" ${has('vp') ? 'checked' : ''}> Trực chỉ huy Văn phòng Công ty</label>` : '') +
     `<label><input type="checkbox" data-tch="cang" ${has('cang') ? 'checked' : ''}> ${esc(trucLabel('cang'))}</label></div>`;
   if (m === 'dh') h += `<div class="tsub"><button class="btn small" data-tref="1">↻ Lấy lại danh sách từ Thành phần và Trưởng ca</button></div>`;
