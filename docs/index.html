@@ -303,6 +303,61 @@ tbody tr:hover{background:#e3effb}
 .subnav .btn{min-height:42px;font-size:15px;font-weight:600;border:2px solid #9bb8d6;background:#e4eefa;color:#143c5f}
 .subnav .btn.next,.subnav .btn.add{background:#FF8A3D;border-color:#FF8A3D;color:#fff;margin-left:auto}
 .qbar.qhide{display:none}
+/* ===== bố cục 3 cột: mục lục | soạn thảo | xem trước ===== */
+#editor{grid-template-columns:230px minmax(380px,1fr) minmax(420px,1.05fr)}
+.toc{position:sticky;top:70px;max-height:calc(100vh - 110px);overflow:auto;background:#143c5f;border-radius:10px;padding:10px 8px;color:#fff;box-shadow:0 2px 8px rgba(20,60,95,.35)}
+.toch{display:flex;justify-content:space-between;font-weight:800;font-size:13px;letter-spacing:.6px;text-transform:uppercase;padding:2px 8px 6px;color:#cfe3f7}
+.tprog{height:6px;border-radius:3px;background:rgba(255,255,255,.22);margin:0 8px 8px;overflow:hidden}
+.tprog>div{height:100%;background:#7BE08A;transition:width .25s}
+.ti{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:#e6f0fa;padding:8px 9px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;line-height:1.25;margin:1px 0}
+.ti:hover{background:rgba(255,255,255,.13)}
+.ti i{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.45);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800}
+.ti.done i{background:#43A047;border-color:#43A047;color:#fff}
+.ti.on{background:#FF8A3D;color:#fff;box-shadow:0 0 0 2px #fff inset}
+.ti.on i{border-color:#fff}
+.ti.parent{cursor:default}
+.ti.sub{margin-left:20px;width:calc(100% - 20px);font-weight:500;font-size:14px;padding:6px 8px}
+.ti.sub i{flex-basis:18px;height:18px;font-size:11px}
+.ti.sub.add{color:#FFD2AD}
+.ti.sub.add.on{color:#fff}
+.ti.allbtn{margin-top:10px;border-top:1px solid rgba(255,255,255,.2);border-radius:0 0 8px 8px;font-size:13px;font-weight:500;color:#b9d3ec}
+.steps,.subbar,.subnav,.stepnav{display:none!important}
+.stephead{background:#fff4e0;border:0;border-left:6px solid #FF8A3D;border-radius:6px;padding:8px 12px;margin:0 0 12px}
+.stephead>b{font-size:18px}
+.stephead p{margin:2px 0 0;font-size:15px}
+.autobtn{display:none!important}
+.navbar{position:sticky;bottom:-14px;z-index:9;display:flex;justify-content:space-between;gap:8px;margin:14px -16px -14px;padding:9px 12px;background:#143c5f;box-shadow:0 -3px 8px rgba(0,0,0,.25)}
+.navbar .btn{min-height:44px;font-size:16px;font-weight:700}
+.navbar .btn.back{background:#e4eefa;color:#143c5f}
+.navbar .btn.next{background:#FF8A3D;color:#fff;margin-left:auto}
+.form.allmode .navbar{display:none}
+.dock{position:static!important;margin:0 0 12px!important;padding:8px 10px!important;background:#eaf3fc!important;border:2px solid var(--blue2)!important;border-radius:10px;box-shadow:none!important}
+.dock::before{content:"Thêm người nhanh: chọn thiết bị → chọn người → bấm Thêm";display:block;font-weight:700;color:var(--blue);font-size:14px;margin:0 0 6px}
+.dock:empty{display:none!important}
+.dockhead,.qbar .del{display:none!important}
+.qbar{grid-template-columns:1fr 1fr auto!important;margin-bottom:6px;padding:6px 8px}
+.qbar .qcap{grid-column:1 / -1}
+.qbar.qwarn{grid-template-columns:1fr!important}
+.qbar select{min-height:36px;font-size:15px}
+.qbar .btn.small{min-height:36px;font-size:15px;background:#FF8A3D;color:#fff;font-weight:700}
+.qbar .qcap{font-size:15px}
+.leadd{margin:4px 0 8px}
+.leadd>summary{cursor:pointer;font-size:13px;color:#667;padding:2px 0}
+.pickbar{display:block!important;margin-top:10px}
+.pickbar select{border:2px dashed #FF8A3D;background:#fff8ef;font-weight:600;color:#B45309;min-height:42px}
+.addgrp{margin:0 0 14px}
+.addgrp>b{display:block;color:var(--blue);margin-bottom:6px;font-size:15px}
+.addgrp>div{display:flex;flex-wrap:wrap;gap:8px}
+.addbtn{border:2px solid #FF8A3D;background:#fff8ef;color:#B45309;border-radius:8px;padding:9px 14px;font-size:15px;font-weight:700;cursor:pointer;text-align:left}
+.addbtn:hover{background:#FF8A3D;color:#fff}
+.addbtn.all{background:#FF8A3D;color:#fff}
+.addbtn.oth{border-style:dashed;border-color:#9bb8d6;background:#fff;color:#44607e;font-weight:600}
+.mut{color:#778;font-size:14px;align-self:center}
+.pickrow{border-color:#FF8A3D;background:#fff8ef}
+.pickrow select{font-weight:600;color:#B45309}
+.form{padding-bottom:0}
+@media (max-width:1180px){#editor{grid-template-columns:200px 1fr}.preview{grid-column:1 / -1;position:static;max-height:none}}
+@media (max-width:980px){#editor{grid-template-columns:1fr}.toc{position:static;max-height:none}.toc .ti{display:inline-flex;width:auto}.toc .ti.sub{margin-left:0;width:auto}}
 @media print{
   html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -342,6 +397,7 @@ tbody tr:hover{background:#e3effb}
 
 <!-- ============ BIÊN BẢN ============ -->
 <div class="view on" id="editor">
+  <nav class="toc no-print" id="toc"></nav>
   <div class="form no-print" id="formBox" data-cur="1">
     <div class="steps" id="stepBar"></div>
 
@@ -363,16 +419,14 @@ tbody tr:hover{background:#e3effb}
       </div>
       <label class="lb">Căn cứ (chọn trong danh mục)</label>
       <div id="canCuBox"></div>
-      <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="ccPick"></select><button class="btn small" data-act="pickCC">+ Thêm</button><button class="btn small" data-act="addCC">+ Khác</button></div>
+      <div class="pickrow" style="grid-template-columns:1fr auto"><select id="ccPick"></select><button class="autobtn" data-act="pickCC">+</button><button class="btn small" data-act="addCC">✎ Tự nhập</button></div>
       <label class="lb">Căn cứ thêm cho biên bản này (mỗi dòng một căn cứ)</label>
       <textarea id="canCuThem" style="min-height:50px"></textarea>
     </div>
 
     <!-- BƯỚC 2 -->
     <div class="step" data-step="2">
-      <div class="toolbar">
-        <div class="tb-row t1"><span class="tb-lbl">Thêm người</span><select id="addTP"></select><button class="btn small" data-act="pickUnit">+ Thêm</button><button class="btn small" data-act="blankUnit">+ Khác</button></div>
-      </div>
+      <div class="pickrow" style="grid-template-columns:1fr auto"><select id="addTP"></select><button class="autobtn" data-act="pickUnit">+</button><button class="btn small" data-act="blankUnit">✎ Đơn vị khác</button></div>
       <div class="sec">I. Thành phần</div>
       <div id="tpBox"></div>
     </div>
@@ -395,7 +449,9 @@ tbody tr:hover{background:#e3effb}
     <div class="step" data-step="4">
       <div class="subbar" id="subBar"></div>
       <div class="subhelp" id="subHelp"></div>
-      <div class="toolbar" id="addToolbar">
+      <div id="addList"></div>
+      <div class="dock" id="dock"></div>
+      <div class="toolbar" id="addToolbar" style="display:none!important">
         <div class="tb-row t2"><span class="tb-lbl">Thêm mục</span><select id="addKind">
             <option value="berth">Cầu bến</option>
             <option value="ban">Ban / bộ phận làm việc</option>
@@ -417,7 +473,7 @@ tbody tr:hover{background:#e3effb}
     <!-- BƯỚC 6 -->
     <div class="step" data-step="6">
       <div class="sec">IV. Kết luận</div>
-      <div class="pickrow" style="grid-template-columns:1fr auto auto"><select id="klPick"></select><button class="btn small" data-act="klAdd">+ Thêm</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
+      <div class="pickrow" style="grid-template-columns:1fr auto"><select id="klPick"></select><button class="autobtn" data-act="klAdd">+</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
       <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
     </div>
 
@@ -431,7 +487,7 @@ tbody tr:hover{background:#e3effb}
       <div class="finish" id="finishBox"></div>
     </div>
 
-    <div class="dock" id="dock"></div>
+    <div class="navbar no-print" id="navBar"></div>
   </div>
 
   <div class="preview"><div id="paper"></div></div>
@@ -865,7 +921,7 @@ function tP(p){
   return `<div class="prow" data-p><label class="ck"><input type="checkbox" data-co ${p.co!==false?'checked':''}> có mặt</label><select data-xung>${['','Ông','Bà'].map(x => `<option ${x===(p.xung||'')?'selected':''}>${x}</option>`).join('')}</select><input type="text" data-hoten list="rosterNames" value="${esc(p.hoTen)}" placeholder="Họ và tên"><input type="text" data-cd value="${esc(p.chucDanh)}" placeholder="Chức danh"><button class="del" data-del>✕</button></div>`;
 }
 function pplBox(arr){
-  return `<details class="pl-d"><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="ppickrow"><select data-pplpick></select><button class="btn small" data-act="pplAdd">+ Thêm</button><button class="btn small" data-act="addP">+ Khác</button></div></details>`;
+  return `<details class="pl-d" open><summary>Danh sách người (${arr.length})</summary><div class="pl">${arr.map(tP).join('')}</div><div class="ppickrow"><select data-pplpick></select><button class="autobtn" data-act="pplAdd">+</button><button class="btn small" data-act="addP">✎ Người khác</button></div></details>`;
 }
 const plOf = el => el ? el.querySelector(':scope > details > .pl') : null;
 function defaultSig(ten){ return ten === KSNB_NAME ? 'ĐẠI DIỆN BAN KIỂM SOÁT NỘI BỘ' : 'ĐẠI DIỆN ' + String(ten || '').toUpperCase(); }
@@ -877,9 +933,9 @@ function tItem(it){
 }
 function tBan(g){
   return `<div class="card-b" data-ban><div class="bh"><input type="text" data-bten value="${esc(g.ten)}" placeholder="Tên ban / bộ phận"><button class="del" data-del>✕</button></div>
-    <div class="lead"><input type="text" data-blead value="${esc(g.lead || DEFAULT_LEAD)}" title="Câu mở đầu, in một lần cho cả ban"></div>
+    <details class="leadd"><summary>Câu mở đầu của ban (thường không cần sửa)</summary><div class="lead"><input type="text" data-blead value="${esc(g.lead || DEFAULT_LEAD)}" title="Câu mở đầu, in một lần cho cả ban"></div></details>
     <div class="items">${(g.items||[]).map(tItem).join('')}</div>
-    <div class="pickbar"><select data-pick></select><button class="btn small" data-act="pickItem">+ thêm vị trí</button><button class="btn small" data-act="pickAll">+ tất cả</button><button class="btn small" data-act="blankItem">+ khác</button></div></div>`;
+    <div class="pickbar"><select data-pick></select></div></div>`;
 }
 function tB(b){
   return `<div class="card-b" data-berth style="padding:8px 10px"><div class="brow"><input type="text" data-cbten value="${esc(b.ten)}" placeholder="Cầu"><input type="text" data-cbpt list="ptList" value="${esc(b.phuongTien)}" placeholder="Phương tiện cập bến"><input type="text" data-cbtk value="${esc(b.thucHien)}" placeholder="Thực hiện làm hàng"><input type="text" data-cbtb value="${esc(b.thietBi)}" placeholder="Thiết bị làm hàng"><button class="del" data-del>✕</button></div></div>`;
@@ -995,7 +1051,7 @@ function klStats(){
 const klFill = (t, st) => String(t).replace(/\{(\w+)\}/g, (m, k) => (st[k] !== undefined && k[0] !== '_') ? st[k] : m);
 function refreshKlPick(){
   const list = settingsOf($('cang').value).ketLuanMau || [];
-  $('klPick').innerHTML = '<option value="">— chọn câu mẫu cho phần kết luận —</option>' + list.map((k, i) =>
+  $('klPick').innerHTML = '<option value="">＋ Chọn câu mẫu để thêm vào kết luận…</option>' + list.map((k, i) =>
     `<optgroup label="${esc(k.y)}">${(k.mau || []).map((m, j) => `<option value="${i}|${j}">${esc(m.replace(/\n/g, ' ').slice(0, 90))}</option>`).join('')}</optgroup>`).join('');
 }
 function klLines(y, text, st){
@@ -1021,13 +1077,13 @@ function refreshAllMenus(){
 function refreshCC(){
   const have = new Set(kids($('canCuBox'), '[data-cc]').map(el => val(el, '[data-t]').trim()));
   const list = settingsOf($('cang').value).canCu || [];
-  $('ccPick').innerHTML = '<option value="">— chọn căn cứ trong danh mục —</option>' +
+  $('ccPick').innerHTML = '<option value="">＋ Chọn căn cứ để thêm…</option>' +
     list.map((t, i) => have.has(t) ? '' : `<option value="${i}">${esc(t)}</option>`).join('');
 }
 function refreshTP(){
   const present = new Set([...$('tpBox').querySelectorAll('[data-uten]')].map(e => e.value.trim()));
   const units = allUnits($('cang').value);
-  $('addTP').innerHTML = '<option value="">— chọn đơn vị trong danh mục —</option>' +
+  $('addTP').innerHTML = '<option value="">＋ Chọn đơn vị để thêm…</option>' +
     units.map((u,i) => present.has(u.ten) ? '' : `<option value="${i}">${esc(u.ten)}</option>`).join('');
 }
 function refreshBanPick(card){
@@ -1035,12 +1091,14 @@ function refreshBanPick(card){
   const g = cat($('cang').value).groups.find(x => x.ten === name);
   const have = new Set(kids(card.querySelector(':scope > .items'), '[data-item]').map(it => val(it,'[data-label]').trim()));
   const pooled = new Set(g ? g.pools.map(p => p.ten) : []);
-  const opts = g ? g.items.map((it,i) => (have.has(it.label) || pooled.has(it.phan)) ? '' : `<option value="${i}">${esc((it.phan ? it.phan + ' › ' : '') + it.label)}</option>`).join('') : '';
-  card.querySelector('[data-pick]').innerHTML = '<option value="">— chọn vị trí trong danh mục —</option>' + opts;
+  const list = g ? g.items.map((it,i) => (have.has(it.label) || pooled.has(it.phan)) ? '' : `<option value="${i}">${esc((it.phan ? it.phan + ' › ' : '') + it.label)}</option>`).filter(Boolean) : [];
+  const poolOnly = !!(g && g.items.length && g.items.every(it => pooled.has(it.phan)));
   const pb = card.querySelector('.pickbar');
-  ['[data-pick]', '[data-act="pickItem"]', '[data-act="pickAll"]'].forEach(sel => { pb.querySelector(sel).hidden = !opts; });
-  // "+ khác" chỉ dành cho vị trí không thuộc danh sách chung (vd điều độ - thủ tục); ban toàn cơ giới / bảo vệ thì dùng thanh xanh dưới cùng
-  pb.querySelector('[data-act="blankItem"]').hidden = !!(g && g.items.length && g.items.every(it => pooled.has(it.phan)));
+  // một ô duy nhất: chọn là tự thêm
+  pb.hidden = poolOnly && !list.length;
+  pb.querySelector('[data-pick]').innerHTML = '<option value="">＋ Thêm vị trí vào danh sách…</option>' +
+    (list.length > 1 ? '<option value="all">★ Thêm tất cả các vị trí còn lại</option>' : '') + list.join('') +
+    (poolOnly ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>');
   sortItemsDom(card.querySelector(':scope > .items'));
   refreshDock();
 }
@@ -1073,7 +1131,7 @@ function refreshPeoplePicks(){
     const opt = x => `<option data-x="${esc(x.xung || '')}" data-n="${esc(x.hoTen)}" data-c="${esc(x.chucDanh || '')}">${esc(x.hoTen)}</option>`;
     const a = own.filter(x => x.hoTen && !seen.has(x.hoTen) && seen.add(x.hoTen));
     const b = more.filter(x => x.hoTen && !seen.has(x.hoTen) && seen.add(x.hoTen));
-    sel.innerHTML = '<option value="">— chọn người trong danh mục —</option>' + a.map(opt).join('') +
+    sel.innerHTML = '<option value="">＋ Chọn người để thêm…</option>' + a.map(opt).join('') +
       (b.length ? `<optgroup label="Người khác trong ban">${b.map(opt).join('')}</optgroup>` : '');
   });
 }
@@ -1789,6 +1847,30 @@ const ND_NEW = {
 };
 function afterAdd(){ sortNdDom(); document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshDock(); refreshND(); refreshTP(); refreshCC(); markDirty(); }
 
+
+function banAdd(card, v){
+  if (!card || v === '') return;
+  const name = val(card, ':scope > .bh [data-bten]').trim();
+  const g = cat($('cang').value).groups.find(x => x.ten === name);
+  const box = card.querySelector(':scope > .items');
+  const pl = new Set(g ? g.pools.map(p => p.ten) : []);
+  const have = new Set(kids(box, '[data-item]').map(it => val(it,'[data-label]').trim()));
+  if (v === 'blank'){
+    const free = [...new Set((g ? g.items : []).filter(it => !pl.has(it.phan) && it.phan).map(it => it.phan))];
+    box.insertAdjacentHTML('beforeend', tItem({ phan: free.length === 1 ? free[0] : '', label: '', note: '', nguoi: [] }));
+  } else if (v === 'all'){
+    if (g) g.items.filter(it => !have.has(it.label) && !pl.has(it.phan)).forEach(it => box.insertAdjacentHTML('beforeend', tItem(it)));
+  } else if (g) box.insertAdjacentHTML('beforeend', tItem(g.items[+v]));
+  refreshBanPick(card); markDirty();
+}
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.matches) return;
+  if (t.matches('[data-pick]')){ banAdd(t.closest('[data-ban]'), t.value); return; }
+  if (t.matches('#addTP,#ccPick,#klPick,[data-pplpick]') && t.value !== ''){
+    const b = t.parentElement.querySelector('.autobtn'); if (b) b.click();
+    if (t.id === 'klPick') t.value = '';
+  }
+});
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
   if (go){ show(go.dataset.go); return; }
@@ -1842,26 +1924,6 @@ document.addEventListener('click', e => {
       if (kind === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Trực điều hành', nguoi: c.truc });
       $('ndBox').insertAdjacentHTML('beforeend', html);
       afterAdd();
-    }
-    else if (a === 'pickItem' || a === 'pickAll' || a === 'blankItem'){
-      const card = act.closest('[data-ban]');
-      const name = val(card, ':scope > .bh [data-bten]').trim();
-      const g = cat(cang).groups.find(x => x.ten === name);
-      const box = card.querySelector(':scope > .items');
-      if (a === 'blankItem'){
-        const pl = new Set(g ? g.pools.map(p => p.ten) : []);
-        const free = [...new Set((g ? g.items : []).filter(it => !pl.has(it.phan) && it.phan).map(it => it.phan))];
-        box.insertAdjacentHTML('beforeend', tItem({ phan: free.length === 1 ? free[0] : '', label: '', note: '', nguoi: [] }));
-      }
-      else if (a === 'pickItem'){
-        const sel = card.querySelector('[data-pick]'); if (sel.value === '' || !g) return;
-        box.insertAdjacentHTML('beforeend', tItem(g.items[+sel.value]));
-      } else if (g){
-        const have = new Set(kids(box, '[data-item]').map(it => val(it,'[data-label]').trim()));
-        const pooled = new Set(g.pools.map(p => p.ten));
-        g.items.filter(it => !have.has(it.label) && !pooled.has(it.phan)).forEach(it => box.insertAdjacentHTML('beforeend', tItem(it)));
-      }
-      refreshBanPick(card);
     }
     else if (a === 'pplAdd'){
       const host = act.closest('[data-unit],[data-item],[data-truc]');
@@ -2179,13 +2241,13 @@ window.addEventListener('afterprint', () => { delete $('paper').dataset.wrapped;
 
 /* ---- hướng dẫn từng bước ---- */
 const STEPS = [
-  { t: 'Thông tin chung', short: 'Thông tin', h: ['Chọn <b>cảng</b> cần kiểm tra ở ô đầu tiên.', 'Xem lại tiêu đề, địa điểm, ngày lập.', 'Ở phần <b>Căn cứ</b>: chọn căn cứ trong danh sách rồi bấm <b>+ Thêm</b>.'] },
-  { t: 'Thành phần tham gia', short: 'Thành phần', h: ['Chọn <b>đơn vị</b> (ví dụ Ban KSNB, Cảng) ở ô bên dưới rồi bấm <b>+ Thêm</b>.', 'Trong từng đơn vị, chọn người tham gia kiểm tra.'] },
-  { t: 'Thời gian kiểm tra', short: 'Thời gian', h: ['Nhập <b>ca trực</b>, giờ và ngày bắt đầu, giờ và ngày kết thúc kiểm tra.', 'Ô "các bộ phận được kiểm tra" tự điền ở bước sau, không cần nhập.'] },
-  { t: 'Kết quả từng nơi', short: 'Kết quả', h: ['Mỗi cầu bến, mỗi ban, mục trực là <b>một thẻ nhỏ</b> ngay bên dưới. Bấm thẻ nào thì chỉ hiện việc của thẻ đó.', 'Chưa có mục nào: bấm thẻ <b>＋ Thêm mục</b>, chọn loại, chọn tên rồi bấm <b>+ Thêm</b>. Thêm xong máy tự mở mục đó.', 'Làm xong một mục, bấm <b>Mục tiếp theo</b> ở cuối. Người vắng mặt: bỏ dấu tick ở ô "có mặt".'] },
-  { t: 'An ninh trật tự', short: 'An ninh', h: ['Bấm <b>+ Dùng câu mặc định</b>, hoặc tự gõ tình hình an ninh trật tự.'] },
-  { t: 'Kết luận', short: 'Kết luận', h: ['Bấm <b>Soạn tự động</b> để máy viết kết luận từ các bước trước, rồi sửa lại nếu cần.', 'Cũng có thể chọn câu mẫu rồi bấm <b>+ Thêm</b>.'] },
-  { t: 'Hoàn tất', short: 'Hoàn tất', h: ['Nhập giờ và ngày kết thúc.', 'Xem lại biên bản ở khung bên phải.', 'Bấm <b>Lưu biên bản</b> rồi <b>Xuất file Word</b> (hoặc In / PDF).'] }
+  { t: 'Thông tin chung', short: 'Thông tin', d: 'Chọn cảng, xem lại ngày lập, chọn căn cứ.', h: ['Chọn <b>cảng</b> cần kiểm tra ở ô đầu tiên.', 'Xem lại tiêu đề, địa điểm, ngày lập.', 'Ở phần <b>Căn cứ</b>: chọn căn cứ trong danh sách rồi bấm <b>+ Thêm</b>.'] },
+  { t: 'Thành phần tham gia', short: 'Thành phần', d: 'Chọn đơn vị, rồi chọn người tham gia kiểm tra.', h: ['Chọn <b>đơn vị</b> (ví dụ Ban KSNB, Cảng) ở ô bên dưới rồi bấm <b>+ Thêm</b>.', 'Trong từng đơn vị, chọn người tham gia kiểm tra.'] },
+  { t: 'Thời gian kiểm tra', short: 'Thời gian', d: 'Nhập ca trực, giờ và ngày bắt đầu – kết thúc.', h: ['Nhập <b>ca trực</b>, giờ và ngày bắt đầu, giờ và ngày kết thúc kiểm tra.', 'Ô "các bộ phận được kiểm tra" tự điền ở bước sau, không cần nhập.'] },
+  { t: 'Kết quả từng nơi', short: 'Kết quả', d: 'Bấm từng mục ở cột bên trái và điền kết quả. Mục nào xong sẽ có dấu ✓.', h: ['Mỗi cầu bến, mỗi ban, mục trực là <b>một thẻ nhỏ</b> ngay bên dưới. Bấm thẻ nào thì chỉ hiện việc của thẻ đó.', 'Chưa có mục nào: bấm thẻ <b>＋ Thêm mục</b>, chọn loại, chọn tên rồi bấm <b>+ Thêm</b>. Thêm xong máy tự mở mục đó.', 'Làm xong một mục, bấm <b>Mục tiếp theo</b> ở cuối. Người vắng mặt: bỏ dấu tick ở ô "có mặt".'] },
+  { t: 'An ninh trật tự', short: 'An ninh', d: 'Bấm câu mặc định hoặc tự gõ tình hình an ninh trật tự.', h: ['Bấm <b>+ Dùng câu mặc định</b>, hoặc tự gõ tình hình an ninh trật tự.'] },
+  { t: 'Kết luận', short: 'Kết luận', d: 'Bấm “Soạn tự động” rồi sửa lại nếu cần.', h: ['Bấm <b>Soạn tự động</b> để máy viết kết luận từ các bước trước, rồi sửa lại nếu cần.', 'Cũng có thể chọn câu mẫu rồi bấm <b>+ Thêm</b>.'] },
+  { t: 'Hoàn tất', short: 'Hoàn tất', d: 'Nhập giờ kết thúc, kiểm tra lần cuối rồi Lưu và Xuất Word.', h: ['Nhập giờ và ngày kết thúc.', 'Xem lại biên bản ở khung bên phải.', 'Bấm <b>Lưu biên bản</b> rồi <b>Xuất file Word</b> (hoặc In / PDF).'] }
 ];
 let stepCur = 1;
 function stepDone(n){
@@ -2194,7 +2256,7 @@ function stepDone(n){
     case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
     case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
     case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
-    case 4: return !!$('ndBox').querySelector('[data-berth],[data-ban],[data-tn],[data-truc]');
+    case 4: { const g = subGroups(); return g.length > 0 && g.every(x => x.done); }
     case 5: return !!v('antt');
     case 6: return !!v('ketLuan');
     case 7: return !!(v('ktGio') || v('ktNgay'));
@@ -2205,9 +2267,7 @@ function buildSteps(){
   $('stepBar').innerHTML = STEPS.map((s, i) => `<button data-sg="${i + 1}" title="${s.t}"><i>${i + 1}</i><span>${s.short}</span></button>`).join('') + '<button class="stepall" data-sgall="1" title="Hiện tất cả các phần cùng lúc">☰ Tất cả</button>';
   document.querySelectorAll('.step').forEach(el => {
     const n = +el.dataset.step, s = STEPS[n - 1];
-    el.insertAdjacentHTML('afterbegin', `<div class="stephead"><b>Bước ${n}/${STEPS.length}: ${s.t}</b><p>Việc cần làm:</p><ol>${s.h.map(x => '<li>' + x + '</li>').join('')}</ol></div>`);
-    const nxt = STEPS[n];
-    el.insertAdjacentHTML('beforeend', `<div class="stepnav">${n > 1 ? '<button class="btn back" data-sg="' + (n - 1) + '">‹ Quay lại</button>' : '<span></span>'}${nxt ? '<button class="btn next" data-sg="' + (n + 1) + '">Tiếp theo: ' + nxt.short + ' ›</button>' : ''}</div>`);
+    el.insertAdjacentHTML('afterbegin', `<div class="stephead"><b>Bước ${n}/${STEPS.length}: ${s.t}</b><p>${s.d}</p></div>`);
   });
 }
 function gotoStep(n, quiet){
@@ -2219,6 +2279,7 @@ function gotoStep(n, quiet){
   if (n === 4) refreshDock();
 }
 function updateSteps(){
+  renderToc();
   try { const sb = $('stepBar'); if (sb && sb.offsetHeight) $('formBox').style.setProperty('--stepbar-h', (sb.offsetHeight - 14) + 'px'); } catch(e){}
   const bar = $('stepBar'); if (!bar || !bar.children.length) return;
   bar.querySelectorAll('[data-sg]').forEach(b => { const n = +b.dataset.sg; b.classList.toggle('on', n === stepCur && !$('formBox').classList.contains('allmode')); b.classList.toggle('done', stepDone(n)); });
@@ -2256,11 +2317,11 @@ function subGroups(){
   return g;
 }
 const SUBHELP = {
-  berth: 'Điền thông tin cho từng cầu: phương tiện đang làm hàng, thiết bị, người thực hiện. Cầu không hoạt động thì ghi "Không có phương tiện".',
-  ban: 'Chọn <b>vị trí</b> rồi bấm <b>+ thêm vị trí</b> (hoặc <b>+ tất cả</b>), sau đó chọn người đang làm việc. Bộ phận cơ giới, bảo vệ: dùng <b>thanh xanh dưới cùng</b> (chọn thiết bị, chọn người, bấm Thêm).',
-  truc: 'Nhập họ tên, chức danh người trực điều hành. Bỏ dấu tick ở ô "có mặt" nếu người đó không có mặt.',
+  berth: 'Mỗi dòng là một cầu: ghi phương tiện đang làm hàng, thiết bị, người thực hiện. Cầu không hoạt động thì ghi “Không có phương tiện”.',
+  ban: 'Chọn vị trí ở ô <b>＋ Thêm vị trí</b> (chọn xong tự thêm), rồi chọn người làm việc ở từng vị trí. Nếu có khung xanh bên dưới: chọn thiết bị → chọn người → bấm Thêm.',
+  truc: 'Nhập họ tên, chức danh người trực điều hành. Bỏ dấu tick ở ô “có mặt” nếu người đó không có mặt.',
   tn: 'Ghi tên công ty thuê ngoài và nội dung dịch vụ đang thực hiện.',
-  add: 'Chọn <b>loại mục</b>, chọn <b>tên</b> trong danh sách rồi bấm <b>+ Thêm</b>. Thêm xong máy tự mở mục đó cho bạn nhập.'
+  add: 'Bấm vào mục muốn thêm. Thêm xong máy tự mở mục đó cho bạn nhập.'
 };
 function refreshSub(){
   const bar = $('subBar'); if (!bar) return;
@@ -2282,6 +2343,7 @@ function refreshSub(){
   const st4 = document.querySelector('.step[data-step="4"]'); st4.classList.toggle('subadd', subCur === 'add');
   const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : (cur && cur.els[0].matches('[data-ban]') ? 'ban' : (cur && cur.els[0].matches('[data-truc]') ? 'truc' : 'tn')));
   $('subHelp').innerHTML = SUBHELP[kind];
+  renderAddList();
   const idx = keys.indexOf(subCur);
   const nxt = idx >= 0 && idx < keys.length - 1 ? g[idx + 1].label : null;
   $('subNav').innerHTML = subCur === 'add' ? (keys.length ? `<button class="btn back" data-sub="${esc(keys[0])}">‹ Về các mục đã thêm</button>` : '') :
@@ -2293,14 +2355,87 @@ function refreshSub(){
   const bi = banEl ? bans.indexOf(banEl) : -1;
   $('dock').querySelectorAll('[data-qbar]').forEach(b => b.classList.toggle('qhide', +b.dataset.qban !== bi));
   $('formBox').classList.toggle('nosubdock', bi < 0 || !$('dock').querySelector('[data-qbar]:not(.qhide)'));
+  renderToc();
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-sub]'); if (!b) return;
-  subCur = b.dataset.sub; refreshSub(); if (subCur === 'add') refreshND();
+  subCur = b.dataset.sub; $('formBox').classList.remove('allmode');
+  if (stepCur !== 4) gotoStep(4);
+  refreshSub(); updateSteps();
   const f = $('formBox'); f.scrollTop = 0;
 });
 
+/* ---- danh sách mục để thêm (bấm là thêm) ---- */
+function renderAddList(){
+  const box = $('addList'); if (!box) return;
+  if (subCur !== 'add'){ box.innerHTML = ''; return; }
+  const c = cat($('cang').value), nd = $('ndBox');
+  const has = sel => new Set([...nd.querySelectorAll(sel)].map(e => e.value.trim()));
+  const hb = has('[data-berth] [data-cbten]'), hg = has('[data-ban] > .bh [data-bten]'), ht = has('[data-tn] [data-congty]');
+  const btn = (k, i, t, cls) => `<button class="addbtn ${cls || ''}" data-addkind="${k}" data-addidx="${i}">${esc(t)}</button>`;
+  let h = '';
+  const berths = c.berths.map((b, i) => hb.has(b.ten) ? '' : btn('berth', i, '＋ ' + b.ten)).join('');
+  h += `<div class="addgrp"><b>Cầu bến</b><div>${berths ? btn('berthall', 0, '★ Thêm tất cả cầu bến', 'all') + berths : '<span class="mut">Đã thêm hết.</span>'}${btn('berth', -1, '✎ Cầu khác (tự nhập)', 'oth')}</div></div>`;
+  let bans = c.groups.map((g, i) => hg.has(g.ten) ? '' : btn('ban', i, '＋ ' + g.ten)).join('');
+  if (!nd.querySelector('[data-truc]')) bans += btn('truc', 0, '＋ ' + (settingsOf($('cang').value).tenTruc || 'Công tác trực điều hành sản xuất'));
+  h += `<div class="addgrp"><b>Ban / bộ phận làm việc</b><div>${bans || '<span class="mut">Đã thêm hết.</span>'}${btn('ban', -1, '✎ Ban khác (tự nhập)', 'oth')}</div></div>`;
+  const th = c.thue.map((t, i) => ht.has(t.congTy) ? '' : btn('thue', i, '＋ ' + t.congTy)).join('');
+  if (c.thue.length || th) h += `<div class="addgrp"><b>Đơn vị thuê ngoài</b><div>${th || '<span class="mut">Đã thêm hết.</span>'}${btn('thue', -1, '✎ Đơn vị khác (tự nhập)', 'oth')}</div></div>`;
+  box.innerHTML = h;
+}
+function addNd(kind, idx){
+  $('addKind').value = kind; refreshND(); $('addND').value = String(idx);
+  if ($('addND').value !== String(idx)) return false;
+  document.querySelector('[data-act="pickND"]').click(); return true;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-addkind]'); if (!b) return;
+  const k = b.dataset.addkind, i = +b.dataset.addidx;
+  if (k === 'berthall'){
+    const c = cat($('cang').value);
+    const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim()));
+    c.berths.forEach((x, j) => { if (!have.has(x.ten)) addNd('berth', j); });
+  } else addNd(k, i);
+});
+
+/* ---- mục lục bên trái ---- */
+var tocReady = false, navSeq = [];
+function renderToc(){
+  const toc = $('toc'); if (!toc || !tocReady) return;
+  const all = $('formBox').classList.contains('allmode');
+  const g = subGroups();
+  const doneN = [1, 2, 3, 4, 5, 6, 7].filter(stepDone).length;
+  let h = `<div class="toch"><span>Mục lục</span><span>${doneN}/7</span></div><div class="tprog"><div style="width:${doneN / 7 * 100}%"></div></div>`;
+  const item = (cls, attr, mark, label) => `<button class="ti ${cls}" ${attr}><i>${mark}</i><span>${label}</span></button>`;
+  navSeq = [];
+  STEPS.forEach((s, i) => {
+    const n = i + 1, d = stepDone(n), on = !all && stepCur === n && n !== 4;
+    if (n !== 4){ h += item((d ? 'done ' : '') + (on ? 'on' : ''), `data-sg="${n}"`, d ? '✓' : n, s.short === 'Thông tin' ? 'Thông tin chung' : (n === 2 ? 'Thành phần' : s.short)); navSeq.push({ sg: n, label: s.short }); return; }
+    h += item((d ? 'done ' : '') + 'parent', `data-sg="4"`, d ? '✓' : 4, 'Kết quả từng nơi');
+    g.forEach(x => { h += item('sub ' + (x.done ? 'done ' : '') + (!all && stepCur === 4 && subCur === x.key ? 'on' : ''), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)); navSeq.push({ sub: x.key, label: x.label }); });
+    h += item('sub add ' + (!all && stepCur === 4 && subCur === 'add' ? 'on' : ''), 'data-sub="add"', '+', 'Thêm mục');
+    navSeq.push({ sub: 'add', label: 'Thêm mục' });
+  });
+  h += `<button class="ti allbtn" data-sgall="1"><i>☰</i><span>${all ? 'Quay lại từng mục' : 'Xem tất cả cùng lúc'}</span></button>`;
+  toc.innerHTML = h;
+  // thanh điều hướng dưới
+  let cur = navSeq.findIndex(x => stepCur === 4 ? x.sub === subCur : x.sg === stepCur);
+  const nb = $('navBar');
+  if (cur < 0){ nb.innerHTML = ''; return; }
+  const pv = navSeq[cur - 1], nx = navSeq[cur + 1];
+  nb.innerHTML = (pv ? `<button class="btn back" data-nav="${cur - 1}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
+    (nx ? `<button class="btn next" data-nav="${cur + 1}">Tiếp theo: ${esc(nx.label)} ›</button>` : '');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nav]'); if (!b) return;
+  const t = navSeq[+b.dataset.nav]; if (!t) return;
+  $('formBox').classList.remove('allmode');
+  if (t.sg){ gotoStep(t.sg); } else { subCur = t.sub; gotoStep(4); refreshSub(); }
+  $('formBox').scrollTop = 0;
+});
+
 buildSteps();
+tocReady = true; refreshSub(); updateSteps();
 try { if (!localStorage.getItem('bb_help')) setTimeout(() => showHelp(true), 400); } catch(e){}
 
 window.addEventListener('beforeunload', e => { if (state.dirty){ e.preventDefault(); e.returnValue = ''; } });
