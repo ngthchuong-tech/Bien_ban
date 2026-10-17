@@ -358,6 +358,35 @@ tbody tr:hover{background:#e3effb}
 .form{padding-bottom:0}
 @media (max-width:1180px){#editor{grid-template-columns:200px 1fr}.preview{grid-column:1 / -1;position:static;max-height:none}}
 @media (max-width:980px){#editor{grid-template-columns:1fr}.toc{position:static;max-height:none}.toc .ti{display:inline-flex;width:auto}.toc .ti.sub{margin-left:0;width:auto}}
+/* ===== gọn dòng, khung thêm nhanh ghim đáy ===== */
+.dock{position:sticky!important;bottom:var(--nav-h,60px);z-index:8;margin:12px -16px 0!important;padding:6px 12px!important;border:0!important;border-top:3px solid var(--blue)!important;border-radius:0!important;background:#dcecfb!important;box-shadow:0 -4px 10px rgba(31,78,120,.3)!important}
+.dock::before{display:none!important}
+.dock .qcap small{display:none}
+.qbar{grid-template-columns:auto 1fr 1fr auto!important;margin-bottom:4px;padding:4px 6px}
+.qbar .qcap{grid-column:auto;font-size:14px}
+.qbar select{min-height:32px;padding:2px 6px}
+.qbar .btn.small{min-height:32px}
+#formBox input[type=text],#formBox input[type=date],#formBox input:not([type]),#formBox select{padding:4px 8px;min-height:32px;font-size:14.5px}
+#formBox textarea{padding:5px 8px;font-size:14.5px}
+#formBox .btn.small{min-height:30px;padding:3px 10px;font-size:13.5px}
+#formBox .card-b{padding:8px 10px;margin-bottom:8px}
+#formBox .item{padding:5px 8px;margin-bottom:5px}
+#formBox .ih{margin-bottom:3px;gap:5px}
+#formBox .prow{margin-bottom:3px;gap:5px}
+#formBox .pl-d>summary{font-size:13px;padding:1px 0}
+#formBox .ppickrow,#formBox .ppick{margin:3px 0 0}
+#formBox .bh{margin-bottom:4px}
+#formBox label.lb{margin:5px 0 2px;font-size:13.5px}
+#formBox .pickrow{margin:4px 0 8px;padding:6px 8px}
+#formBox .pickbar{margin-top:6px}
+#formBox .pickbar select{min-height:34px}
+.stephead{display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline;padding:4px 10px!important;margin:0 0 8px!important}
+.stephead>b{font-size:16px!important;margin:0!important;display:inline!important}
+.stephead p{margin:0!important;font-size:13.5px!important}
+.subhelp{padding:4px 9px!important;margin:0 0 8px!important;font-size:13.5px!important;line-height:1.4!important}
+.navbar{padding:6px 12px;margin-top:10px}
+.navbar .btn{min-height:38px;font-size:15px}
+#formBox .sec{margin:12px 0 6px}
 @media print{
   html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -450,7 +479,6 @@ tbody tr:hover{background:#e3effb}
       <div class="subbar" id="subBar"></div>
       <div class="subhelp" id="subHelp"></div>
       <div id="addList"></div>
-      <div class="dock" id="dock"></div>
       <div class="toolbar" id="addToolbar" style="display:none!important">
         <div class="tb-row t2"><span class="tb-lbl">Thêm mục</span><select id="addKind">
             <option value="berth">Cầu bến</option>
@@ -461,6 +489,7 @@ tbody tr:hover{background:#e3effb}
       <div class="sec">II. Nội dung kiểm tra: kết quả từng nơi</div>
       <div id="ndBox"></div>
       <div class="subnav" id="subNav"></div>
+      <div class="dock" id="dock"></div>
     </div>
 
     <!-- BƯỚC 5 -->
@@ -2280,6 +2309,7 @@ function gotoStep(n, quiet){
 }
 function updateSteps(){
   renderToc();
+  try { const nb = $('navBar'); if (nb && nb.offsetHeight) $('formBox').style.setProperty('--nav-h', nb.offsetHeight + 'px'); } catch(e){}
   try { const sb = $('stepBar'); if (sb && sb.offsetHeight) $('formBox').style.setProperty('--stepbar-h', (sb.offsetHeight - 14) + 'px'); } catch(e){}
   const bar = $('stepBar'); if (!bar || !bar.children.length) return;
   bar.querySelectorAll('[data-sg]').forEach(b => { const n = +b.dataset.sg; b.classList.toggle('on', n === stepCur && !$('formBox').classList.contains('allmode')); b.classList.toggle('done', stepDone(n)); });
