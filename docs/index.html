@@ -2710,7 +2710,8 @@ function renderToc(){
     });
     // III. Công tác trực điều hành sản xuất
     h += row(2, NOCH + item('sub ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : '', 'Công tác trực điều hành sản xuất'));
-    navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
+    // chưa có cầu bến / ban nào và trực còn trống: nút "Tiếp theo" đưa tới "Thêm mục", không nhảy vào trực
+    if (!(gt.virtual && !gb && !bans.length && !tns.length)) navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
     if (gt.els.length){
       const dh = gt.els.find(z => z.dataset.tkind === 'dh'), np = z => [...z.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
       if (dh) h += row(3, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
