@@ -2407,7 +2407,7 @@ function stepDone(n){
     case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
     case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
     case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
-    case 4: { const g = subGroups().filter(x => !x.virtual); return g.length > 0 && g.every(x => x.done); }
+    case 4: { const g = subGroups().filter(x => !x.virtual); return g.length > 0 && gaps4().length === 0; }
     case 5: return !!v('antt');
     case 6: return !!v('ketLuan');
     case 7: return !!(v('ktGio') || v('ktNgay'));
@@ -2428,11 +2428,36 @@ function gotoStep(n, quiet){
   if (!quiet) f.scrollTop = 0;
   if (n === 4) refreshDock();
 }
-// Bước 4 chưa đủ: nêu rõ mục nào còn trống, bấm vào là mở đúng mục đó
+function goTo(uid){
+  const el = byUid(uid); if (!el) return;
+  const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el.matches('[data-svc]') ? el.closest('[data-tn]') : el;
+  subCur = card.matches('[data-berth]') ? 'berth' : card.matches('[data-truc]') ? 'truc' : uidOf(card);
+  $('formBox').classList.remove('allmode');
+  if (stepCur !== 4) gotoStep(4);
+  refreshSub(); updateSteps(); markFresh(el, false);
+}
+// Những chỗ ở bước 4 còn thiếu nội dung: mỗi chỗ có tên rõ ràng và dẫn tới đúng ô cần điền
+function gaps4(){
+  const out = [], nd = $('ndBox');
+  const hasName = el => [...el.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
+  const add = (el, text) => out.push({ uid: uidOf(el), text, el });
+  kids(nd, '[data-berth]').forEach(b => { if (!val(b, '[data-cbpt]').trim()) add(b, 'Cầu bến ' + (val(b, '[data-cbten]').trim() || '(chưa đặt tên)') + ': chưa ghi phương tiện'); });
+  kids(nd, '[data-ban]').forEach(c => {
+    const ban = val(c, ':scope > .bh [data-bten]').trim() || 'Ban', its = kids(c.querySelector(':scope > .items'), '[data-item]');
+    if (!its.length) add(c, ban + ': chưa có vị trí nào');
+    its.forEach(it => { if (!hasName(it) && !val(it, '[data-note]').trim()) add(it, ban + ' › ' + (val(it, '[data-label]').trim() || '(vị trí chưa đặt tên)') + ': chưa có người'); });
+  });
+  kids(nd, '[data-tn]').forEach(t => { if (!val(t, '[data-congty]').trim()) add(t, 'Thuê ngoài: chưa ghi tên công ty'); });
+  kids(nd, '[data-truc]').forEach(t => { if (!hasName(t)) add(t, (val(t, '[data-ttl]').trim() || 'Công tác trực') + ': chưa có người'); });
+  return out;
+}
+// Bước 4 chưa đủ: nêu rõ chỗ nào còn thiếu, bấm vào là mở đúng ô đó
 function miss4(){
-  const bad = subGroups().filter(x => !x.virtual && !x.done);
-  if (!bad.length) return `<span class="miss">⚠</span> Kết quả từng nơi chưa có nội dung <a data-sub="add">mở bước này</a><br>`;
-  return `<span class="miss">⚠</span> Kết quả từng nơi còn trống: ` + bad.map(x => `<a data-sub="${esc(x.key)}">${esc(x.label)}</a>`).join(', ') + '<br>';
+  const gp = gaps4();
+  if (!gp.length) return `<span class="miss">⚠</span> Kết quả từng nơi chưa có nội dung <a data-sub="add">mở bước này</a><br>`;
+  const MAX = 10;
+  return `<span class="miss">⚠</span> Kết quả từng nơi còn thiếu ${gp.length} chỗ:<br>` +
+    gp.slice(0, MAX).map(x => `&nbsp;&nbsp;• <a data-goto="${esc(x.uid)}">${esc(x.text)}</a><br>`).join('') + (gp.length > MAX ? `&nbsp;&nbsp;… và ${gp.length - MAX} chỗ nữa<br>` : '');
 }
 function updateSteps(){
   renderToc();
@@ -2468,10 +2493,10 @@ function subGroups(){
   const add = (key, label, els, done) => { let o = g.find(x => x.key === key); if (!o){ o = { key, label, els: [], done: false }; g.push(o); } o.els.push(...els); o.done = o.done || done; };
   const nd = $('ndBox'), ch = [...nd.children];
   const berths = ch.filter(e => e.matches('[data-berth]'));
-  if (berths.length) add('berth', 'Cầu bến', berths, berths.some(e => e.querySelector('[data-cbpt]') && (e.querySelector('[data-cbpt]').value || '').trim()));
+  if (berths.length) add('berth', 'Cầu bến', berths, berths.every(e => (e.querySelector('[data-cbpt]').value || '').trim()));
   ch.forEach(e => {
     if (!e.dataset.uid) e.dataset.uid = 'u' + (++subUid);
-    if (e.matches('[data-ban]')) add(e.dataset.uid, (e.querySelector('[data-bten]').value || 'Ban').trim() || 'Ban', [e], !!e.querySelector('[data-p] [data-hoten]') && [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
+    if (e.matches('[data-ban]')) add(e.dataset.uid, (e.querySelector('[data-bten]').value || 'Ban').trim() || 'Ban', [e], (its => its.length > 0 && its.every(it => [...it.querySelectorAll('[data-hoten]')].some(x => x.value.trim()) || val(it, '[data-note]').trim()))(kids(e.querySelector(':scope > .items'), '[data-item]')));
     else if (e.matches('[data-tn]')) add(e.dataset.uid, (e.querySelector('[data-congty]').value || 'Thuê ngoài').trim() || 'Thuê ngoài', [e], !!(e.querySelector('[data-congty]').value || '').trim());
     else if (e.matches('[data-truc]')) add('truc', 'Công tác trực điều hành sản xuất', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
   });
