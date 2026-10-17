@@ -401,6 +401,9 @@ tbody tr:hover{background:#e3effb}
 .trow.l2{margin-left:24px;margin-top:4px}
 .phanh{flex:1;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:#ffd2ad;padding:2px 4px;min-width:0}
 .trow.l3{margin-left:30px}
+.trow.l2 .ti.sub{font-size:13.5px;padding:4px 7px}
+.trow.l2:has(.tchev){margin-left:14px}
+.ti.parentlbl{color:#ffd2ad;font-weight:800;text-transform:uppercase;font-size:12.5px;letter-spacing:.3px}
 .ti.leaf{font-size:13px;font-weight:500;padding:3px 6px;gap:6px;color:#dbe9f7}
 .ti.leaf i{flex:0 0 14px;height:14px;font-size:9px;border-width:1.5px}
 .ti.leaf.done{color:#fff}
@@ -2550,8 +2553,26 @@ function renderToc(){
     const n = i + 1, d = stepDone(n), on = !all && stepCur === n && n !== 4;
     if (n !== 4){ h += item((d ? 'done ' : '') + (on ? 'on' : ''), `data-sg="${n}"`, d ? '✓' : n, s.short === 'Thông tin' ? 'Thông tin chung' : (n === 2 ? 'Thành phần' : s.short)); navSeq.push({ sg: n, label: s.short }); return; }
     h += row(0, item((d ? 'done ' : '') + 'parent', `data-sg="4"`, d ? '✓' : 4, 'Kết quả từng nơi') + plus('top', 'Thêm mục mới (cầu bến, ban, trực…)'));
+    let tnDone = false;
     g.forEach(x => {
-      const el0 = x.els[0], isBan = el0.matches('[data-ban]'), isBerth = x.key === 'berth';
+      const el0 = x.els[0], isBan = el0.matches('[data-ban]'), isBerth = x.key === 'berth', isTn = el0.matches('[data-tn]');
+      if (isTn){
+        if (!tnDone){
+          tnDone = true;
+          const tns = g.filter(z => z.els[0].matches('[data-tn]')), allDone = tns.every(z => z.done);
+          const tname = settingsOf($('cang').value).tenThue || 'Thiết bị thuê ngoài';
+          h += row(1, '<span class="tchev"></span>' + item('sub parentlbl ' + (allDone ? 'done' : ''), `data-sub="${esc(tns[0].key)}"`, allDone ? '✓' : '', esc(tname)) + plus('tnall', 'Thêm công ty thuê ngoài'));
+        }
+        const openT = !tocShut.has(x.key) && (subCur === x.key || tocOpen.has(x.key));
+        h += row(2, `<button class="tchev" data-tocopen="${esc(x.key)}" title="Mở / thu gọn">${openT ? '▾' : '▸'}</button>` +
+          item('sub ' + (x.done ? 'done ' : '') + (!all && stepCur === 4 && subCur === x.key ? 'on' : ''), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('svc:' + x.key, 'Thêm thiết bị / dịch vụ cho ' + x.label));
+        if (openT) kids(el0.querySelector(':scope > .svcs'), '[data-svc]').forEach(sv => {
+          const nm = val(sv, '[data-t]').trim() || '(thiết bị / dịch vụ mới)';
+          h += row(3, item('leaf ' + (nm.startsWith('(') ? '' : 'done'), `data-goto="${uidOf(sv)}"`, nm.startsWith('(') ? '' : '✓', esc(nm)));
+        });
+        navSeq.push({ sub: x.key, label: x.label });
+        return;
+      }
       const open = (isBan || isBerth) && !tocShut.has(x.key) && (subCur === x.key || tocOpen.has(x.key));
       const chev = (isBan || isBerth) ? `<button class="tchev" data-tocopen="${esc(x.key)}" title="Mở / thu gọn">${open ? '▾' : '▸'}</button>` : '<span class="tchev"></span>';
       h += row(1, chev + item('sub ' + (x.done ? 'done ' : '') + (!all && stepCur === 4 && subCur === x.key ? 'on' : ''), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) +
@@ -2597,7 +2618,7 @@ function showPop(btn, html){
 }
 function goTo(uid){
   const el = byUid(uid); if (!el) return;
-  const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el;
+  const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el.matches('[data-svc]') ? el.closest('[data-tn]') : el;
   subCur = card.matches('[data-berth]') ? 'berth' : uidOf(card);
   $('formBox').classList.remove('allmode');
   if (stepCur !== 4) gotoStep(4);
@@ -2610,6 +2631,18 @@ function tocAdd(k, btn){
     const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim()));
     const opts = c.berths.map((b, i) => have.has(b.ten) ? '' : `<button data-pop="berth|${i}">＋ ${esc(b.ten)}</button>`).join('');
     showPop(btn, `<div class="ph">Thêm cầu bến</div>${opts}<button data-pop="berth|-1">✎ Cầu khác (tự nhập)</button>`); return;
+  }
+  if (k === 'tnall'){
+    const have = new Set([...$('ndBox').querySelectorAll('[data-tn] [data-congty]')].map(x => x.value.trim()));
+    const opts = c.thue.map((t, i) => have.has(t.congTy) ? '' : `<button data-pop="tn|${i}">＋ ${esc(t.congTy)}</button>`).join('');
+    showPop(btn, `<div class="ph">Thêm công ty thuê ngoài</div>${opts}<button class="oth" data-pop="tn|-1">✎ Công ty khác (tự nhập)</button>`); return;
+  }
+  if (k.startsWith('svc:')){
+    const uid = k.slice(4), card = byUid(uid); if (!card) return;
+    const nm = val(card, '[data-congty]').trim(), cc = c.thue.find(t => t.congTy === nm);
+    const have = new Set(kids(card.querySelector(':scope > .svcs'), '[data-svc]').map(sv => val(sv, '[data-t]').trim()));
+    const opts = (cc ? cc.dv : []).map((d, i) => { const t = typeof d === 'string' ? d : d.t; return have.has(t) ? '' : `<button data-pop="svc|${uid}|${i}">＋ ${esc(t)}</button>`; }).join('');
+    showPop(btn, `<div class="ph">Thêm vào «${esc(nm || 'công ty')}»</div>${opts}<button class="oth" data-pop="svc|${uid}|-1">✎ Thiết bị / dịch vụ mới (tự nhập)</button>`); return;
   }
   const [kind, uid, ...rest] = k.split(':'), card = byUid(uid); if (!card) return;
   const g = c.groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
@@ -2634,6 +2667,15 @@ document.addEventListener('click', e => {
   if (pp){
     const [t, a1, a2] = pp.dataset.pop.split('|'); closePop();
     if (t === 'berth'){ subCur = 'berth'; $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('berth', +a1); return; }
+    if (t === 'tn'){ $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('thue', +a1); return; }
+    if (t === 'svc'){
+      const sc = byUid(a1); if (!sc) return;
+      const cc = cat($('cang').value).thue.find(x => x.congTy === val(sc, '[data-congty]').trim()), d = (+a2 >= 0 && cc) ? cc.dv[+a2] : '';
+      const row = mk(`<div class="srow" data-svc><input type="text" data-t value="${esc(typeof d === 'string' ? d : (d && d.t) || '')}"><button class="del" data-del>✕</button></div>`);
+      sc.querySelector(':scope > .svcs').appendChild(row);
+      $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4);
+      subCur = uidOf(sc); markDirty(); markFresh(row, true); return;
+    }
     const card = byUid(a1); if (!card) return;
     const g = cat($('cang').value).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
     $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4);
