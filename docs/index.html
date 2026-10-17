@@ -424,6 +424,35 @@ tbody tr:hover{background:#e3effb}
 .fresh{outline:3px solid #E91E63!important;outline-offset:1px;background:#fff0f6!important;box-shadow:0 0 0 6px rgba(233,30,99,.18)!important;animation:freshp 1s ease-in-out 3}
 .fresh::after{content:"MỚI THÊM";position:absolute;top:-10px;right:12px;background:#E91E63;color:#fff;font-size:11px;font-weight:800;padding:1px 9px;border-radius:9px;z-index:3;letter-spacing:.4px}
 @keyframes freshp{50%{box-shadow:0 0 0 12px rgba(233,30,99,.08)}}
+/* ===== cây mục lục nhiều cấp rõ ràng ===== */
+#editor{grid-template-columns:272px minmax(380px,1fr) minmax(420px,1.05fr)}
+.trow.l1{margin:6px 0 1px 0}
+.trow.l2{margin-left:12px;border-left:2px solid rgba(255,255,255,.2);padding-left:2px}
+.trow.l3{margin-left:26px;border-left:2px solid rgba(255,255,255,.2);padding-left:2px}
+.trow.l4{margin-left:40px;border-left:2px solid rgba(255,255,255,.2);padding-left:2px}
+.trow.l1 .ti.head{font-weight:800;font-size:14.5px;background:rgba(255,255,255,.09);padding:6px 8px;color:#fff}
+.trow.l1 .ti.head i{min-width:26px;flex-basis:auto;border-radius:13px;padding:0 5px;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.12)}
+.trow.l1 .ti.head.done i{background:#43A047;border-color:#43A047}
+.trow.l1 .ti.head.on{background:#FF8A3D;box-shadow:0 0 0 2px #fff inset}
+.ti.dim{opacity:.7;font-style:italic}
+.trow.l2 .ti.sub{font-size:14px;font-weight:700;padding:4px 7px;color:#fff}
+.trow.l3 .ti.sub{font-size:13.5px;font-weight:600;padding:4px 7px}
+.trow.l2 .phanh,.trow.l3 .phanh{color:#ffd2ad}
+.trow.l2 .ti.parentlbl{color:#ffd2ad}
+.trow.l4 .ti.leaf{font-size:13px;color:#d3e4f6}
+.trow.l1 .ti.sub{margin-left:0}
+.trow.l1 .ti.sub.add{font-weight:600}
+/* hình thức trực */
+.tmode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 8px}
+.tm{display:flex;gap:8px;text-align:left;border:2px solid #9bb8d6;background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;color:#143c5f}
+.tm i{font-style:normal;font-size:18px;line-height:1.1;color:#9bb8d6}
+.tm span{display:flex;flex-direction:column}
+.tm b{font-size:15px}
+.tm small{font-size:12.5px;color:#556;line-height:1.3;margin-top:2px}
+.tm.on{border-color:#7B3FA0;background:#f3eafa;box-shadow:0 0 0 2px #7B3FA0 inset}
+.tm.on i{color:#7B3FA0}
+.tsub{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:0 0 10px;padding:7px 10px;background:#f7f2fc;border-radius:8px;border:1px solid #d9c6ea;font-size:14.5px}
+.tsub label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;color:#4a2a68}
 @media print{
   html,body{background:#fff!important}
   .top,.form,.view:not(#editor),.no-print{display:none!important}
@@ -516,6 +545,7 @@ tbody tr:hover{background:#e3effb}
       <div class="subbar" id="subBar"></div>
       <div class="subhelp" id="subHelp"></div>
       <div id="addList"></div>
+      <div id="trucPanel"></div>
       <div class="toolbar" id="addToolbar" style="display:none!important">
         <div class="tb-row t2"><span class="tb-lbl">Thêm mục</span><select id="addKind">
             <option value="berth">Cầu bến</option>
@@ -975,7 +1005,7 @@ function buildNew(cang){
     canCu: [], canCuThem: '',
     thanhPhan: [],
     phamVi: { bophan: '', manual: false, catruc: '', tuNgay: '', tuGio: '', denNgay: '', denGio: '' },
-    cauBen: [], ban: [], thue: [], truc: null,
+    cauBen: [], ban: [], thue: [], truc: [],
     antt: '', ketLuan: '', ktGio: '', ktNgay: '',
     sig: sigOf(s)
   };
@@ -1009,8 +1039,10 @@ function tB(b){
 function tT(t){
   return `<div class="card-b" data-tn><span class="grip" title="Giữ chuột kéo để đổi thứ tự">⋮⋮</span><div class="bh"><input type="text" data-congty value="${esc(t.congTy)}" placeholder="Tên công ty"><button class="del" data-del>✕</button></div><input type="text" data-intro value="${esc(t.intro||'')}" placeholder="Giới thiệu (vd: cung cấp dịch vụ cho tàu...)" style="margin-bottom:5px"><input type="text" data-tnote value="${esc(t.note||'')}" placeholder="Ghi chú (vd: không bố trí thiết bị, dịch vụ làm hàng)" style="margin-bottom:5px"><div class="svcs">${(t.dv||[]).map(x => `<div class="srow" data-svc><input type="text" data-t value="${esc(x.t)}"><button class="del" data-del>✕</button></div>`).join('')}</div><div class="addbar"><button class="btn small" data-act="addSvc">+ thiết bị / dịch vụ</button></div></div>`;
 }
+const trucArr = t => Array.isArray(t) ? t : (t ? [t] : []);
 function tTruc(t){
-  return `<div class="card-b" data-truc><span class="grip" title="Giữ chuột kéo để đổi thứ tự">⋮⋮</span><div class="bh"><input type="text" data-ttl value="${esc(t.ten)}" placeholder="Tên mục trực"><button class="del" data-del>✕</button></div>${pplBox(t.nguoi||[]).replace('<details','<details open')}</div>`;
+  const kind = t.kind || (/chỉ huy/i.test(t.ten || '') ? 'cang' : 'dh');
+  return `<div class="card-b" data-truc data-tkind="${kind}"><span class="grip" title="Giữ chuột kéo để đổi thứ tự">⋮⋮</span><div class="bh"><input type="text" data-ttl value="${esc(t.ten)}" placeholder="Tên mục trực"><button class="del" data-del>✕</button></div>${pplBox(t.nguoi||[]).replace('<details','<details open')}</div>`;
 }
 
 /* ---------------- đưa dữ liệu lên form ---------------- */
@@ -1032,7 +1064,7 @@ function renderForm(d){
   $('denNgay').value = d.phamVi.denNgay || ''; $('denGio').value = d.phamVi.denGio || '';
   $('ndBox').innerHTML = [
     ...d.cauBen.map(tB), ...d.ban.map(tBan), ...d.thue.map(tT),
-    ...(d.truc ? [tTruc(d.truc)] : [])
+    ...trucArr(d.truc).map(tTruc)
   ].join('');
   $('antt').value = d.antt || '';
   $('ketLuan').value = d.ketLuan || '';
@@ -1073,8 +1105,7 @@ function collect(){
     thue: kids(nd, '[data-tn]').map(el => ({ congTy: val(el,'[data-congty]').trim(), intro: val(el,'[data-intro]').trim(),
           note: val(el,'[data-tnote]').trim(),
           dv: kids(el.querySelector(':scope > .svcs'), '[data-svc]').map(s => ({ t: val(s,'[data-t]').trim() })) })),
-    truc: (() => { const el = nd.querySelector('[data-truc]');
-      return el ? { ten: val(el,'[data-ttl]').trim(), nguoi: persons(plOf(el)) } : null; })(),
+    truc: [...nd.querySelectorAll(':scope > [data-truc]')].map(el => ({ kind: el.dataset.tkind || 'dh', ten: val(el,'[data-ttl]').trim(), nguoi: persons(plOf(el)) })),
     antt: v('antt'), ketLuan: v('ketLuan'), ktGio: v('ktGio'), ktNgay: v('ktNgay')
   };
 }
@@ -1106,7 +1137,7 @@ function klStats(){
   })));
   const act = [], off = [];
   d.cauBen.filter(b => b.ten).forEach(b => { (!b.phuongTien || /^không/i.test(b.phuongTien.trim())) ? off.push(b.ten) : act.push(b.ten); });
-  const tv = (d.truc ? d.truc.nguoi : []).filter(x => x.hoTen && x.co === false).map(x => `${(x.xung || '').toLowerCase()} ${x.hoTen}`.trim());
+  const tv = trucArr(d.truc).flatMap(t => t.nguoi || []).filter(x => x.hoTen && x.co === false).map(x => `${(x.xung || '').toLowerCase()} ${x.hoTen}`.trim());
   return {
     coMat: String(co), vangMat: String(vang), dsVang: dsV.join('; ') || '……',
     cauHoatDong: pad(act.length), dsCauHoatDong: act.join(', ') || '……', cauKhong: pad(off.length), dsCauKhong: off.join(', ') || '……',
@@ -1283,7 +1314,7 @@ function refreshDock(){
 /* ---------------- xem trước khổ A4 ---------------- */
 function autoBophan(d){
   const l = d.ban.filter(g => g.ten).map(g => g.ten);
-  if (d.truc && (d.truc.nguoi || []).some(x => x.hoTen)) l.push('Công tác điều hành sản xuất');
+  if (trucArr(d.truc).some(t => (t.nguoi || []).some(x => x.hoTen))) l.push('Công tác điều hành sản xuất');
   return l.join(', ');
 }
 function render(){
@@ -1397,9 +1428,10 @@ function html(d){
     });
   }
 
-  const trN = d.truc ? named(d.truc.nguoi) : [];
-  if (trN.length){
-    const tt = d.truc.ten || st.tenTruc || 'Trực điều hành';
+  trucArr(d.truc).forEach(tb => {
+    const trN = named(tb.nguoi);
+    if (!trN.length) return;
+    const tt = tb.ten || st.tenTruc || 'Trực điều hành';
     if (kieuTr === 'vang'){
       trN.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
     } else {
@@ -1409,7 +1441,7 @@ function html(d){
         p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'Không có mặt' : 'Có mặt'} ở cảng tại thời điểm kiểm tra.`);
       });
     }
-  }
+  });
 
   roman('III', 'TÌNH HÌNH AN NINH TRẬT TỰ');
   p('', esc(d.antt.trim() || '……'));
@@ -1905,7 +1937,7 @@ const ND_NEW = {
   berth: () => tB({ ten: '', phuongTien: '', thucHien: '', thietBi: '' }),
   ban: () => tBan({ ten: '', lead: settingsOf($('cang').value).leadIn || DEFAULT_LEAD, items: [] }),
   thue: () => tT({ congTy: '', intro: '', note: '', dv: [] }),
-  truc: () => tTruc({ ten: settingsOf($('cang').value).tenTruc || 'Trực điều hành', nguoi: [] })
+  truc: () => tTruc({ kind: 'dh', ten: 'Công tác trực điều hành sản xuất', nguoi: [] })
 };
 function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshDock(); refreshND(); refreshTP(); refreshCC(); markDirty(); }
 
@@ -1924,7 +1956,7 @@ function placeItem(box, el){
 function placeNd(el){
   const nd = $('ndBox'), bi = berthIdx($('cang').value);
   const ty = e => e.matches('[data-berth]') ? 0 : e.matches('[data-ban]') ? 1 : e.matches('[data-tn]') ? 2 : 3;
-  const key = e => ty(e) === 0 ? bi(val(e, '[data-cbten]').trim()) : ty(e) === 1 ? banRank(val(e, ':scope > .bh [data-bten]')) : 0;
+  const key = e => ty(e) === 0 ? bi(val(e, '[data-cbten]').trim()) : ty(e) === 1 ? banRank(val(e, ':scope > .bh [data-bten]')) : ty(e) === 3 ? ({ dh: 0, vp: 1, cang: 2 }[e.dataset.tkind] || 0) : 0;
   const sibs = [...nd.children].filter(e => e !== el && e.matches('[data-berth],[data-ban],[data-tn],[data-truc]'));
   const same = sibs.filter(e => ty(e) === ty(el));
   if (same.length){ const nx = same.find(e => key(e) > key(el)); nx ? nx.before(el) : same[same.length - 1].after(el); return; }
@@ -2054,10 +2086,10 @@ document.addEventListener('click', e => {
       const c = cat(cang);
       let html;
       if (kind === 'berth') html = v === '-1' ? ND_NEW.berth() : tB(c.berths[+v]);
-      if (kind === 'ban' && v === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Công tác trực điều hành sản xuất', nguoi: c.truc });
+      if (kind === 'ban' && v === 'truc') html = tTruc({ kind: 'dh', ten: trucLabel('dh'), nguoi: trucDhPeople([]) });
       else if (kind === 'ban') html = v === '-1' ? ND_NEW.ban() : tBan({ ten: c.groups[+v].ten, lead: settingsOf(cang).leadIn || DEFAULT_LEAD, items: [] });
       if (kind === 'thue') html = v === '-1' ? ND_NEW.thue() : tT(c.thue[+v]);
-      if (kind === 'truc') html = tTruc({ ten: settingsOf(cang).tenTruc || 'Trực điều hành', nguoi: c.truc });
+      if (kind === 'truc') html = tTruc({ kind: 'dh', ten: trucLabel('dh'), nguoi: trucDhPeople([]) });
       const nel = mk(html); $('ndBox').appendChild(nel); placeNd(nel);
       afterAdd(); markFresh(nel);
     }
@@ -2392,7 +2424,7 @@ function stepDone(n){
     case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
     case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
     case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
-    case 4: { const g = subGroups(); return g.length > 0 && g.every(x => x.done); }
+    case 4: { const g = subGroups().filter(x => !x.virtual); return g.length > 0 && g.every(x => x.done); }
     case 5: return !!v('antt');
     case 6: return !!v('ketLuan');
     case 7: return !!(v('ktGio') || v('ktNgay'));
@@ -2449,14 +2481,15 @@ function subGroups(){
     if (!e.dataset.uid) e.dataset.uid = 'u' + (++subUid);
     if (e.matches('[data-ban]')) add(e.dataset.uid, (e.querySelector('[data-bten]').value || 'Ban').trim() || 'Ban', [e], !!e.querySelector('[data-p] [data-hoten]') && [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
     else if (e.matches('[data-tn]')) add(e.dataset.uid, (e.querySelector('[data-congty]').value || 'Thuê ngoài').trim() || 'Thuê ngoài', [e], !!(e.querySelector('[data-congty]').value || '').trim());
-    else if (e.matches('[data-truc]')) add(e.dataset.uid, (e.querySelector('[data-ttl]').value || 'Trực điều hành').trim() || 'Trực điều hành', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
+    else if (e.matches('[data-truc]')) add('truc', 'Công tác trực điều hành sản xuất', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
   });
+  if (!g.some(x => x.key === 'truc')) g.push({ key: 'truc', label: 'Công tác trực điều hành sản xuất', els: [], done: false, virtual: true });
   return g;
 }
 const SUBHELP = {
   berth: 'Mỗi dòng là một cầu: ghi phương tiện đang làm hàng, thiết bị, người thực hiện. Cầu không hoạt động thì ghi “Không có phương tiện”.',
   ban: 'Chọn vị trí ở ô <b>＋ Thêm vị trí</b> (chọn xong tự thêm), rồi chọn người làm việc ở từng vị trí. Nếu có khung xanh bên dưới: chọn thiết bị → chọn người → bấm Thêm.',
-  truc: 'Nhập họ tên, chức danh người trực điều hành. Bỏ dấu tick ở ô “có mặt” nếu người đó không có mặt.',
+  truc: 'Chọn hình thức trực ở trên, rồi kiểm tra danh sách người. Bỏ dấu tick ở ô “có mặt” nếu người đó không có mặt.',
   tn: 'Ghi tên công ty thuê ngoài và nội dung dịch vụ đang thực hiện.',
   add: 'Bấm vào mục muốn thêm. Thêm xong máy tự mở mục đó cho bạn nhập.'
 };
@@ -2478,9 +2511,9 @@ function refreshSub(){
   const cur = g.find(x => x.key === subCur);
   if (cur) cur.els.forEach(e => e.classList.remove('subhide'));
   const st4 = document.querySelector('.step[data-step="4"]'); st4.classList.toggle('subadd', subCur === 'add');
-  const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : (cur && cur.els[0].matches('[data-ban]') ? 'ban' : (cur && cur.els[0].matches('[data-truc]') ? 'truc' : 'tn')));
+  const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : subCur === 'truc' ? 'truc' : (cur && cur.els[0] && cur.els[0].matches('[data-ban]') ? 'ban' : 'tn'));
   $('subHelp').innerHTML = SUBHELP[kind];
-  renderAddList();
+  renderAddList(); renderTrucPanel();
   const idx = keys.indexOf(subCur);
   const nxt = idx >= 0 && idx < keys.length - 1 ? g[idx + 1].label : null;
   $('subNav').innerHTML = subCur === 'add' ? (keys.length ? `<button class="btn back" data-sub="${esc(keys[0])}">‹ Về các mục đã thêm</button>` : '') :
@@ -2514,7 +2547,7 @@ function renderAddList(){
   const berths = c.berths.map((b, i) => hb.has(b.ten) ? '' : btn('berth', i, '＋ ' + b.ten)).join('');
   h += `<div class="addgrp"><b>Cầu bến</b><div>${berths ? btn('berthall', 0, '★ Thêm tất cả cầu bến', 'all') + berths : '<span class="mut">Đã thêm hết.</span>'}${btn('berth', -1, '✎ Cầu khác (tự nhập)', 'oth')}</div></div>`;
   let bans = c.groups.map((g, i) => hg.has(g.ten) ? '' : btn('ban', i, '＋ ' + g.ten)).join('');
-  if (!nd.querySelector('[data-truc]')) bans += btn('truc', 0, '＋ ' + (settingsOf($('cang').value).tenTruc || 'Công tác trực điều hành sản xuất'));
+  bans += '<button class="addbtn" data-sub="truc">→ Công tác trực điều hành sản xuất (mục III)</button>';
   h += `<div class="addgrp"><b>Ban / bộ phận làm việc</b><div>${bans || '<span class="mut">Đã thêm hết.</span>'}${btn('ban', -1, '✎ Ban khác (tự nhập)', 'oth')}</div></div>`;
   const th = c.thue.map((t, i) => ht.has(t.congTy) ? '' : btn('thue', i, '＋ ' + t.congTy)).join('');
   if (c.thue.length || th) h += `<div class="addgrp"><b>Đơn vị thuê ngoài</b><div>${th || '<span class="mut">Đã thêm hết.</span>'}${btn('thue', -1, '✎ Đơn vị khác (tự nhập)', 'oth')}</div></div>`;
@@ -2535,6 +2568,75 @@ document.addEventListener('click', e => {
   } else addNd(k, i);
 });
 
+/* ---- mục III: công tác trực điều hành sản xuất / trực chỉ huy ---- */
+const isLBT = () => /long bình tân/i.test($('cang').value);
+function trucLabel(kind){
+  const cang = $('cang').value, cn = /^cảng/i.test(cang) ? cang : 'Cảng ' + cang;
+  return kind === 'vp' ? 'Trực chỉ huy Văn phòng Công ty' : kind === 'cang' ? 'Trực chỉ huy ' + cn : 'Công tác trực điều hành sản xuất';
+}
+const trucBlocks = () => [...$('ndBox').querySelectorAll(':scope > [data-truc]')];
+function trucMode(){ const b = trucBlocks(); return !b.length ? '' : (b.some(x => x.dataset.tkind === 'dh') ? 'dh' : 'ch'); }
+// người trực ngày thường = người ở mục Thành phần (trừ Ban KSNB) + Trưởng ca
+function trucDhPeople(existing){
+  const keep = new Map((existing || []).map(p => [p.hoTen, p])), out = [], seen = new Set();
+  const add = p => {
+    if (!p.hoTen || seen.has(p.hoTen)) return; seen.add(p.hoTen);
+    const old = keep.get(p.hoTen);
+    out.push({ co: old ? old.co !== false : true, xung: (old && old.xung) || p.xung || 'Ông', hoTen: p.hoTen, chucDanh: old ? old.chucDanh : (p.chucDanh || '') });
+  };
+  kids($('tpBox'), '[data-unit]').filter(u => val(u, '[data-uten]').trim() !== KSNB_NAME).forEach(u => persons(plOf(u)).forEach(add));
+  [...$('ndBox').querySelectorAll('[data-ban] > .items > [data-item]')].filter(it => /trưởng ca/i.test(val(it, '[data-label]'))).forEach(it =>
+    persons(plOf(it)).filter(p => p.co !== false).forEach(p => add({ ...p, chucDanh: p.chucDanh || 'Trưởng ca' })));
+  return out;
+}
+function addTrucBlock(kind){
+  const c = cat($('cang').value);
+  const el = mk(tTruc({ kind, ten: trucLabel(kind), nguoi: kind === 'dh' ? trucDhPeople([]) : kind === 'cang' ? c.truc.map(x => ({ ...x })) : [] }));
+  $('ndBox').appendChild(el); placeNd(el);
+  subCur = 'truc'; afterAdd(); markFresh(el, false); return el;
+}
+function setTrucMode(m){
+  if (trucMode() === m) return;
+  const bl = trucBlocks();
+  if (bl.some(b => [...b.querySelectorAll('[data-hoten]')].some(i => i.value.trim())) && !confirm('Đổi hình thức trực sẽ thay danh sách người trực đang có. Tiếp tục?')) return;
+  bl.forEach(b => b.remove());
+  addTrucBlock(m === 'dh' ? 'dh' : 'cang');
+}
+function trucRefresh(){
+  const b = trucBlocks().find(x => x.dataset.tkind === 'dh'); if (!b) return;
+  const list = trucDhPeople(persons(plOf(b)));
+  plOf(b).innerHTML = list.map(tP).join('');
+  b.querySelector(':scope > details > summary').textContent = 'Danh sách người (' + list.length + ')';
+  refreshPeoplePicks(); markDirty(); markFresh(b, false);
+}
+function renderTrucPanel(){
+  const box = $('trucPanel'); if (!box) return;
+  if (subCur !== 'truc'){ box.innerHTML = ''; box.dataset.sig = ''; return; }
+  const m = trucMode(), bl = trucBlocks(), has = k => bl.some(b => b.dataset.tkind === k);
+  let h = `<div class="tmode"><button class="tm ${m === 'dh' ? 'on' : ''}" data-tmode="dh"><i>${m === 'dh' ? '●' : '○'}</i><span><b>Trực điều hành sản xuất</b><small>Ngày thường: gồm người ở mục Thành phần (trừ Ban KSNB) và Trưởng ca</small></span></button>` +
+    `<button class="tm ${m === 'ch' ? 'on' : ''}" data-tmode="ch"><i>${m === 'ch' ? '●' : '○'}</i><span><b>Trực chỉ huy</b><small>Ngày lễ, tết: chọn trực chỉ huy Văn phòng và / hoặc Cảng</small></span></button></div>`;
+  if (m === 'ch') h += `<div class="tsub"><b>Chọn một hoặc cả hai:</b>` +
+    (isLBT() ? `<label><input type="checkbox" data-tch="vp" ${has('vp') ? 'checked' : ''}> Trực chỉ huy Văn phòng Công ty</label>` : '') +
+    `<label><input type="checkbox" data-tch="cang" ${has('cang') ? 'checked' : ''}> ${esc(trucLabel('cang'))}</label></div>`;
+  if (m === 'dh') h += `<div class="tsub"><button class="btn small" data-tref="1">↻ Lấy lại danh sách từ Thành phần và Trưởng ca</button></div>`;
+  if (!m) h += `<div class="tsub"><b>Bấm chọn một hình thức trực ở trên để bắt đầu.</b></div>`;
+  if (box.dataset.sig === h) return;   // không dựng lại khi chưa đổi, để ô tick nhận được sự kiện
+  box.dataset.sig = h; box.innerHTML = h;
+}
+document.addEventListener('click', e => {
+  const m = e.target.closest('[data-tmode]'); if (m){ setTrucMode(m.dataset.tmode); return; }
+  if (e.target.closest('[data-tref]')) trucRefresh();
+});
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.matches || !t.matches('[data-tch]')) return;
+  const k = t.dataset.tch, b = trucBlocks().find(x => x.dataset.tkind === k);
+  if (t.checked){ if (!b) addTrucBlock(k); return; }
+  if (b){
+    if ([...b.querySelectorAll('[data-hoten]')].some(i => i.value.trim()) && !confirm('Bỏ mục này sẽ xóa danh sách người đã nhập. Tiếp tục?')){ t.checked = true; return; }
+    b.remove(); afterAdd();
+  }
+});
+
 /* ---- mục lục bên trái ---- */
 var tocReady = false, navSeq = [];
 var tocOpen = new Set(), tocShut = new Set(), tocPrev = null;
@@ -2552,50 +2654,58 @@ function renderToc(){
   STEPS.forEach((s, i) => {
     const n = i + 1, d = stepDone(n), on = !all && stepCur === n && n !== 4;
     if (n !== 4){ h += item((d ? 'done ' : '') + (on ? 'on' : ''), `data-sg="${n}"`, d ? '✓' : n, s.short === 'Thông tin' ? 'Thông tin chung' : (n === 2 ? 'Thành phần' : s.short)); navSeq.push({ sg: n, label: s.short }); return; }
+    const gb = g.find(z => z.key === 'berth'), gt = g.find(z => z.key === 'truc');
+    const bans = g.filter(z => z.els[0] && z.els[0].matches('[data-ban]')), tns = g.filter(z => z.els[0] && z.els[0].matches('[data-tn]'));
+    const cur4 = k => (!all && stepCur === 4 && subCur === k ? 'on' : '');
+    const isOpen = k => !tocShut.has(k) && (subCur === k || tocOpen.has(k));
+    const chev = k => `<button class="tchev" data-tocopen="${esc(k)}" title="Mở / thu gọn">${isOpen(k) ? '▾' : '▸'}</button>`;
+    const NOCH = '<span class="tchev"></span>';
+    const leaf = (uid, nm, dn) => row(4, item('leaf ' + (dn ? 'done' : ''), `data-goto="${uid}"`, dn ? '✓' : '', esc(nm)));
     h += row(0, item((d ? 'done ' : '') + 'parent', `data-sg="4"`, d ? '✓' : 4, 'Kết quả từng nơi') + plus('top', 'Thêm mục mới (cầu bến, ban, trực…)'));
-    let tnDone = false;
-    g.forEach(x => {
-      const el0 = x.els[0], isBan = el0.matches('[data-ban]'), isBerth = x.key === 'berth', isTn = el0.matches('[data-tn]');
-      if (isTn){
-        if (!tnDone){
-          tnDone = true;
-          const tns = g.filter(z => z.els[0].matches('[data-tn]')), allDone = tns.every(z => z.done);
-          const tname = settingsOf($('cang').value).tenThue || 'Thiết bị thuê ngoài';
-          h += row(1, '<span class="tchev"></span>' + item('sub parentlbl ' + (allDone ? 'done' : ''), `data-sub="${esc(tns[0].key)}"`, allDone ? '✓' : '', esc(tname)) + plus('tnall', 'Thêm công ty thuê ngoài'));
-        }
-        const openT = !tocShut.has(x.key) && (subCur === x.key || tocOpen.has(x.key));
-        h += row(2, `<button class="tchev" data-tocopen="${esc(x.key)}" title="Mở / thu gọn">${openT ? '▾' : '▸'}</button>` +
-          item('sub ' + (x.done ? 'done ' : '') + (!all && stepCur === 4 && subCur === x.key ? 'on' : ''), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('svc:' + x.key, 'Thêm thiết bị / dịch vụ cho ' + x.label));
-        if (openT) kids(el0.querySelector(':scope > .svcs'), '[data-svc]').forEach(sv => {
-          const nm = val(sv, '[data-t]').trim() || '(thiết bị / dịch vụ mới)';
-          h += row(3, item('leaf ' + (nm.startsWith('(') ? '' : 'done'), `data-goto="${uidOf(sv)}"`, nm.startsWith('(') ? '' : '✓', esc(nm)));
-        });
-        navSeq.push({ sub: x.key, label: x.label });
-        return;
-      }
-      const open = (isBan || isBerth) && !tocShut.has(x.key) && (subCur === x.key || tocOpen.has(x.key));
-      const chev = (isBan || isBerth) ? `<button class="tchev" data-tocopen="${esc(x.key)}" title="Mở / thu gọn">${open ? '▾' : '▸'}</button>` : '<span class="tchev"></span>';
-      h += row(1, chev + item('sub ' + (x.done ? 'done ' : '') + (!all && stepCur === 4 && subCur === x.key ? 'on' : ''), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) +
-        (isBan ? plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label) : isBerth ? plus('berth', 'Thêm cầu bến') : ''));
-      if (open && isBerth) x.els.forEach(b => {
-        const nm = val(b, '[data-cbten]').trim() || '(cầu mới)', dn = !!val(b, '[data-cbpt]').trim();
-        h += row(3, item('leaf ' + (dn ? 'done' : ''), `data-goto="${uidOf(b)}"`, dn ? '✓' : '', esc(nm)));
-      });
-      if (open && isBan){
-        let last = null;
-        kids(el0.querySelector(':scope > .items'), '[data-item]').forEach(it => {
-          const ph = (it.dataset.phan || '').trim();
-          if (ph !== last){ last = ph; if (ph) h += row(2, `<span class="phanh">${esc(ph)}</span>` + plus('phan:' + x.key + ':' + ph, 'Thêm vị trí vào ' + ph)); }
-          const nm = val(it, '[data-label]').trim() || '(vị trí mới)', dn = persons(plOf(it)).some(p => p.hoTen);
-          h += row(3, item('leaf ' + (dn ? 'done' : ''), `data-goto="${uidOf(it)}"`, dn ? '✓' : '', esc(nm)));
-        });
-        const cg = cat($('cang').value).groups.find(z => z.ten === val(el0, ':scope > .bh [data-bten]').trim());
-        const seen = new Set(kids(el0.querySelector(':scope > .items'), '[data-item]').map(it => (it.dataset.phan || '').trim()));
-        if (cg) cg.pools.forEach(pl => { if (pl.ten && !seen.has(pl.ten)) h += row(2, `<span class="phanh">${esc(pl.ten)}</span>` + plus('phan:' + x.key + ':' + pl.ten, 'Thêm vị trí vào ' + pl.ten)); });
-      }
+    // I. Cầu bến
+    if (gb){
+      h += row(1, chev('berth') + item('sub head ' + (gb.done ? 'done ' : '') + cur4('berth'), 'data-sub="berth"', gb.done ? '✓' : 'I', 'Cầu bến') + plus('berth', 'Thêm cầu bến'));
+      navSeq.push({ sub: 'berth', label: 'Cầu bến' });
+      if (isOpen('berth')) gb.els.forEach(bb => h += leaf(uidOf(bb), val(bb, '[data-cbten]').trim() || '(cầu mới)', !!val(bb, '[data-cbpt]').trim()));
+    } else h += row(1, NOCH + item('sub head dim', 'data-tocadd="berth"', 'I', 'Cầu bến (chưa thêm)') + plus('berth', 'Thêm cầu bến'));
+    // II. Các ban, bộ phận
+    const bansDone = bans.length > 0 && bans.every(z => z.done);
+    h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-tocadd="banall"', bansDone ? '✓' : 'II', 'Các ban, bộ phận') + plus('banall', 'Thêm ban / bộ phận'));
+    bans.forEach(x => {
+      const el0 = x.els[0], open = isOpen(x.key);
+      h += row(2, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label));
       navSeq.push({ sub: x.key, label: x.label });
+      if (!open) return;
+      let last = null;
+      kids(el0.querySelector(':scope > .items'), '[data-item]').forEach(it => {
+        const ph = (it.dataset.phan || '').trim();
+        if (ph !== last){ last = ph; if (ph) h += row(3, `<span class="phanh">${esc(ph)}</span>` + plus('phan:' + x.key + ':' + ph, 'Thêm vị trí vào ' + ph)); }
+        h += leaf(uidOf(it), val(it, '[data-label]').trim() || '(vị trí mới)', persons(plOf(it)).some(p => p.hoTen));
+      });
+      const cg = cat($('cang').value).groups.find(z => z.ten === val(el0, ':scope > .bh [data-bten]').trim());
+      const seen = new Set(kids(el0.querySelector(':scope > .items'), '[data-item]').map(it => (it.dataset.phan || '').trim()));
+      if (cg) cg.pools.forEach(pl => { if (pl.ten && !seen.has(pl.ten)) h += row(3, `<span class="phanh">${esc(pl.ten)}</span>` + plus('phan:' + x.key + ':' + pl.ten, 'Thêm vị trí vào ' + pl.ten)); });
     });
-    h += row(1, '<span class="tchev"></span>' + item('sub add ' + (!all && stepCur === 4 && subCur === 'add' ? 'on' : ''), 'data-sub="add"', '+', 'Thêm mục'));
+    const tname = settingsOf($('cang').value).tenThue || 'Thiết bị thuê ngoài', tnDone = tns.length > 0 && tns.every(z => z.done);
+    h += row(2, NOCH + item('sub parentlbl ' + (tnDone ? 'done ' : '') + (tns.length ? '' : 'dim'), tns.length ? `data-sub="${esc(tns[0].key)}"` : 'data-tocadd="tnall"', tnDone ? '✓' : '', esc(tname)) + plus('tnall', 'Thêm công ty thuê ngoài'));
+    tns.forEach(x => {
+      const el0 = x.els[0], open = isOpen(x.key);
+      h += row(3, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('svc:' + x.key, 'Thêm thiết bị / dịch vụ cho ' + x.label));
+      navSeq.push({ sub: x.key, label: x.label });
+      if (open) kids(el0.querySelector(':scope > .svcs'), '[data-svc]').forEach(sv => { const nm = val(sv, '[data-t]').trim(); h += leaf(uidOf(sv), nm || '(thiết bị / dịch vụ mới)', !!nm); });
+    });
+    // III. Công tác trực điều hành sản xuất
+    h += row(1, NOCH + item('sub head ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : 'III', 'Công tác trực điều hành sản xuất'));
+    navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
+    if (gt.els.length){
+      const dh = gt.els.find(z => z.dataset.tkind === 'dh'), np = z => [...z.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
+      if (dh) h += row(2, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
+      else {
+        h += row(2, `<span class="phanh">Trực chỉ huy</span>`);
+        gt.els.forEach(z => h += leaf(uidOf(z), val(z, '[data-ttl]').trim() || 'Trực chỉ huy', np(z)));
+      }
+    }
+    h += row(1, NOCH + item('sub add ' + cur4('add'), 'data-sub="add"', '+', 'Thêm mục'));
     navSeq.push({ sub: 'add', label: 'Thêm mục' });
   });
   h += `<button class="ti allbtn" data-sgall="1"><i>☰</i><span>${all ? 'Quay lại từng mục' : 'Xem tất cả cùng lúc'}</span></button>`;
@@ -2619,7 +2729,7 @@ function showPop(btn, html){
 function goTo(uid){
   const el = byUid(uid); if (!el) return;
   const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el.matches('[data-svc]') ? el.closest('[data-tn]') : el;
-  subCur = card.matches('[data-berth]') ? 'berth' : uidOf(card);
+  subCur = card.matches('[data-berth]') ? 'berth' : card.matches('[data-truc]') ? 'truc' : uidOf(card);
   $('formBox').classList.remove('allmode');
   if (stepCur !== 4) gotoStep(4);
   refreshSub(); updateSteps(); markFresh(el, false);
@@ -2631,6 +2741,11 @@ function tocAdd(k, btn){
     const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim()));
     const opts = c.berths.map((b, i) => have.has(b.ten) ? '' : `<button data-pop="berth|${i}">＋ ${esc(b.ten)}</button>`).join('');
     showPop(btn, `<div class="ph">Thêm cầu bến</div>${opts}<button data-pop="berth|-1">✎ Cầu khác (tự nhập)</button>`); return;
+  }
+  if (k === 'banall'){
+    const have = new Set([...$('ndBox').querySelectorAll('[data-ban] > .bh [data-bten]')].map(x => x.value.trim()));
+    const opts = c.groups.map((g, i) => have.has(g.ten) ? '' : `<button data-pop="ban|${i}">＋ ${esc(g.ten)}</button>`).join('');
+    showPop(btn, `<div class="ph">Thêm ban / bộ phận</div>${opts}<button class="oth" data-pop="ban|-1">✎ Ban khác (tự nhập)</button>`); return;
   }
   if (k === 'tnall'){
     const have = new Set([...$('ndBox').querySelectorAll('[data-tn] [data-congty]')].map(x => x.value.trim()));
@@ -2667,6 +2782,7 @@ document.addEventListener('click', e => {
   if (pp){
     const [t, a1, a2] = pp.dataset.pop.split('|'); closePop();
     if (t === 'berth'){ subCur = 'berth'; $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('berth', +a1); return; }
+    if (t === 'ban'){ $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('ban', +a1); return; }
     if (t === 'tn'){ $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('thue', +a1); return; }
     if (t === 'svc'){
       const sc = byUid(a1); if (!sc) return;
