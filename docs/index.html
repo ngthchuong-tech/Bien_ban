@@ -2407,7 +2407,7 @@ function stepDone(n){
     case 1: return !!(v('cang') && v('tieuDe') && v('ngayLap'));
     case 2: return !!$('tpBox').querySelector('[data-unit] [data-hoten]') && [...$('tpBox').querySelectorAll('[data-hoten]')].some(x => x.value.trim());
     case 3: return !!(v('catruc') || v('tuGio') || v('tuNgay'));
-    case 4: { const g = subGroups().filter(x => !x.virtual); return g.length > 0 && g.every(x => x.done); }
+    case 4: { const g = subGroups().filter(x => !x.virtual); return g.some(x => x.done); }   // có ít nhất một mục đã có nội dung là được; mục nào còn trống thì mục lục bên trái vẫn báo riêng
     case 5: return !!v('antt');
     case 6: return !!v('ketLuan');
     case 7: return !!(v('ktGio') || v('ktNgay'));
