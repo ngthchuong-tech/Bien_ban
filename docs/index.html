@@ -372,8 +372,6 @@ tbody tr:hover{background:#e3effb}
 .trow.l1 .ti.sub{font-size:14px;padding:5px 7px}
 .tchev{flex:0 0 16px;width:16px;height:22px;border:0;background:transparent;color:#9fc0e0;font-size:11px;cursor:pointer;padding:0}
 .tchev:hover{color:#fff}
-.tplus{flex:0 0 24px;height:24px;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.1);color:#fff;border-radius:6px;font-size:15px;font-weight:800;line-height:1;cursor:pointer;padding:0}
-.tplus:hover{background:#FF8A3D;border-color:#FF8A3D}
 .trow.l2{margin-left:24px;margin-top:4px}
 .phanh{flex:1;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:#ffd2ad;padding:2px 4px;min-width:0}
 .trow.l3{margin-left:30px}
@@ -383,12 +381,6 @@ tbody tr:hover{background:#e3effb}
 .ti.leaf{font-size:13px;font-weight:500;padding:3px 6px;gap:6px;color:#dbe9f7}
 .ti.leaf i{flex:0 0 14px;height:14px;font-size:9px;border-width:1.5px}
 .ti.leaf.done{color:#fff}
-#tocPop{position:fixed;z-index:60;background:#fff;border:2px solid #FF8A3D;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);max-height:62vh;overflow:auto;min-width:240px;max-width:360px;padding:6px}
-#tocPop button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:6px 9px;border-radius:6px;cursor:pointer;font-size:14px;color:#1f3a56}
-#tocPop button:hover{background:#FF8A3D;color:#fff}
-#tocPop button.oth{color:#44607e;font-style:italic}
-#tocPop .ph{font-weight:800;color:#B45309;font-size:13px;padding:4px 8px 6px;border-bottom:1px solid #eee;margin-bottom:3px}
-#tocPop .ph2{font-weight:700;font-size:12px;color:#667;text-transform:uppercase;padding:6px 8px 2px}
 #formBox .card-b,#formBox .item,#formBox .prow{position:relative}
 #formBox .card-b{padding-left:26px}
 #formBox .item{padding-left:20px}
@@ -2441,7 +2433,14 @@ function updateSteps(){
 }
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-sg]');
-  if (g){ $('formBox').classList.remove('allmode'); gotoStep(+g.dataset.sg); return; }
+  if (g){
+    $('formBox').classList.remove('allmode');
+    if (+g.dataset.sg === 4){   // vào bước 4: mở mục đã thêm gần nhất; chưa có gì thì ra màn hình Thêm mục
+      const gr = subGroups().filter(x => !x.virtual).map(x => x.key);
+      if (!gr.includes(subCur)) subCur = gr.length ? gr[0] : 'add';
+    }
+    gotoStep(+g.dataset.sg); if (+g.dataset.sg === 4) refreshSub(); return;
+  }
   if (e.target.closest('[data-sgall]')){ const f = $('formBox'); f.classList.toggle('allmode'); updateSteps(); return; }
   const px = e.target.closest('[data-proxy]'); if (px){ $(px.dataset.proxy).click(); return; }
 });
@@ -2604,7 +2603,7 @@ document.addEventListener('change', e => {
 });
 
 /* ---- mục lục bên trái ---- */
-var tocReady = false, navSeq = [], navAt = -1;
+var tocReady = false, navSeq = [];
 var tocOpen = new Set(), tocShut = new Set(), tocPrev = null;
 function renderToc(){
   const toc = $('toc'); if (!toc || !tocReady) return;
@@ -2614,7 +2613,7 @@ function renderToc(){
   const doneN = [1, 2, 3, 4, 5, 6, 7].filter(stepDone).length;
   let h = `<div class="toch"><span>Mục lục</span><span>${doneN}/7</span></div><div class="tprog"><div style="width:${doneN / 7 * 100}%"></div></div>`;
   const item = (cls, attr, mark, label) => `<button class="ti ${cls}" ${attr}><i>${mark}</i><span>${label}</span></button>`;
-  const plus = (k, tt) => `<button class="tplus" data-tocadd="${esc(k)}" title="${esc(tt)}">＋</button>`;
+  const plus = () => '';
   const row = (lvl, inner) => `<div class="trow l${lvl}">${inner}</div>`;
   navSeq = [];
   STEPS.forEach((s, i) => {
@@ -2627,18 +2626,17 @@ function renderToc(){
     const chev = k => `<button class="tchev" data-tocopen="${esc(k)}" title="Mở / thu gọn">${isOpen(k) ? '▾' : '▸'}</button>`;
     const NOCH = '<span class="tchev"></span>';
     const leaf = (uid, nm, dn) => row(4, item('leaf ' + (dn ? 'done' : ''), `data-goto="${uid}"`, dn ? '✓' : '', esc(nm)));
-    navSeq.push({ sg: 4, label: 'Kết quả từng nơi' });
+    if (!g.some(z => !z.virtual)) navSeq.push({ sg: 4, label: 'Kết quả từng nơi' });   // chưa có gì: bước 4 là màn hình chọn mục
     h += row(0, item((d ? 'done ' : '') + 'parent', `data-sg="4"`, d ? '✓' : 4, 'Kết quả từng nơi'));
     // I. Cầu bến
     if (gb){
       h += row(1, chev('berth') + item('sub head ' + (gb.done ? 'done ' : '') + cur4('berth'), 'data-sub="berth"', gb.done ? '✓' : 'I', 'Cầu bến') + plus('berth', 'Thêm cầu bến'));
       navSeq.push({ sub: 'berth', label: 'Cầu bến' });
       if (isOpen('berth')) gb.els.forEach(bb => h += leaf(uidOf(bb), val(bb, '[data-cbten]').trim() || '(cầu mới)', !!val(bb, '[data-cbpt]').trim()));
-    } else h += row(1, NOCH + item('sub head dim', 'data-tocadd="berth"', 'I', 'Cầu bến (chưa thêm)') + plus('berth', 'Thêm cầu bến'));
+    } else h += row(1, NOCH + item('sub head dim', 'data-sub="add"', 'I', 'Cầu bến (chưa thêm)') + plus('berth', 'Thêm cầu bến'));
     // II. Các ban, bộ phận
     const bansDone = bans.length > 0 && bans.every(z => z.done);
-    h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-tocadd="banall"', bansDone ? '✓' : 'II', 'Các ban, bộ phận, trực') + plus('banall', 'Thêm ban / bộ phận'));
-    if (!bans.length) navSeq.push({ sub: 'add', ph: 1, label: 'Các ban, bộ phận' });   // chưa có ban: bước kế tiếp của cầu bến là chọn ban
+    h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-sub="add"', bansDone ? '✓' : 'II', 'Các ban, bộ phận, trực') + plus('banall', 'Thêm ban / bộ phận'));
     bans.forEach(x => {
       const el0 = x.els[0], open = isOpen(x.key);
       h += row(2, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label));
@@ -2655,7 +2653,7 @@ function renderToc(){
       if (cg) cg.pools.forEach(pl => { if (pl.ten && !seen.has(pl.ten)) h += row(3, `<span class="phanh">${esc(pl.ten)}</span>` + plus('phan:' + x.key + ':' + pl.ten, 'Thêm vị trí vào ' + pl.ten)); });
     });
     const tname = settingsOf($('cang').value).tenThue || 'Thiết bị thuê ngoài', tnDone = tns.length > 0 && tns.every(z => z.done);
-    h += row(2, NOCH + item('sub parentlbl ' + (tnDone ? 'done ' : '') + (tns.length ? '' : 'dim'), tns.length ? `data-sub="${esc(tns[0].key)}"` : 'data-tocadd="tnall"', tnDone ? '✓' : '', esc(tname)) + plus('tnall', 'Thêm công ty thuê ngoài'));
+    h += row(2, NOCH + item('sub parentlbl ' + (tnDone ? 'done ' : '') + (tns.length ? '' : 'dim'), tns.length ? `data-sub="${esc(tns[0].key)}"` : 'data-sub="add"', tnDone ? '✓' : '', esc(tname)) + plus('tnall', 'Thêm công ty thuê ngoài'));
     tns.forEach(x => {
       const el0 = x.els[0], open = isOpen(x.key);
       h += row(3, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('svc:' + x.key, 'Thêm thiết bị / dịch vụ cho ' + x.label));
@@ -2675,109 +2673,29 @@ function renderToc(){
       }
     }
     h += row(1, NOCH + item('sub add ' + cur4('add'), 'data-sub="add"', '+', 'Thêm mục'));
-    navSeq.push({ sub: 'add', label: 'Thêm mục' });
   });
   h += `<button class="ti allbtn" data-sgall="1"><i>☰</i><span>${all ? 'Quay lại từng mục' : 'Xem tất cả cùng lúc'}</span></button>`;
   toc.innerHTML = h;
   toc.dataset.s4 = (all || stepCur === 4) ? '1' : '0';   // đang ở bước khác thì thu gọn cây của bước 4
-  let cur = navSeq.findIndex(x => stepCur === 4 ? x.sub === subCur : x.sg === stepCur);
-  if (stepCur === 4 && navAt >= 0 && navSeq[navAt] && navSeq[navAt].sub === subCur) cur = navAt;   // đang đứng ở mục 'Các ban' còn trống
+  // Nút Trước / Sau đi đúng theo thứ tự mục lục: 1 → 2 → 3 → (cầu bến → từng ban → thuê ngoài → trực) → 5 → 6 → 7
+  let cur = navSeq.findIndex(x => stepCur === 4 ? (x.sub === subCur || (subCur === 'add' && x.sg === 4)) : x.sg === stepCur);
+  if (stepCur === 4 && subCur === 'add' && cur < 0) cur = navSeq.findIndex(x => x.sub) - 0.5;   // màn hình Thêm mục: đứng trước mục đầu tiên
   const nb = $('navBar');
-  if (cur < 0){ nb.innerHTML = ''; return; }
-  let pv = navSeq[cur - 1]; const nx = navSeq[cur + 1];
-  if (pv && pv.sg === 4 && stepCur === 4) pv = navSeq[cur - 2];   // trong bước 4, nút lùi của mục đầu về bước 3
+  if (cur < 0 && !(stepCur === 4)){ nb.innerHTML = ''; return; }
+  const pv = navSeq[Math.ceil(cur) - 1], nx = navSeq[Math.floor(cur) + 1];
   nb.innerHTML = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
-    (nx ? `<button class="btn next" data-nav="${cur + 1}">Tiếp theo: ${esc(nx.label)} ›</button>` : '');
-}
-/* ---- bấm ＋ trong mục lục: chọn nội dung cần thêm ---- */
-function closePop(){ const p = $('tocPop'); if (p) p.remove(); }
-function showPop(btn, html){
-  closePop();
-  const p = document.createElement('div'); p.id = 'tocPop'; p.innerHTML = html; document.body.appendChild(p);
-  const r = btn.getBoundingClientRect();
-  p.style.left = Math.min(r.right + 6, innerWidth - p.offsetWidth - 8) + 'px';
-  p.style.top = Math.max(8, Math.min(r.top - 6, innerHeight - p.offsetHeight - 8)) + 'px';
-}
-function goTo(uid){
-  const el = byUid(uid); if (!el) return;
-  const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el.matches('[data-svc]') ? el.closest('[data-tn]') : el;
-  subCur = card.matches('[data-berth]') ? 'berth' : card.matches('[data-truc]') ? 'truc' : uidOf(card);
-  $('formBox').classList.remove('allmode');
-  if (stepCur !== 4) gotoStep(4);
-  refreshSub(); updateSteps(); markFresh(el, false);
-}
-function tocAdd(k, btn){
-  const c = cat($('cang').value);
-  if (k === 'top'){ subCur = 'add'; $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); refreshSub(); updateSteps(); return; }
-  if (k === 'berth'){
-    const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim()));
-    const opts = c.berths.map((b, i) => have.has(b.ten) ? '' : `<button data-pop="berth|${i}">＋ ${esc(b.ten)}</button>`).join('');
-    showPop(btn, `<div class="ph">Thêm cầu bến</div>${opts}<button data-pop="berth|-1">✎ Cầu khác (tự nhập)</button>`); return;
-  }
-  if (k === 'banall'){
-    const have = new Set([...$('ndBox').querySelectorAll('[data-ban] > .bh [data-bten]')].map(x => x.value.trim()));
-    const opts = c.groups.map((g, i) => have.has(g.ten) ? '' : `<button data-pop="ban|${i}">＋ ${esc(g.ten)}</button>`).join('');
-    showPop(btn, `<div class="ph">Thêm ban / bộ phận</div>${opts}<button class="oth" data-pop="ban|-1">✎ Ban khác (tự nhập)</button>`); return;
-  }
-  if (k === 'tnall'){
-    const have = new Set([...$('ndBox').querySelectorAll('[data-tn] [data-congty]')].map(x => x.value.trim()));
-    const opts = c.thue.map((t, i) => have.has(t.congTy) ? '' : `<button data-pop="tn|${i}">＋ ${esc(t.congTy)}</button>`).join('');
-    showPop(btn, `<div class="ph">Thêm công ty thuê ngoài</div>${opts}<button class="oth" data-pop="tn|-1">✎ Công ty khác (tự nhập)</button>`); return;
-  }
-  if (k.startsWith('svc:')){
-    const uid = k.slice(4), card = byUid(uid); if (!card) return;
-    const nm = val(card, '[data-congty]').trim(), cc = c.thue.find(t => t.congTy === nm);
-    const have = new Set(kids(card.querySelector(':scope > .svcs'), '[data-svc]').map(sv => val(sv, '[data-t]').trim()));
-    const opts = (cc ? cc.dv : []).map((d, i) => { const t = typeof d === 'string' ? d : d.t; return have.has(t) ? '' : `<button data-pop="svc|${uid}|${i}">＋ ${esc(t)}</button>`; }).join('');
-    showPop(btn, `<div class="ph">Thêm vào «${esc(nm || 'công ty')}»</div>${opts}<button class="oth" data-pop="svc|${uid}|-1">✎ Thiết bị / dịch vụ mới (tự nhập)</button>`); return;
-  }
-  const [kind, uid, ...rest] = k.split(':'), card = byUid(uid); if (!card) return;
-  const g = c.groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
-  const have = new Set(kids(card.querySelector(':scope > .items'), '[data-item]').map(it => (it.dataset.phan || '').trim() + '|' + val(it, '[data-label]').trim()));
-  const only = kind === 'phan' ? rest.join(':') : null;
-  const phans = [...new Set((g ? g.items : []).map(it => it.phan || ''))].filter(ph => only === null || ph === only);
-  if (only !== null && !phans.includes(only)) phans.push(only);
-  let html = `<div class="ph">Thêm vào «${esc(only !== null ? (only || 'ban') : val(card, ':scope > .bh [data-bten]').trim())}»</div>`;
-  phans.forEach(ph => {
-    if (only === null && ph) html += `<div class="ph2">${esc(ph)}</div>`;
-    (g ? g.items : []).forEach((it, i) => { if ((it.phan || '') === ph && !have.has(ph + '|' + it.label)) html += `<button data-pop="item|${uid}|${i}">＋ ${esc(it.label)}</button>`; });
-    html += `<button class="oth" data-pop="blank|${uid}|${esc(ph)}">✎ Vị trí mới${ph ? ' trong ' + esc(ph) : ''} (tự nhập)</button>`;
-  });
-  showPop(btn, html);
+    (nx ? `<button class="btn next" data-nav="${navSeq.indexOf(nx)}">Tiếp theo: ${esc(nx.label)} ›</button>` : '');
 }
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-tocopen]');
   if (o){ const k = o.dataset.tocopen, isOpen = !tocShut.has(k) && (subCur === k || tocOpen.has(k)); if (isOpen){ tocOpen.delete(k); tocShut.add(k); } else { tocShut.delete(k); tocOpen.add(k); } renderToc(); return; }
   const gt = e.target.closest('[data-goto]'); if (gt){ goTo(gt.dataset.goto); return; }
-  const pl = e.target.closest('[data-tocadd]'); if (pl){ e.stopPropagation(); tocAdd(pl.dataset.tocadd, pl); return; }
-  const pp = e.target.closest('[data-pop]');
-  if (pp){
-    const [t, a1, a2] = pp.dataset.pop.split('|'); closePop();
-    if (t === 'berth'){ subCur = 'berth'; $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('berth', +a1); return; }
-    if (t === 'ban'){ $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('ban', +a1); return; }
-    if (t === 'tn'){ $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4); addNd('thue', +a1); return; }
-    if (t === 'svc'){
-      const sc = byUid(a1); if (!sc) return;
-      const cc = cat($('cang').value).thue.find(x => x.congTy === val(sc, '[data-congty]').trim()), d = (+a2 >= 0 && cc) ? cc.dv[+a2] : '';
-      const row = mk(`<div class="srow" data-svc><input type="text" data-t value="${esc(typeof d === 'string' ? d : (d && d.t) || '')}"><button class="del" data-del>✕</button></div>`);
-      sc.querySelector(':scope > .svcs').appendChild(row);
-      $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4);
-      subCur = uidOf(sc); markDirty(); markFresh(row, true); return;
-    }
-    const card = byUid(a1); if (!card) return;
-    const g = cat($('cang').value).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
-    $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4);
-    if (t === 'item' && g) addItemTo(card, catItemData(g, +a2)); else addItemTo(card, blankItemData(g, a2 || ''));
-    return;
-  }
-  if (!e.target.closest('#tocPop')) closePop();
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   const t = navSeq[+b.dataset.nav]; if (!t) return;
-  navAt = +b.dataset.nav;
   $('formBox').classList.remove('allmode');
-  if (t.sg){ gotoStep(t.sg); } else { subCur = t.sub; gotoStep(4); refreshSub(); }
+  if (t.sg){ if (t.sg === 4) subCur = 'add'; gotoStep(t.sg); refreshSub(); } else { subCur = t.sub; gotoStep(4); refreshSub(); }
   $('formBox').scrollTop = 0;
 });
 
