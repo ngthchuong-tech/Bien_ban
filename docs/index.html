@@ -2652,7 +2652,7 @@ document.addEventListener('change', e => {
 });
 
 /* ---- mục lục bên trái ---- */
-var tocReady = false, navSeq = [];
+var tocReady = false, navSeq = [], navAt = -1;
 var tocOpen = new Set(), tocShut = new Set(), tocPrev = null;
 function renderToc(){
   const toc = $('toc'); if (!toc || !tocReady) return;
@@ -2686,6 +2686,7 @@ function renderToc(){
     // II. Các ban, bộ phận
     const bansDone = bans.length > 0 && bans.every(z => z.done);
     h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-tocadd="banall"', bansDone ? '✓' : 'II', 'Các ban, bộ phận, trực') + plus('banall', 'Thêm ban / bộ phận'));
+    if (!bans.length) navSeq.push({ sub: 'add', ph: 1, label: 'Các ban, bộ phận' });   // chưa có ban: bước kế tiếp của cầu bến là chọn ban
     bans.forEach(x => {
       const el0 = x.els[0], open = isOpen(x.key);
       h += row(2, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label));
@@ -2712,7 +2713,7 @@ function renderToc(){
     // III. Công tác trực điều hành sản xuất
     h += row(2, NOCH + item('sub ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : '', 'Công tác trực điều hành sản xuất'));
     // chưa có cầu bến / ban nào và trực còn trống: nút "Tiếp theo" đưa tới "Thêm mục", không nhảy vào trực
-    if (!(gt.virtual && !gb && !bans.length && !tns.length)) navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
+    navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
     if (gt.els.length){
       const dh = gt.els.find(z => z.dataset.tkind === 'dh'), np = z => [...z.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
       if (dh) h += row(3, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
@@ -2727,6 +2728,7 @@ function renderToc(){
   h += `<button class="ti allbtn" data-sgall="1"><i>☰</i><span>${all ? 'Quay lại từng mục' : 'Xem tất cả cùng lúc'}</span></button>`;
   toc.innerHTML = h;
   let cur = navSeq.findIndex(x => stepCur === 4 ? x.sub === subCur : x.sg === stepCur);
+  if (stepCur === 4 && navAt >= 0 && navSeq[navAt] && navSeq[navAt].sub === subCur) cur = navAt;   // đang đứng ở mục 'Các ban' còn trống
   const nb = $('navBar');
   if (cur < 0){ nb.innerHTML = ''; return; }
   let pv = navSeq[cur - 1]; const nx = navSeq[cur + 1];
@@ -2820,6 +2822,7 @@ document.addEventListener('click', e => {
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   const t = navSeq[+b.dataset.nav]; if (!t) return;
+  navAt = +b.dataset.nav;
   $('formBox').classList.remove('allmode');
   if (t.sg){ gotoStep(t.sg); } else { subCur = t.sub; gotoStep(4); refreshSub(); }
   $('formBox').scrollTop = 0;
