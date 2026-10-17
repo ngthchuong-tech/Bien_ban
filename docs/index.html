@@ -2675,6 +2675,7 @@ function renderToc(){
     const chev = k => `<button class="tchev" data-tocopen="${esc(k)}" title="Mở / thu gọn">${isOpen(k) ? '▾' : '▸'}</button>`;
     const NOCH = '<span class="tchev"></span>';
     const leaf = (uid, nm, dn) => row(4, item('leaf ' + (dn ? 'done' : ''), `data-goto="${uid}"`, dn ? '✓' : '', esc(nm)));
+    navSeq.push({ sg: 4, label: 'Kết quả từng nơi' });
     h += row(0, item((d ? 'done ' : '') + 'parent', `data-sg="4"`, d ? '✓' : 4, 'Kết quả từng nơi') + plus('top', 'Thêm mục mới (cầu bến, ban, trực…)'));
     // I. Cầu bến
     if (gb){
@@ -2728,8 +2729,9 @@ function renderToc(){
   let cur = navSeq.findIndex(x => stepCur === 4 ? x.sub === subCur : x.sg === stepCur);
   const nb = $('navBar');
   if (cur < 0){ nb.innerHTML = ''; return; }
-  const pv = navSeq[cur - 1], nx = navSeq[cur + 1];
-  nb.innerHTML = (pv ? `<button class="btn back" data-nav="${cur - 1}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
+  let pv = navSeq[cur - 1]; const nx = navSeq[cur + 1];
+  if (pv && pv.sg === 4 && stepCur === 4) pv = navSeq[cur - 2];   // trong bước 4, nút lùi của mục đầu về bước 3
+  nb.innerHTML = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
     (nx ? `<button class="btn next" data-nav="${cur + 1}">Tiếp theo: ${esc(nx.label)} ›</button>` : '');
 }
 /* ---- bấm ＋ trong mục lục: chọn nội dung cần thêm ---- */
