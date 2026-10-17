@@ -2515,8 +2515,10 @@ function refreshSub(){
     if (nw) subCur = nw;
   }
   subKnown = keys; subCnt = cnt;
-  if (subCur !== 'add' && !keys.includes(subCur)) subCur = keys.length ? keys[0] : 'add';
-  if (!keys.length) subCur = 'add';
+  // mục chưa có thật (trực còn trống) không tự được chọn: chưa có gì thì về "Thêm mục", có rồi thì mở mục đầu tiên đã thêm
+  const real = g.filter(x => !x.virtual).map(x => x.key);
+  if (subCur !== 'add' && (!keys.includes(subCur) || subCur == null)) subCur = real.length ? real[0] : 'add';
+  if (!real.length && !(subCur === 'truc')) subCur = 'add';
   bar.innerHTML = g.map(x => `<button data-sub="${esc(x.key)}" class="${x.done ? 'done' : ''} ${x.key === subCur ? 'on' : ''}">${esc(x.label)}</button>`).join('') +
     `<button data-sub="add" class="add ${subCur === 'add' ? 'on' : ''}">＋ Thêm mục</button>`;
   $('ndBox').querySelectorAll(':scope > *').forEach(e => e.classList.add('subhide'));
