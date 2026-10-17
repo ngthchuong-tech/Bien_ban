@@ -561,14 +561,14 @@ tbody tr:hover{background:#e3effb}
 
     <!-- BƯỚC 5 -->
     <div class="step" data-step="5">
-      <div class="sec">IV. Tình hình an ninh trật tự</div>
+      <div class="sec">III. Tình hình an ninh trật tự</div>
       <textarea id="antt"></textarea>
       <div class="addbar"><button class="btn small" data-act="anttMau">+ Dùng câu mặc định của cảng</button></div>
     </div>
 
     <!-- BƯỚC 6 -->
     <div class="step" data-step="6">
-      <div class="sec">V. Kết luận</div>
+      <div class="sec">IV. Kết luận</div>
       <div class="pickrow" style="grid-template-columns:1fr auto"><select id="klPick"></select><button class="autobtn" data-act="klAdd">+</button><button class="btn small primary" data-act="klAuto">Soạn tự động</button></div>
       <textarea id="ketLuan" style="min-height:130px" placeholder="Về tuân thủ nội quy lao động: ...&#10;Về tình hình sản xuất: ..."></textarea>
     </div>
@@ -1429,9 +1429,6 @@ function html(d){
   }
 
   const trB = trucArr(d.truc).filter(tb => named(tb.nguoi).length);
-  roman('III', 'CÔNG TÁC TRỰC ĐIỀU HÀNH SẢN XUẤT');
-  if (danhSo && !trB.length) p('', '……');
-  n = 0;
   const isCh = tb => tb.kind === 'vp' || tb.kind === 'cang';
   const chB = trB.filter(isCh);
   trB.forEach(tb => {
@@ -1450,9 +1447,7 @@ function html(d){
     if (kieuTr === 'vang'){
       trN.forEach(x => p('', `* ${esc(tt)}: ${pre(x)}${esc(x.hoTen)}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''} ${x.co === false ? 'không có mặt tại cảng trong thời gian kiểm tra.' : 'đang có mặt tại cảng.'}`));
     } else {
-      // Mục III đã có tiêu đề riêng: chỉ ghi tên khối khi là trực chỉ huy hoặc có nhiều khối
-      if (!danhSo) p('b h2', `* ${esc(tt)}:`);
-      else if (tb.kind !== 'dh' || trB.length > 1) p('b h2', head(tt));
+      p('b h2', danhSo ? head(tt) : `* ${esc(tt)}:`);
       trN.forEach(x => {
         const who = (x.xung ? esc(x.xung) + ' ' : '') + esc(x.hoTen);
         p('ind2', `+ ${who}${x.chucDanh ? ' - ' + esc(x.chucDanh) : ''}: ${x.co === false ? 'Không có mặt' : 'Có mặt'} ở cảng tại thời điểm kiểm tra.`);
@@ -1460,10 +1455,10 @@ function html(d){
     }
   });
 
-  roman('IV', 'TÌNH HÌNH AN NINH TRẬT TỰ');
+  roman('III', 'TÌNH HÌNH AN NINH TRẬT TỰ');
   p('', esc(d.antt.trim() || '……'));
 
-  if (danhSo) p('b h1', 'V. KẾT LUẬN'); else p('u', 'Kết luận:');
+  if (danhSo) p('b h1', 'IV. KẾT LUẬN'); else p('u', 'Kết luận:');
   const kl = lines(d.ketLuan);
   if (!kl.length) p('', '……');
   let kn = 0;
@@ -2564,7 +2559,7 @@ function renderAddList(){
   const berths = c.berths.map((b, i) => hb.has(b.ten) ? '' : btn('berth', i, '＋ ' + b.ten)).join('');
   h += `<div class="addgrp"><b>Cầu bến</b><div>${berths ? btn('berthall', 0, '★ Thêm tất cả cầu bến', 'all') + berths : '<span class="mut">Đã thêm hết.</span>'}${btn('berth', -1, '✎ Cầu khác (tự nhập)', 'oth')}</div></div>`;
   let bans = c.groups.map((g, i) => hg.has(g.ten) ? '' : btn('ban', i, '＋ ' + g.ten)).join('');
-  bans += '<button class="addbtn" data-sub="truc">→ Công tác trực điều hành sản xuất (mục III)</button>';
+  bans += '<button class="addbtn" data-sub="truc">→ Công tác trực điều hành sản xuất</button>';
   h += `<div class="addgrp"><b>Ban / bộ phận làm việc</b><div>${bans || '<span class="mut">Đã thêm hết.</span>'}${btn('ban', -1, '✎ Ban khác (tự nhập)', 'oth')}</div></div>`;
   const th = c.thue.map((t, i) => ht.has(t.congTy) ? '' : btn('thue', i, '＋ ' + t.congTy)).join('');
   if (c.thue.length || th) h += `<div class="addgrp"><b>Đơn vị thuê ngoài</b><div>${th || '<span class="mut">Đã thêm hết.</span>'}${btn('thue', -1, '✎ Đơn vị khác (tự nhập)', 'oth')}</div></div>`;
@@ -2687,7 +2682,7 @@ function renderToc(){
     } else h += row(1, NOCH + item('sub head dim', 'data-tocadd="berth"', 'I', 'Cầu bến (chưa thêm)') + plus('berth', 'Thêm cầu bến'));
     // II. Các ban, bộ phận
     const bansDone = bans.length > 0 && bans.every(z => z.done);
-    h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-tocadd="banall"', bansDone ? '✓' : 'II', 'Các ban, bộ phận') + plus('banall', 'Thêm ban / bộ phận'));
+    h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-tocadd="banall"', bansDone ? '✓' : 'II', 'Các ban, bộ phận, trực') + plus('banall', 'Thêm ban / bộ phận'));
     bans.forEach(x => {
       const el0 = x.els[0], open = isOpen(x.key);
       h += row(2, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label));
@@ -2712,13 +2707,13 @@ function renderToc(){
       if (open) kids(el0.querySelector(':scope > .svcs'), '[data-svc]').forEach(sv => { const nm = val(sv, '[data-t]').trim(); h += leaf(uidOf(sv), nm || '(thiết bị / dịch vụ mới)', !!nm); });
     });
     // III. Công tác trực điều hành sản xuất
-    h += row(1, NOCH + item('sub head ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : 'III', 'Công tác trực điều hành sản xuất'));
+    h += row(2, NOCH + item('sub ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : '', 'Công tác trực điều hành sản xuất'));
     navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
     if (gt.els.length){
       const dh = gt.els.find(z => z.dataset.tkind === 'dh'), np = z => [...z.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
-      if (dh) h += row(2, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
+      if (dh) h += row(3, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
       else {
-        h += row(2, `<span class="phanh">Trực chỉ huy</span>`);
+        h += row(3, `<span class="phanh">Trực chỉ huy</span>`);
         gt.els.forEach(z => h += leaf(uidOf(z), val(z, '[data-ttl]').trim() || 'Trực chỉ huy', np(z)));
       }
     }
