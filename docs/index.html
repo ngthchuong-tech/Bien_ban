@@ -1264,7 +1264,7 @@ function refreshDock(){
       const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
       const taken = new Set(cur ? persons(plOf(cur)).map(x => x.hoTen) : []);
       html += `<div class="qbar" data-qbar data-qkey="${esc(key)}" data-qban="${bi}" data-qpool="${esc(pool.ten)}">${cap}` +
-        `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select>` +
+        `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}${/cơ giới/i.test(pool.ten) ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>'}</select>` +
         `<select data-qppl><option value="">2. chọn người</option>${pool.nhanVien.map((x, i) => taken.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen)}</option>`).join('')}</select>` +
         `<button class="btn small primary" data-act="quickAdd">Thêm</button><button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button></div>`;
     });
@@ -2010,6 +2010,12 @@ function banAdd(card, v){
 document.addEventListener('change', e => {
   const t = e.target; if (!t.matches) return;
   if (t.matches('[data-pick]')){ banAdd(t.closest('[data-ban]'), t.value); return; }
+  if (t.matches('[data-qdev]') && t.value === 'blank'){   // thanh dưới: thêm vị trí mới (tự nhập) vào bộ phận này
+    const bar = t.closest('[data-qbar]'), card = [...$('ndBox').querySelectorAll(':scope > [data-ban]')][+bar.dataset.qban];
+    const g = card && cat($('cang').value).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
+    t.value = ''; if (card) addItemTo(card, blankItemData(g, bar.dataset.qpool || ''));
+    return;
+  }
   if (t.matches('#addTP,#ccPick,#klPick,[data-pplpick]') && t.value !== ''){
     const b = t.parentElement.querySelector('.autobtn'); if (b) b.click();
     if (t.id === 'klPick') t.value = '';
