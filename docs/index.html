@@ -810,7 +810,7 @@ Bà Lưu Thị Mỹ Chi | Phó GĐ Kho vận - logistics`
   },
   'Gò Dầu': {
     phuDe: 'Về việc kiểm tra thời gian làm việc, tuân thủ nội quy lao động tại Cảng Gò Dầu',
-    tenTruc: 'Trực chỉ huy cảng Gò Dầu',
+    tenTruc: 'Công tác trực điều hành sản xuất',
     tenThue: 'Thiết bị thuê ngoài',
     kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong',
     leadIn: DEFAULT_LEAD,
@@ -849,7 +849,7 @@ Trưởng ca | Nguyễn Ngọc Đệ
 ## Ban Kế toán Tài vụ
 Trạm cân Khu A | Nguyễn Văn Nghi
 Trạm cân Khu B | Trần Thanh Hà
-## Ban hành chính bảo vệ
+## Ban Hành chính bảo vệ
 Trực ban an ninh | Nguyễn Quang Tuyên
 Khu B | (04 nhân viên cổng ra vào)
 B1+B5 | (01 nhân viên cầu cảng)
@@ -1596,6 +1596,7 @@ function DMof(c){
   DM[c] = normalize(DM[c] || SEED[c] || {});
   // Gò Dầu: trình bày giống Long Bình Tân (áp một lần cho danh mục đã lưu từ trước)
   if (c === 'Gò Dầu' && !DM[c].kieuLBT){ Object.assign(DM[c], KIEU_LBT, { kieuLBT: 1 }); }
+  if (c === 'Gò Dầu' && /^trực chỉ huy/i.test(DM[c].tenTruc || '')) DM[c].tenTruc = 'Công tác trực điều hành sản xuất';
   return DM[c];
 }
 function settingsOf(c){ return DMof(c); }
@@ -2695,7 +2696,7 @@ function renderTrucPanel(){
   let h = `<div class="tmode"><button class="tm ${m === 'dh' ? 'on' : ''}" data-tmode="dh"><i>${m === 'dh' ? '●' : '○'}</i><span><b>Trực điều hành sản xuất</b><small>Ngày thường: gồm người ở mục Thành phần (trừ Ban KSNB) và Trưởng ca</small></span></button>` +
     `<button class="tm ${m === 'ch' ? 'on' : ''}" data-tmode="ch"><i>${m === 'ch' ? '●' : '○'}</i><span><b>Trực chỉ huy</b><small>Ngày lễ, tết: một mục, gồm 2 nội dung con (Văn phòng Công ty / Cảng)</small></span></button></div>`;
   if (m === 'ch') h += `<div class="tsub"><b>Trực chỉ huy gồm các nội dung con (chọn một hoặc cả hai):</b>` +
-    (isLBT() ? `<label><input type="checkbox" data-tch="vp" ${has('vp') ? 'checked' : ''}> Trực chỉ huy Văn phòng Công ty</label>` : '') +
+    `<label><input type="checkbox" data-tch="vp" ${has('vp') ? 'checked' : ''}> Trực chỉ huy Văn phòng Công ty</label>` +
     `<label><input type="checkbox" data-tch="cang" ${has('cang') ? 'checked' : ''}> ${esc(trucLabel('cang'))}</label></div>`;
   if (m === 'dh') h += `<div class="tsub"><button class="btn small" data-tref="1">↻ Lấy lại danh sách từ Thành phần và Trưởng ca</button></div>`;
   if (!m) h += `<div class="tsub"><b>Bấm chọn một hình thức trực ở trên để bắt đầu.</b></div>`;
