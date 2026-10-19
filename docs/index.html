@@ -880,6 +880,7 @@ async function api(action, payload){
   });
   const j = await r.json();
   if (!j.ok) throw new Error(j.error || 'Lỗi không rõ');
+  if (j.data === undefined) throw new Error('Máy chủ trả về dữ liệu rỗng (kiểm tra đã triển khai lại Apps Script chưa)');
   return j.data;
 }
 
@@ -2783,17 +2784,18 @@ function renderToc(){
     h += row(1, NOCH + item('sub add ' + cur4('add'), 'data-sub="add"', '+', 'Thêm mục'));
   });
   h += `<button class="ti allbtn" data-sgall="1"><i>☰</i><span>${all ? 'Quay lại từng mục' : 'Xem tất cả cùng lúc'}</span></button>`;
-  toc.innerHTML = h;
+  if (toc.dataset.h !== h){ toc.dataset.h = h; toc.innerHTML = h; }   // chỉ vẽ lại khi có thay đổi, để bấm chuột không bị mất
   toc.dataset.s4 = (all || stepCur === 4) ? '1' : '0';   // đang ở bước khác thì thu gọn cây của bước 4
   // Nút Trước / Sau đi đúng theo thứ tự mục lục: 1 → 2 → 3 → (cầu bến → từng ban → thuê ngoài → trực) → 5 → 6 → 7
   let cur = navSeq.findIndex(x => stepCur === 4 ? (x.sub === subCur || (subCur === 'add' && x.sg === 4)) : x.sg === stepCur);
   if (stepCur === 4 && subCur === 'add' && cur < 0) cur = navSeq.findIndex(x => x.sub) - 0.5;   // màn hình Thêm mục: đứng trước mục đầu tiên
   const nb = $('navBar');
-  if (cur < 0 && !(stepCur === 4)){ nb.innerHTML = ''; return; }
+  if (cur < 0 && !(stepCur === 4)){ nb.innerHTML = ''; nb.dataset.h = ''; return; }
   const pv = navSeq.slice(0, Math.ceil(cur)).reverse().find(z => z.addban === undefined), nx = navSeq[Math.floor(cur) + 1];   // Quay lại bỏ qua các ban chưa thêm
-  nb.innerHTML = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
+  const nbHtml = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
     (nx && nx.addban !== undefined ? (skip => skip ? `<button class="btn back" data-nav="${navSeq.indexOf(skip)}" title="Không có ban này: sang ${esc(skip.label)}">Bỏ qua ›</button>` : '')(navSeq.slice(navSeq.indexOf(nx) + 1).find(z => z.addban === undefined)) : '') +
     (nx ? `<button class="btn next" data-nav="${navSeq.indexOf(nx)}">${nx.addban !== undefined ? 'Thêm' : 'Tiếp theo:'} ${esc(nx.label)} ›</button>` : '');
+  if (nb.dataset.h !== nbHtml){ nb.dataset.h = nbHtml; nb.innerHTML = nbHtml; }
 }
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-tocopen]');
