@@ -2473,7 +2473,7 @@ function sheetToDocx(){
   const txt = el => { const c = el.cloneNode(true); c.querySelectorAll('.box').forEach(b => b.replaceWith('☐')); return c; };
   const para = (el, f, o) => wPara(wRuns(txt(el), f), o);
   let body = '';
-  const border = (sz) => `<w:tcBorders><w:top w:val="single" w:sz="${sz}"/><w:left w:val="single" w:sz="${sz}"/><w:bottom w:val="single" w:sz="${sz}"/><w:right w:val="single" w:sz="${sz}"/></w:tcBorders>`;
+  const border = (sz, noTop, noBot) => `<w:tcBorders><w:top w:val="${noTop ? 'nil' : 'single'}" w:sz="${sz}" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="${sz}" w:space="0" w:color="000000"/><w:bottom w:val="${noBot ? 'nil' : 'single'}" w:sz="${sz}" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="${sz}" w:space="0" w:color="000000"/></w:tcBorders>`;
   const table = t => {
     const cols = [...t.querySelectorAll(':scope > colgroup > col')].map(c => /width:\s*([\d.]+)mm/.test(c.getAttribute('style') || '') ? Math.round(parseFloat(RegExp.$1) * MM) : 0);
     const fixed = cols.reduce((a, b) => a + b, 0), flex = cols.filter(x => !x).length;
@@ -2483,7 +2483,7 @@ function sheetToDocx(){
       const cells = [...tr.children], isH = tr.classList.contains('gh'), isS = tr.classList.contains('sg');
       let col = 0, k = 0, tcs = '';
       while (col < W.length){
-        if (occ[col] > 0){ tcs += `<w:tc><w:tcPr><w:tcW w:w="${W[col]}" w:type="dxa"/><w:vMerge/>${border(4)}</w:tcPr><w:p/></w:tc>`; occ[col]--; col++; continue; }
+        if (occ[col] > 0){ occ[col]--; tcs += `<w:tc><w:tcPr><w:tcW w:w="${W[col]}" w:type="dxa"/>${border(4, true, occ[col] > 0)}</w:tcPr>${wPara('', { after: 0, line: 240 })}</w:tc>`; col++; continue; }
         const td = cells[k++]; if (!td) break;
         const cs = +(td.getAttribute('colspan') || 1), rs = +(td.getAttribute('rowspan') || 1);
         const w = W.slice(col, col + cs).reduce((a, b) => a + b, 0), th = td.tagName === 'TH';
@@ -2491,7 +2491,7 @@ function sheetToDocx(){
         const inner = [...td.childNodes].some(n => n.nodeType === 1 && n.tagName === 'SMALL') || td.innerHTML.includes('<br>')
           ? td.innerHTML.split(/<br\s*\/?>/i).map(part => { const d = document.createElement('div'); d.innerHTML = part; return wPara(wRuns(txt(d), { ...f, b: f.b && !d.querySelector('small'), sz: d.querySelector('small') ? 18 : 21 }), { jc: td.classList.contains('c') || th ? 'center' : 'left', before: 20, after: 20, line: 240 }); }).join('')
           : wPara(wRuns(txt(td), f), { jc: td.classList.contains('c') || th ? 'center' : 'left', before: 20, after: 20, line: 240 });
-        tcs += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${cs > 1 ? `<w:gridSpan w:val="${cs}"/>` : ''}${rs > 1 ? '<w:vMerge w:val="restart"/>' : ''}${border(4)}${th ? '<w:shd w:val="clear" w:color="auto" w:fill="E8E8E8"/>' : isH ? '<w:shd w:val="clear" w:color="auto" w:fill="F0F0F0"/>' : ''}<w:vAlign w:val="center"/></w:tcPr>${inner}</w:tc>`;
+        tcs += `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${cs > 1 ? `<w:gridSpan w:val="${cs}"/>` : ''}${border(4, false, rs > 1)}${th ? '<w:shd w:val="clear" w:color="auto" w:fill="E8E8E8"/>' : isH ? '<w:shd w:val="clear" w:color="auto" w:fill="F0F0F0"/>' : ''}<w:vAlign w:val="center"/></w:tcPr>${inner}</w:tc>`;
         if (rs > 1) for (let j = 0; j < cs; j++) occ[col + j] = rs - 1;
         col += cs;
       }
