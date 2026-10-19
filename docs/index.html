@@ -80,6 +80,7 @@ textarea{min-height:70px;resize:vertical}
 .qbar .btn.small{min-height:28px;padding:2px 12px;font-size:14px}
 .qbar .del{min-height:28px;min-width:28px;padding:0}
 .qbar .qadd{grid-column:1/-1}
+.qbar.qonly{grid-template-columns:auto 1fr auto!important}.qbar.qonly .qadd{grid-column:auto}
 .qbar .qadd select{width:100%;border:1.5px dashed #FF8A3D;background:#fff8ef;color:#B45309;font-weight:600}
 .qbar .hint{font-size:12px;line-height:1.2;margin:0}
 .dock .qcap small{display:inline;font-weight:400;color:#555;font-size:11px;margin-left:4px}
@@ -1274,10 +1275,13 @@ function refreshDock(){
       const key = g.ten + '|' + pool.ten;
       if (dockHidden.has(key)){ hiddenN++; return; }
       const cap = `<span class="qcap">${esc(pool.ten || 'Vị trí')}<small>${esc(g.ten)}</small></span>`;
-      if (!devs.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con".</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
-      if (!pool.nhanVien.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh sách nhân viên chung đang trống. Vào tab Danh mục, mục 5, nhập tên nhân viên rồi quay lại.</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
+      if (!devs.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}" data-qban="${bi}">${cap}<span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con".</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
       const haveLb = new Set(kids(items, '[data-item]').filter(it => (it.dataset.phan || '') === pool.ten).map(it => val(it, '[data-label]').trim()));
       const leftDevs = devs.map((x, i) => haveLb.has(x.label) ? '' : `<option value="${i}">${esc(x.label)}</option>`).filter(Boolean);
+      const addSel = `<div class="qadd"><select data-qadd><option value="">＋ Thêm thiết bị / vị trí vào danh sách…</option>${leftDevs.length > 1 ? '<option value="all">★ Thêm tất cả còn lại</option>' : ''}${leftDevs.join('')}${/cơ giới/i.test(pool.ten) ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>'}</select></div>`;
+      if (!pool.nhanVien.length){   // danh mục không có danh sách nhân viên chung: vẫn cho thêm thiết bị / vị trí, người nhập tay trong từng ô
+        html += `<div class="qbar qonly" data-qbar data-qkey="${esc(key)}" data-qban="${bi}" data-qpool="${esc(pool.ten)}">${cap}${addSel}<button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button></div>`; return;
+      }
       let dv = prev[key];
       if (dv === undefined || dv === '' || !devs[+dv]) dv = '';
       const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
@@ -1286,7 +1290,7 @@ function refreshDock(){
         `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${haveLb.has(x.label) ? '✓ ' : ''}${esc(x.label)}</option>`).join('')}</select>` +
         `<select data-qppl><option value="">2. chọn người</option>${pool.nhanVien.map((x, i) => taken.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen)}</option>`).join('')}</select>` +
         `<button class="btn small primary" data-act="quickAdd">Thêm</button><button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button>` +
-        `<div class="qadd"><select data-qadd><option value="">＋ Thêm thiết bị / vị trí vào danh sách…</option>${leftDevs.length > 1 ? '<option value="all">★ Thêm tất cả còn lại</option>' : ''}${leftDevs.join('')}${/cơ giới/i.test(pool.ten) ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>'}</select></div></div>`;
+        addSel + `</div>`;
     });
   });
   if (!html && !hiddenN){ dock.innerHTML = ''; refreshPeoplePicks(); return; }
