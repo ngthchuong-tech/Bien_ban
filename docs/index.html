@@ -2750,7 +2750,7 @@ function renderToc(){
   if (stepCur === 4 && subCur === 'add' && cur < 0) cur = navSeq.findIndex(x => x.sub) - 0.5;   // màn hình Thêm mục: đứng trước mục đầu tiên
   const nb = $('navBar');
   if (cur < 0 && !(stepCur === 4)){ nb.innerHTML = ''; return; }
-  const pv = navSeq[Math.ceil(cur) - 1], nx = navSeq[Math.floor(cur) + 1];
+  const pv = navSeq.slice(0, Math.ceil(cur)).reverse().find(z => z.addban === undefined), nx = navSeq[Math.floor(cur) + 1];   // Quay lại bỏ qua các ban chưa thêm
   nb.innerHTML = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
     (nx && nx.addban !== undefined ? (skip => skip ? `<button class="btn back" data-nav="${navSeq.indexOf(skip)}" title="Không có ban này: sang ${esc(skip.label)}">Bỏ qua ›</button>` : '')(navSeq.slice(navSeq.indexOf(nx) + 1).find(z => z.addban === undefined)) : '') +
     (nx ? `<button class="btn next" data-nav="${navSeq.indexOf(nx)}">${nx.addban !== undefined ? 'Thêm' : 'Tiếp theo:'} ${esc(nx.label)} ›</button>` : '');
