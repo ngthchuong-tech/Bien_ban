@@ -2327,7 +2327,7 @@ function wParaOfP(p, base){
 }
 function wCell(w, inner){ return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/></w:tcPr>${inner || '<w:p/>'}</w:tc>`; }
 function wTable(widths, rows){
-  return `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows}</w:tbl>`;
+  return `<w:tbl><w:tblPr><w:tblW w:w="${widths.reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${widths.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows}</w:tbl>`;
 }
 function wLogoPara(cx, cy){
   return `<w:p><w:pPr><w:spacing w:before="0" w:after="40"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Logo"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="0" name="logo"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdLogo"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
@@ -2478,6 +2478,7 @@ function sheetToDocx(){
   const border = (sz, noTop, noBot) => `<w:tcBorders><w:top w:val="${noTop ? 'nil' : 'single'}" w:sz="${sz}" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="${sz}" w:space="0" w:color="000000"/><w:bottom w:val="${noBot ? 'nil' : 'single'}" w:sz="${sz}" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="${sz}" w:space="0" w:color="000000"/></w:tcBorders>`;
   const table = t => {
     const cols = [...t.querySelectorAll(':scope > colgroup > col')].map(c => /width:\s*([\d.]+)mm/.test(c.getAttribute('style') || '') ? Math.round(parseFloat(RegExp.$1) * MM) : 0);
+    if (!cols.length){ const fr = t.querySelector('tr'); const n = fr ? [...fr.children].reduce((a, c) => a + (+(c.getAttribute('colspan') || 1)), 0) : 1; for (let i = 0; i < n; i++) cols.push(0); }
     const fixed = cols.reduce((a, b) => a + b, 0), flex = cols.filter(x => !x).length;
     const W = cols.map(x => x || Math.round((TOTAL - fixed) / flex));
     let rows = '', occ = new Array(W.length).fill(0);
