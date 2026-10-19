@@ -521,6 +521,7 @@ tbody tr:hover{background:#e3effb}
       </div>
       <div class="sec">II. Nội dung kiểm tra: kết quả từng nơi</div>
       <div id="ndBox"></div>
+      <div class="pickbar" id="berthPick" hidden><select id="berthSel"></select></div>
       <div class="dock" id="dock"></div>
     </div>
 
@@ -2010,6 +2011,12 @@ function banAdd(card, v){
 document.addEventListener('change', e => {
   const t = e.target; if (!t.matches) return;
   if (t.matches('[data-pick]')){ banAdd(t.closest('[data-ban]'), t.value); return; }
+  if (t.id === 'berthSel'){
+    const v = t.value; if (v === '') return;
+    if (v === 'all'){ const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim())); cat($('cang').value).berths.forEach((x, j) => { if (!have.has(x.ten)) addNd('berth', j); }); }
+    else addNd('berth', +v);
+    renderBerthPick(); return;
+  }
   if (t.matches('[data-qdev]') && t.value === 'blank'){   // thanh dưới: thêm vị trí mới (tự nhập) vào bộ phận này
     const bar = t.closest('[data-qbar]'), card = [...$('ndBox').querySelectorAll(':scope > [data-ban]')][+bar.dataset.qban];
     const g = card && cat($('cang').value).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
@@ -2521,7 +2528,7 @@ function refreshSub(){
   if (cur) cur.els.forEach(e => e.classList.remove('subhide'));
   const st4 = document.querySelector('.step[data-step="4"]'); st4.classList.toggle('subadd', subCur === 'add');
   const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : subCur === 'truc' ? 'truc' : (cur && cur.els[0] && cur.els[0].matches('[data-ban]') ? 'ban' : 'tn'));
-  renderAddList(); renderTrucPanel();
+  renderAddList(); renderBerthPick(); renderTrucPanel();
   // thanh xanh dưới cùng chỉ hiện cho ban đang mở
   const banEl = kind === 'ban' ? cur.els[0] : null;
   const bans = [...$('ndBox').querySelectorAll(':scope > [data-ban]')];
@@ -2555,6 +2562,16 @@ function renderAddList(){
   if (c.thue.length || th) h += `<div class="addgrp"><b>Đơn vị thuê ngoài</b><div>${th || '<span class="mut">Đã thêm hết.</span>'}${btn('thue', -1, '✎ Đơn vị khác (tự nhập)', 'oth')}</div></div>`;
   h += `<div class="addgrp"><b>Công tác trực</b><div><button class="addbtn" data-sub="truc">→ Công tác trực điều hành sản xuất</button></div></div>`;
   box.innerHTML = h;
+}
+// Đang ở mục Cầu bến: ô chọn thêm cầu (giống ô thêm vị trí của từng ban)
+function renderBerthPick(){
+  const bp = $('berthPick'), sel = $('berthSel'); if (!bp) return;
+  bp.hidden = subCur !== 'berth';
+  if (bp.hidden) return;
+  const c = cat($('cang').value), have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim()));
+  const left = c.berths.map((b, i) => have.has(b.ten) ? '' : `<option value="${i}">${esc(b.ten)}</option>`).filter(Boolean);
+  const html = '<option value="">＋ Thêm cầu bến…</option>' + (left.length > 1 ? '<option value="all">★ Thêm tất cả cầu bến còn lại</option>' : '') + left.join('') + '<option value="-1">✎ Cầu khác (tự nhập)</option>';
+  if (sel.dataset.sig !== html){ sel.dataset.sig = html; sel.innerHTML = html; }   // không dựng lại khi chưa đổi, để lựa chọn không bị mất
 }
 function addNd(kind, idx){
   $('addKind').value = kind; refreshND(); $('addND').value = String(idx);
