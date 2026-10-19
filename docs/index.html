@@ -1009,6 +1009,7 @@ function tB(b){
 function tT(t){
   return `<div class="card-b" data-tn><span class="grip" title="Giữ chuột kéo để đổi thứ tự">⋮⋮</span><div class="bh"><input type="text" data-congty value="${esc(t.congTy)}" placeholder="Tên công ty"><button class="del" data-del>✕</button></div><input type="text" data-intro value="${esc(t.intro||'')}" placeholder="Giới thiệu (vd: cung cấp dịch vụ cho tàu...)" style="margin-bottom:5px"><input type="text" data-tnote value="${esc(t.note||'')}" placeholder="Ghi chú (vd: không bố trí thiết bị, dịch vụ làm hàng)" style="margin-bottom:5px"><div class="svcs">${(t.dv||[]).map(x => `<div class="srow" data-svc><input type="text" data-t value="${esc(x.t)}"><button class="del" data-del>✕</button></div>`).join('')}</div><div class="addbar"><button class="btn small" data-act="addSvc">+ thiết bị / dịch vụ</button></div></div>`;
 }
+const fixTruc = t => String(t).replace(/công tác (trực )?điều hành sản xuất/gi, m => /trực/i.test(m) ? (m[0]==='C'?'Công tác trực chỉ huy, điều hành sản xuất':'công tác trực chỉ huy, điều hành sản xuất') : (m[0]==='C'?'Công tác trực chỉ huy, điều hành sản xuất':'công tác trực chỉ huy, điều hành sản xuất'));
 const trucArr = t => Array.isArray(t) ? t : (t ? [t] : []);
 function tTruc(t){
   const kind = t.kind || (/chỉ huy/i.test(t.ten || '') ? 'cang' : 'dh');
@@ -1343,8 +1344,9 @@ function html(d){
   });
 
   roman('II', 'NỘI DUNG KIỂM TRA');
-  const bp = d.phamVi.bophan.trim();
-  p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)}${d.cang ? ' tại ' + (/^cảng/i.test(d.cang) ? d.cang : 'Cảng ' + d.cang) : ''} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
+  const bp = fixTruc(d.phamVi.bophan.trim());
+  const hasVp = trucArr(d.truc).some(t => t.kind === 'vp' && (t.nguoi || []).some(x => x.hoTen));
+  p('', `Ban Kiểm soát nội bộ thực hiện kiểm tra tuân thủ quy định làm việc của các bộ phận: ${dash(bp)}${d.cang ? ' tại ' + (hasVp ? 'Văn phòng Công ty và ' : '') + (/^cảng/i.test(d.cang) ? d.cang : 'Cảng ' + d.cang) : ''} trong ca trực ${dash(d.phamVi.catruc)}, từ ${dash(d.phamVi.tuGio)} ngày ${dash(fmtDay(d.phamVi.tuNgay))} đến ${dash(d.phamVi.denGio)} ngày ${dash(fmtDay(d.phamVi.denNgay))}, kết quả kiểm tra như sau:`);
 
   const cb = d.cauBen.filter(b => b.ten);
   if (cb.length){
@@ -1436,7 +1438,7 @@ function html(d){
   if (!kl.length) p('', '……');
   let kn = 0;
   kl.forEach(t => {
-    const bullet = /^[-–•]\s*/.test(t), c = esc(t.replace(/^[-–•]\s*/, ''));
+    const bullet = /^[-–•]\s*/.test(t), c = esc(fixTruc(t).replace(/^[-–•]\s*/, ''));
     if (bullet) p('ind', `- ${c}`); else p('', danhSo ? `${++kn}. ${c}` : `- ${c}`);
   });
 
