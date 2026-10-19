@@ -79,6 +79,8 @@ textarea{min-height:70px;resize:vertical}
 .qbar select{padding:2px 5px;font-size:14px;min-height:28px}
 .qbar .btn.small{min-height:28px;padding:2px 12px;font-size:14px}
 .qbar .del{min-height:28px;min-width:28px;padding:0}
+.qbar .qadd{grid-column:1/-1}
+.qbar .qadd select{width:100%;border:1.5px dashed #FF8A3D;background:#fff8ef;color:#B45309;font-weight:600}
 .qbar .hint{font-size:12px;line-height:1.2;margin:0}
 .dock .qcap small{display:inline;font-weight:400;color:#555;font-size:11px;margin-left:4px}
 .qbar .qcap{font-weight:700;font-size:14px;color:var(--blue);white-space:nowrap}
@@ -522,6 +524,7 @@ tbody tr:hover{background:#e3effb}
       <div class="sec">II. Nội dung kiểm tra: kết quả từng nơi</div>
       <div id="ndBox"></div>
       <div class="pickbar" id="berthPick" hidden><select id="berthSel"></select></div>
+      <div class="pickbar" id="tnPick" hidden><select id="tnSel"></select></div>
       <div class="dock" id="dock"></div>
     </div>
 
@@ -1260,14 +1263,17 @@ function refreshDock(){
       const cap = `<span class="qcap">${esc(pool.ten || 'Vị trí')}<small>${esc(g.ten)}</small></span>`;
       if (!devs.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh mục chưa có thiết bị / vị trí nào ghi "Bộ phận con" đúng tên này. Vào tab Danh mục, mục 5, kiểm tra ô "Bộ phận con".</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
       if (!pool.nhanVien.length){ html += `<div class="qbar qwarn" data-qbar data-qkey="${esc(key)}">${cap}<span class="hint">Danh sách nhân viên chung đang trống. Vào tab Danh mục, mục 5, nhập tên nhân viên rồi quay lại.</span><button class="del" data-act="qHide" title="Tắt thanh này">✕</button></div>`; return; }
+      const haveLb = new Set(kids(items, '[data-item]').filter(it => (it.dataset.phan || '') === pool.ten).map(it => val(it, '[data-label]').trim()));
+      const leftDevs = devs.map((x, i) => haveLb.has(x.label) ? '' : `<option value="${i}">${esc(x.label)}</option>`).filter(Boolean);
       let dv = prev[key];
       if (dv === undefined || dv === '' || !devs[+dv]) dv = '';
       const cur = dv === '' ? null : kids(items, '[data-item]').find(it => (it.dataset.phan || '') === pool.ten && val(it,'[data-label]').trim() === devs[+dv].label);
       const taken = new Set(cur ? persons(plOf(cur)).map(x => x.hoTen) : []);
       html += `<div class="qbar" data-qbar data-qkey="${esc(key)}" data-qban="${bi}" data-qpool="${esc(pool.ten)}">${cap}` +
-        `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}${/cơ giới/i.test(pool.ten) ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>'}</select>` +
+        `<select data-qdev><option value="">1. chọn thiết bị / vị trí</option>${devs.map((x, i) => `<option value="${i}" ${String(i) === dv ? 'selected' : ''}>${haveLb.has(x.label) ? '✓ ' : ''}${esc(x.label)}</option>`).join('')}</select>` +
         `<select data-qppl><option value="">2. chọn người</option>${pool.nhanVien.map((x, i) => taken.has(x.hoTen) ? '' : `<option value="${i}">${esc(x.hoTen)}</option>`).join('')}</select>` +
-        `<button class="btn small primary" data-act="quickAdd">Thêm</button><button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button></div>`;
+        `<button class="btn small primary" data-act="quickAdd">Thêm</button><button class="del" data-act="qHide" title="Xong rồi, tắt thanh này">✕</button>` +
+        `<div class="qadd"><select data-qadd><option value="">＋ Thêm thiết bị / vị trí vào danh sách…</option>${leftDevs.length > 1 ? '<option value="all">★ Thêm tất cả còn lại</option>' : ''}${leftDevs.join('')}${/cơ giới/i.test(pool.ten) ? '' : '<option value="blank">✎ Vị trí khác (tự nhập)</option>'}</select></div></div>`;
     });
   });
   if (!html && !hiddenN){ dock.innerHTML = ''; refreshPeoplePicks(); return; }
@@ -2011,11 +2017,34 @@ function banAdd(card, v){
 document.addEventListener('change', e => {
   const t = e.target; if (!t.matches) return;
   if (t.matches('[data-pick]')){ banAdd(t.closest('[data-ban]'), t.value); return; }
+  if (t.id === 'tnSel'){
+    const v = t.value; if (v === '') return;
+    if (v === 'all'){ const have = new Set([...$('ndBox').querySelectorAll('[data-tn] [data-congty]')].map(x => x.value.trim())); cat($('cang').value).thue.forEach((x, j) => { if (!have.has(x.congTy)) addNd('thue', j); }); }
+    else addNd('thue', +v);
+    renderTnPick(); return;
+  }
   if (t.id === 'berthSel'){
     const v = t.value; if (v === '') return;
     if (v === 'all'){ const have = new Set([...$('ndBox').querySelectorAll('[data-berth] [data-cbten]')].map(x => x.value.trim())); cat($('cang').value).berths.forEach((x, j) => { if (!have.has(x.ten)) addNd('berth', j); }); }
     else addNd('berth', +v);
     renderBerthPick(); return;
+  }
+  if (t.matches('[data-qadd]')){
+    const v = t.value; if (v === '') return;
+    const bar = t.closest('[data-qbar]'), card = [...$('ndBox').querySelectorAll(':scope > [data-ban]')][+bar.dataset.qban];
+    const g = card && cat($('cang').value).groups.find(x => x.ten === val(card, ':scope > .bh [data-bten]').trim());
+    if (!card || !g) return;
+    const pool = bar.dataset.qpool || '', box = card.querySelector(':scope > .items');
+    if (v === 'blank'){ t.value = ''; addItemTo(card, blankItemData(g, pool)); return; }
+    const have = new Set(kids(box, '[data-item]').filter(it => (it.dataset.phan || '') === pool).map(it => val(it, '[data-label]').trim()));
+    const devs = g.items.filter(x => x.phan === pool);
+    let first = null;
+    (v === 'all' ? devs.map((d, i) => i) : [+v]).forEach(i => {
+      const d = devs[i]; if (!d || have.has(d.label)) return;
+      const el = mk(tItem({ ...d, nguoi: [BLANK_P()] })); box.appendChild(el); placeItem(box, el); first = first || el;
+    });
+    t.value = ''; subCur = uidOf(card); refreshBanPick(card); markDirty(); if (first) markFresh(first, true);
+    return;
   }
   if (t.matches('[data-qdev]') && t.value === 'blank'){   // thanh dưới: thêm vị trí mới (tự nhập) vào bộ phận này
     const bar = t.closest('[data-qbar]'), card = [...$('ndBox').querySelectorAll(':scope > [data-ban]')][+bar.dataset.qban];
@@ -2532,7 +2561,7 @@ function refreshSub(){
   if (cur) cur.els.forEach(e => e.classList.remove('subhide'));
   const st4 = document.querySelector('.step[data-step="4"]'); st4.classList.toggle('subadd', subCur === 'add');
   const kind = subCur === 'add' ? 'add' : (subCur === 'berth' ? 'berth' : subCur === 'truc' ? 'truc' : (cur && cur.els[0] && cur.els[0].matches('[data-ban]') ? 'ban' : 'tn'));
-  renderAddList(); renderBerthPick(); renderTrucPanel();
+  renderAddList(); renderBerthPick(); renderTnPick(); renderTrucPanel();
   // thanh xanh dưới cùng chỉ hiện cho ban đang mở
   const banEl = kind === 'ban' ? cur.els[0] : null;
   const bans = [...$('ndBox').querySelectorAll(':scope > [data-ban]')];
@@ -2576,6 +2605,17 @@ function renderBerthPick(){
   const left = c.berths.map((b, i) => have.has(b.ten) ? '' : `<option value="${i}">${esc(b.ten)}</option>`).filter(Boolean);
   const html = '<option value="">＋ Thêm cầu bến…</option>' + (left.length > 1 ? '<option value="all">★ Thêm tất cả cầu bến còn lại</option>' : '') + left.join('') + '<option value="-1">✎ Cầu khác (tự nhập)</option>';
   if (sel.dataset.sig !== html){ sel.dataset.sig = html; sel.innerHTML = html; }   // không dựng lại khi chưa đổi, để lựa chọn không bị mất
+}
+// Đang ở một công ty thuê ngoài: ô chọn thêm công ty khác
+function renderTnPick(){
+  const bp = $('tnPick'), sel = $('tnSel'); if (!bp) return;
+  const cur = subCur && subCur !== 'add' && subCur !== 'berth' && subCur !== 'truc' ? byUid(subCur) : null;
+  bp.hidden = !(cur && cur.matches('[data-tn]'));
+  if (bp.hidden) return;
+  const c = cat($('cang').value), have = new Set([...$('ndBox').querySelectorAll('[data-tn] [data-congty]')].map(x => x.value.trim()));
+  const left = c.thue.map((t, i) => have.has(t.congTy) ? '' : `<option value="${i}">${esc(t.congTy)}</option>`).filter(Boolean);
+  const html = '<option value="">＋ Thêm công ty thuê ngoài…</option>' + (left.length > 1 ? '<option value="all">★ Thêm tất cả công ty còn lại</option>' : '') + left.join('') + '<option value="-1">✎ Công ty khác (tự nhập)</option>';
+  if (sel.dataset.sig !== html){ sel.dataset.sig = html; sel.innerHTML = html; }
 }
 function addNd(kind, idx){
   $('addKind').value = kind; refreshND(); $('addND').value = String(idx);
