@@ -266,6 +266,9 @@ tbody tr:hover{background:#e3effb}
 .finish .chk{background:#f5f8fb;border:1.5px solid #b9d0e8;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:15px;line-height:1.7}
 .finish .chk .ok{color:var(--ok);font-weight:700}
 .finish .chk .miss{color:var(--err);font-weight:700}
+.finish .chk.cov{margin-top:-2px}
+.finish .sigchk{margin-top:6px;padding-top:6px;border-top:1px dashed #b9d0e8}
+.finish .sigchk input{padding:2px 6px;min-height:28px}
 .finish .chk a{color:var(--blue2);cursor:pointer;text-decoration:underline;margin-left:6px}
 .bigbtns{display:grid;gap:8px}
 .bigbtns .btn{min-height:50px;font-size:17px;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
@@ -452,6 +455,39 @@ tbody tr:hover{background:#e3effb}
 #toc .trow .phanh{padding:3px 6px}
 #toc .ti.dim{font-style:normal;opacity:.7}
 #toc .trow .ti.on{color:#fff}
+
+/* ===== phiếu giấy ghi tại hiện trường ===== */
+#sheetModal{position:fixed;inset:0;z-index:60;background:#e9eef3;overflow:auto}
+#sheetModal[hidden]{display:none}
+.shbar{position:sticky;top:0;z-index:2;display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:8px 14px;background:#fff;border-bottom:2px solid var(--blue)}
+.shbar .grow{flex:1}
+#sheetPaper{width:210mm;margin:14px auto;background:#fff;padding:12mm 12mm;box-shadow:0 2px 10px rgba(0,0,0,.2);font:12.5px/1.35 "Times New Roman",serif;color:#000}
+#sheetPaper h1{font-size:16px;text-align:center;margin:0 0 2px;text-transform:uppercase}
+#sheetPaper h2{font-size:14px;margin:12px 0 4px;border-bottom:1.5px solid #000;padding-bottom:2px}
+#sheetPaper h3{font-size:13px;margin:8px 0 3px}
+#sheetPaper .sub{text-align:center;margin:0 0 8px;font-style:italic}
+#sheetPaper table{width:100%;border-collapse:collapse;margin:3px 0 6px;table-layout:fixed}
+#sheetPaper th,#sheetPaper td{border:1px solid #000;padding:3px 5px;vertical-align:middle;word-wrap:break-word}
+#sheetPaper th{background:#e8e8e8!important;color:#000!important;font-size:12px;text-align:center}
+#sheetPaper tr,#sheetPaper tr td{background:#fff!important}
+#sheetPaper tr.gh td{background:#f0f0f0!important}
+#sheetPaper h3{break-after:avoid}
+#sheetPaper td.c{text-align:center}
+#sheetPaper tr{break-inside:avoid}
+#sheetPaper tr.sg td{height:11mm}
+#sheetPaper tr.gh td{font-weight:700;font-style:italic}
+#sheetPaper .note{font-size:11.5px;font-style:italic;margin:2px 0}
+#sheetPaper .pb{break-before:page}
+#sheetPaper .box{display:inline-block;width:11px;height:11px;border:1.3px solid #000;vertical-align:-2px;margin:0 2px}
+#sheetPaper .ln{border-bottom:1px dotted #000;min-height:17px;margin:3px 0}
+#sheetPaper .grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px}
+@media print{
+  body.sheetmode .top,body.sheetmode #editor,body.sheetmode .view,body.sheetmode #helpModal{display:none!important}
+  body.sheetmode #sheetModal{position:static;display:block!important;background:#fff;overflow:visible}
+  body.sheetmode #sheetPaper{width:auto;margin:0;padding:0;box-shadow:none}
+  body.sheetmode .shbar{display:none!important}
+  @page{size:A4;margin:12mm}
+}
 </style>
 </head>
 <body>
@@ -463,6 +499,7 @@ tbody tr:hover{background:#e3effb}
   <button class="btn" data-go="danhmuc" title="Dữ liệu mẫu để chọn nhanh: người, vị trí, thiết bị, câu mẫu">🗂 Danh mục</button>
   <button class="btn" data-go="settings" title="Địa chỉ máy chủ, mã PIN, logo">⚙ Kết nối</button>
   <button class="btn" id="btnHelp" title="Xem hướng dẫn">❓ Hướng dẫn</button>
+  <button class="btn" id="btnSheet" title="In phiếu giấy để ghi khi đi kiểm tra, lấy theo Danh mục của cảng">📋 Phiếu hiện trường</button>
   <span class="grow"></span>
   <span class="status" id="status"></span>
   <button class="btn" id="btnNew">Biên bản mới</button>
@@ -688,6 +725,18 @@ tbody tr:hover{background:#e3effb}
 
 <datalist id="rosterNames"></datalist>
 
+
+<div id="sheetModal" hidden>
+  <div class="shbar no-print">
+    <b>Phiếu ghi kết quả kiểm tra tại hiện trường</b>
+    <label>Cảng: <select id="shCang"></select></label>
+    <label><input type="checkbox" id="shNames" checked> In sẵn họ tên theo danh mục</label>
+    <span class="grow"></span>
+    <button class="btn primary" id="shPrint">🖨 In / lưu PDF</button>
+    <button class="btn" id="shClose">✕ Đóng</button>
+  </div>
+  <div id="sheetPaper"></div>
+</div>
 <div id="helpModal"><div class="box">
   <h2>Cách lập biên bản (7 bước)</h2>
   <p>Làm lần lượt từ bước 1 đến bước 7. Thanh màu xanh phía trên khung nhập cho biết bạn đang ở bước nào. Bước đã làm xong có dấu ✓. Bấm <b>Tiếp theo</b> ở cuối mỗi bước để sang bước sau. Bên phải là bản biên bản hiện ra ngay khi bạn nhập.</p>
@@ -2336,6 +2385,86 @@ async function exportWord(){
 }
 
 $('btnPrint').onclick = () => window.print();
+/* ---------------- phiếu giấy ghi tại hiện trường ---------------- */
+function sheetHtml(cang, withNames){
+  const c = cat(cang), st = settingsOf(cang), cn = /^cảng/i.test(cang) ? cang : 'Cảng ' + cang;
+  const nm = p => ((p.xung ? p.xung + ' ' : '') + p.hoTen).trim();
+  const blank = '<span class="box"></span> Có mặt &nbsp; <span class="box"></span> Vắng';
+  let n = 0;
+  let h = `<h1>Phiếu ghi kết quả kiểm tra tại hiện trường</h1><p class="sub">${esc(cn)} – Ban Kiểm soát nội bộ. Ghi theo thứ tự bất kỳ; khi nhập máy thì nhập theo các mục dưới đây (ghi số mục ở đầu mỗi bảng).</p>`;
+  // Bước 1–3
+  h += `<h2>Mục 1–3. Thông tin chung, thành phần, thời gian</h2>
+  <div class="grid"><div>Ngày kiểm tra: ……………………………</div><div>Ca trực: ……………</div><div>Bắt đầu lúc: …… giờ …… phút, ngày ……/……/……</div><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div></div>
+  <h3>Thành phần tham gia</h3>
+  <table><colgroup><col style="width:11mm"><col style="width:55mm"><col><col style="width:30mm"><col style="width:32mm"></colgroup>
+  <tr><th>STT</th><th>Họ tên</th><th>Chức danh / đơn vị</th><th>Có mặt</th><th>Ký tên</th></tr>`;
+  const part = [];
+  c.ks.forEach(p => part.push([nm(p), (p.chucDanh || '') + ' (Ban KSNB)']));
+  c.dv.forEach(u => u.nguoi.forEach(p => part.push([nm(p), [p.chucDanh, u.ten].filter(Boolean).join(' – ')])));
+  part.forEach((r, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(r[0]) : ''}</td><td>${withNames ? esc(r[1]) : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có &nbsp;<span class="box"></span> Vắng</td><td></td></tr>`; });
+  for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${part.length + i + 1}</td><td></td><td></td><td></td><td></td></tr>`;
+  h += `</table><p class="note">Người không có tên sẵn thì ghi vào các dòng trống ở cuối bảng.</p>`;
+  // Bước 4.1 cầu bến
+  h += `<h2 class="pb">Mục 4. Kết quả từng nơi</h2><h3>4.1. Tình hình cầu bến</h3>
+  <table><colgroup><col style="width:22mm"><col><col style="width:48mm"><col style="width:42mm"></colgroup>
+  <tr><th>Cầu bến</th><th>Phương tiện cập bến</th><th>Công việc đang làm (xuất / nhập / không làm hàng)</th><th>Thiết bị làm hàng</th></tr>`;
+  c.berths.forEach(b => { h += `<tr class="sg"><td class="c"><b>${esc(b.ten)}</b></td><td></td><td></td><td></td></tr>`; });
+  h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`;
+  // Bước 4.2 các ban
+  c.groups.forEach((g, gi) => {
+    h += `<h3>4.${gi + 2}. ${esc(g.ten)}</h3>
+    <table><colgroup><col style="width:11mm"><col style="width:46mm"><col style="width:44mm"><col style="width:26mm"><col><col style="width:28mm"></colgroup>
+    <tr><th>STT</th><th>Vị trí / thiết bị</th><th>Họ tên người làm việc</th><th>Có mặt</th><th>Người thay thế / ghi chú</th><th>Ký tên</th></tr>`;
+    let last = null; n = 0;
+    g.items.forEach(it => {
+      if ((it.phan || '') !== last){ last = it.phan || ''; if (last) h += `<tr class="gh"><td colspan="6">${esc(last)}</td></tr>`; }
+      const pool = g.pools.find(p => p.ten === (it.phan || ''));
+      const names = it.nguoi.length ? it.nguoi.map(nm).join('; ') : '';
+      h += `<tr class="sg"><td class="c">${++n}</td><td>${esc(it.label)}${it.note ? `<br><small>(${esc(it.note)})</small>` : ''}</td><td>${withNames ? esc(names) : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td><td></td></tr>`;
+    });
+    for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${++n}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td><td></td></tr>`;
+    h += `</table>`;
+    const pools = g.pools.filter(p => p.nhanVien.length);
+    if (withNames && pools.length) pools.forEach(p => { h += `<p class="note"><b>${esc(p.ten || 'Nhân viên chung')}</b> – nhân viên theo danh mục: ${p.nhanVien.map(nm).map(esc).join('; ')}. Ghi tên người thực tế vào cột “Họ tên người làm việc”.</p>`; });
+    h += `<p class="note">3 dòng cuối để ghi vị trí / người phát sinh ngoài danh mục.</p>`;
+  });
+  // thuê ngoài
+  h += `<h3>4.${c.groups.length + 2}. ${esc(st.tenThue || 'Thiết bị thuê ngoài')}</h3>
+  <table><colgroup><col style="width:46mm"><col><col style="width:46mm"><col style="width:28mm"></colgroup>
+  <tr><th>Công ty</th><th>Thiết bị / dịch vụ đang làm hàng (ghi số lượng)</th><th>Người đại diện / người vận hành</th><th>Ký tên</th></tr>`;
+  c.thue.forEach(t => { h += `<tr class="sg"><td><b>${esc(t.congTy)}</b></td><td>${withNames && t.dv.length ? esc(t.dv.map(x => x.t).join('; ')) + '<br><small>Thực tế: </small>' : ''}</td><td></td><td></td></tr>`; });
+  h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr><tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`;
+  // trực
+  h += `<h3>4.${c.groups.length + 3}. Công tác trực</h3>
+  <p class="note">Ngày thường: <span class="box"></span> Trực điều hành sản xuất. Ngày lễ, tết: <span class="box"></span> Trực chỉ huy Văn phòng Công ty <span class="box"></span> Trực chỉ huy ${esc(cn)}.</p>
+  <table><colgroup><col style="width:11mm"><col style="width:58mm"><col><col style="width:26mm"><col style="width:30mm"></colgroup>
+  <tr><th>STT</th><th>Họ tên người trực</th><th>Chức danh / hình thức trực</th><th>Có mặt</th><th>Ký tên</th></tr>`;
+  c.truc.forEach((p, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(nm(p)) : ''}</td><td>${withNames ? esc(p.chucDanh || '') : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`; });
+  for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${c.truc.length + i + 1}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`;
+  h += `</table>`;
+  // bước 5–7
+  h += `<h2 class="pb">Mục 5–7. An ninh trật tự, kết luận, kết thúc</h2>
+  <h3>5. Tình hình an ninh trật tự</h3><div class="ln"></div><div class="ln"></div><div class="ln"></div>
+  <h3>6. Ghi chú cho phần kết luận</h3>
+  <p class="note">Lưu lượng xe ra vào cảng: <span class="box"></span> thấp &nbsp; <span class="box"></span> bình thường &nbsp; <span class="box"></span> cao. Ùn tắc xe: <span class="box"></span> không &nbsp; <span class="box"></span> có, tại: ……………………………</p>
+  <p class="note">Phối hợp giữa các bộ phận: <span class="box"></span> bình thường &nbsp; <span class="box"></span> có vấn đề: ……………………………</p>
+  <div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>
+  <h3>7. Kết thúc và đối chiếu</h3>
+  <div class="grid"><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div><div>Tổng số chữ ký trên phiếu: ……………</div></div>
+  <p class="note">Số chữ ký này nhập vào ô “Số chữ ký trên phiếu giấy” ở bước 7 của app để đối chiếu. Đếm chữ ký ở các bảng ban và bảng trực.</p>
+  <table style="margin-top:14px"><tr><th>Đại diện Ban KSNB</th><th>Đại diện ${esc(cn)}</th></tr><tr style="height:24mm"><td></td><td></td></tr></table>`;
+  return h;
+}
+function showSheet(){
+  const sel = $('shCang'); if (!sel.options.length) sel.innerHTML = $('cang').innerHTML;
+  sel.value = $('cang').value;
+  $('sheetPaper').innerHTML = sheetHtml(sel.value, $('shNames').checked);
+}
+$('btnSheet').onclick = () => { $('sheetModal').hidden = false; document.body.classList.add('sheetmode'); showSheet(); };
+$('shClose').onclick = () => { $('sheetModal').hidden = true; document.body.classList.remove('sheetmode'); };
+$('shCang').onchange = $('shNames').onchange = () => { $('sheetPaper').innerHTML = sheetHtml($('shCang').value, $('shNames').checked); };
+$('shPrint').onclick = () => window.print();
+
 function showLogoPrev(){ const im = $('logoPrev'); im.src = LOGO || ''; im.style.display = LOGO ? 'inline-block' : 'none'; }
 $('logoFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
@@ -2519,16 +2648,81 @@ function miss4(){
   return `<span class="miss">⚠</span> Kết quả từng nơi còn thiếu ${gp.length} chỗ:<br>` +
     gp.slice(0, MAX).map(x => `&nbsp;&nbsp;• <a data-goto="${esc(x.uid)}">${esc(x.text)}</a><br>`).join('') + (gp.length > MAX ? `&nbsp;&nbsp;… và ${gp.length - MAX} chỗ nữa<br>` : '');
 }
+
+/* ---- Bước 7: đối chiếu với danh mục để không sót ---- */
+function cover(){
+  const nd = $('ndBox'), c = cat($('cang').value), out = { miss: [], stat: {} };
+  const has = (arr, f) => new Set(arr.map(f).map(x => (x || '').trim()));
+  // cầu bến
+  const haveB = has(kids(nd, '[data-berth]'), el => val(el, '[data-cbten]'));
+  c.berths.forEach(b => { if (!haveB.has(b.ten.trim())) out.miss.push({ text: 'Cầu bến ' + b.ten + ': chưa có trong biên bản', act: 'berth' }); });
+  // ban và vị trí
+  const bans = kids(nd, '[data-ban]'), haveBan = has(bans, el => val(el, ':scope > .bh [data-bten]'));
+  let catPos = 0, havePos = 0, withP = 0, absent = 0, signs = 0;
+  c.groups.forEach(g => {
+    const card = bans.find(el => val(el, ':scope > .bh [data-bten]').trim() === g.ten.trim());
+    if (!card){ out.miss.push({ text: g.ten + ': chưa thêm ban này (' + g.items.length + ' vị trí)', act: 'ban', idx: c.groups.indexOf(g) }); catPos += g.items.length; return; }
+    const its = kids(card.querySelector(':scope > .items'), '[data-item]');
+    const haveL = new Set(its.map(it => val(it, '[data-label]').trim()));
+    const lack = g.items.filter(x => !haveL.has(x.label.trim()));
+    catPos += g.items.length;
+    if (lack.length) out.miss.push({ text: g.ten + ': thiếu ' + lack.length + ' vị trí so với danh mục — ' + lack.slice(0, 4).map(x => x.label).join('; ') + (lack.length > 4 ? '…' : ''), uid: uidOf(card) });
+  });
+  bans.forEach(card => kids(card.querySelector(':scope > .items'), '[data-item]').forEach(it => {
+    havePos++;
+    const ps = [...it.querySelectorAll('[data-p]')].filter(r => (q(r, '[data-hoten]') || {}).value && q(r, '[data-hoten]').value.trim());
+    if (ps.length) withP++;
+    ps.forEach(r => { if (q(r, '[data-co]').checked) signs++; else absent++; });
+  }));
+  // thuê ngoài
+  const haveT = has(kids(nd, '[data-tn]'), el => val(el, '[data-congty]'));
+  c.thue.forEach(t => { if (!haveT.has((t.congTy || '').trim())) out.miss.push({ text: 'Thuê ngoài — ' + t.congTy + ': chưa thêm', act: 'tn' }); });
+  // trực
+  const tr = kids(nd, '[data-truc]');
+  if (!tr.length) out.miss.push({ text: 'Công tác trực: chưa chọn hình thức trực', act: 'truc' });
+  tr.forEach(t => [...t.querySelectorAll('[data-p]')].forEach(r => { const h = q(r, '[data-hoten]'); if (h && h.value.trim() && q(r, '[data-co]').checked) signs++; }));
+  out.stat = { catPos, havePos, withP, absent, signs };
+  return out;
+}
+let sigVal = '', covList = [];
+const sigMsg = n => sigVal === '' ? '' : (+sigVal === n ? '<span class="ok">✓ khớp</span>' : `<span class="miss">⚠ lệch ${Math.abs(+sigVal - n)}: kiểm tra lại phiếu hoặc biên bản</span>`);
+function coverHtml(){
+  const r = cover(), st = r.stat, MAX = 8; covList = r.miss; window.__sigs = st.signs;
+  let h = '<div class="chk cov"><b>Đối chiếu với danh mục (soát sót):</b><br>';
+  h += r.miss.length
+    ? `<span class="miss">⚠</span> Còn ${r.miss.length} mục có trong danh mục nhưng chưa có trong biên bản:<br>` +
+      r.miss.slice(0, MAX).map((x, i) => `&nbsp;&nbsp;• <a data-cover="${i}">${esc(x.text)}</a><br>`).join('') + (r.miss.length > MAX ? `&nbsp;&nbsp;… và ${r.miss.length - MAX} mục nữa<br>` : '')
+    : '<span class="ok">✓</span> Đã có đủ cầu bến, ban, vị trí, thuê ngoài và trực theo danh mục.<br>';
+  h += `▪ Vị trí: biên bản ${st.havePos} / danh mục ${st.catPos}; có người ${st.withP}; vắng ${st.absent}.<br>`;
+  h += `<div class="sigchk">Số chữ ký trên phiếu giấy: <input type="number" id="sigCount" min="0" style="width:70px"> <span id="sigRes"></span><br><small>Tổng chữ ký ở các bảng ban và bảng trực. Biên bản đang có <b>${st.signs}</b> người có mặt.</small></div></div>`;
+  return h;
+}
 function updateSteps(){
   renderToc();
   try { const nb = $('navBar'); if (nb && nb.offsetHeight) $('formBox').style.setProperty('--nav-h', nb.offsetHeight + 'px'); } catch(e){}
   const fb = $('finishBox'); if (!fb) return;
   const miss = [];
   for (let n = 1; n <= 6; n++) if (!stepDone(n)) miss.push(n);
-  fb.innerHTML = '<div class="chk"><b>Kiểm tra trước khi lưu:</b><br>' + STEPS.slice(0, 6).map((s, i) => stepDone(i + 1)
+  const fbHtml = '<div class="chk"><b>Kiểm tra trước khi lưu:</b><br>' + STEPS.slice(0, 6).map((s, i) => stepDone(i + 1)
     ? `<span class="ok">✓</span> ${s.t}<br>` : (i + 1 === 4 ? miss4() : `<span class="miss">⚠</span> ${s.t} chưa có nội dung <a data-sg="${i + 1}">mở bước này</a><br>`)).join('') + '</div>'
+    + coverHtml()
     + '<div class="bigbtns"><button class="btn" style="background:#FF8A3D" data-proxy="btnSave">💾 Lưu biên bản</button><button class="btn" style="background:#2E7D32" data-proxy="btnWord">⬇ Xuất file Word</button><button class="btn" style="background:#2E75B6" data-proxy="btnPrint">🖨 In / PDF</button></div>';
+  if (document.activeElement && document.activeElement.id === 'sigCount') return;   // đang gõ số chữ ký: không vẽ lại
+  if (fb.dataset.h !== fbHtml){ fb.dataset.h = fbHtml; fb.innerHTML = fbHtml; }
+  const sc = $('sigCount'); if (sc){ if (sc.value !== sigVal) sc.value = sigVal; $('sigRes').innerHTML = sigMsg(window.__sigs || 0); }
 }
+document.addEventListener('input', e => {
+  if (e.target.id !== 'sigCount') return;
+  sigVal = e.target.value; $('sigRes').innerHTML = sigMsg(window.__sigs || 0);
+});
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-cover]'); if (!a) return;
+  const x = covList[+a.dataset.cover]; if (!x) return;
+  $('formBox').classList.remove('allmode');
+  if (x.uid){ goTo(x.uid); return; }
+  if (x.act === 'ban'){ openBanNew(x.idx); return; }
+  gotoStep(4); subCur = x.act === 'berth' ? (subGroups().some(g => g.key === 'berth') ? 'berth' : 'add') : x.act === 'truc' ? 'truc' : 'add'; refreshSub(); updateSteps();
+});
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-sg]');
   if (g){
