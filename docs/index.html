@@ -728,14 +728,14 @@ const KL_MAU = [
   { y: 'Công tác phối hợp giữa các bộ phận', mau: [
     'Không ghi nhận sự không phối hợp tác nghiệp giữa các bộ phận.',
     'Ghi nhận chưa phối hợp tốt giữa …… và ……: ……' ] },
-  { y: 'Công tác trực điều hành sản xuất', mau: [
+  { y: 'Công tác trực chỉ huy, điều hành sản xuất', mau: [
     'Các cá nhân được phân công trực đều có mặt tại Cảng trong thời gian kiểm tra.',
     'Các cá nhân được phân công trực đều có mặt, riêng {dsTrucVang} không có mặt tại Cảng trong thời gian kiểm tra.' ] }
 ];
 const SEED = {
   'Long Bình Tân': {
     phuDe: 'Về việc tuân thủ thời gian làm việc, nội quy lao động tại Cảng Long Bình Tân',
-    tenTruc: 'Công tác trực điều hành sản xuất',
+    tenTruc: 'Công tác trực chỉ huy, điều hành sản xuất',
     tenThue: 'Thiết bị thuê ngoài',
     kieuChucVu: 'gach', kieuCauBen: 'mot', danhSo: 'co', kieuTruc: 'dangco', chungToi: 'khong',
     leadIn: DEFAULT_LEAD,
@@ -1094,7 +1094,7 @@ function refreshND(){
   if (kind === 'ban') opts = c.groups.map((g,i) => present.has(g.ten) ? '' : `<option value="${i}">${esc(g.ten)}</option>`).join('');
   if (kind === 'thue') opts = c.thue.map((t,i) => present.has(t.congTy) ? '' : `<option value="${i}">${esc(t.congTy)}</option>`).join('');
   if (kind === 'truc') opts = present.has('__truc') ? '' : `<option value="0">${esc(settingsOf($('cang').value).tenTruc || 'Trực điều hành')}</option>`;
-  if (kind === 'ban' && !$('ndBox').querySelector('[data-truc]')) opts += `<option value="truc">${esc(settingsOf($('cang').value).tenTruc || 'Công tác trực điều hành sản xuất')}</option>`;
+  if (kind === 'ban' && !$('ndBox').querySelector('[data-truc]')) opts += `<option value="truc">${esc(settingsOf($('cang').value).tenTruc || 'Công tác trực chỉ huy, điều hành sản xuất')}</option>`;
   const khac = kind === 'truc' ? '' : '<option value="-1">+ Mục khác (tự nhập)</option>';
   $('addND').innerHTML = '<option value="">— chọn trong danh mục —</option>' + opts + khac;
 }
@@ -1287,7 +1287,7 @@ function refreshDock(){
 /* ---------------- xem trước khổ A4 ---------------- */
 function autoBophan(d){
   const l = d.ban.filter(g => g.ten).map(g => g.ten);
-  if (trucArr(d.truc).some(t => (t.nguoi || []).some(x => x.hoTen))) l.push('Công tác điều hành sản xuất');
+  if (trucArr(d.truc).some(t => (t.nguoi || []).some(x => x.hoTen))) l.push('Công tác trực chỉ huy, điều hành sản xuất');
   return l.join(', ');
 }
 function render(){
@@ -1406,7 +1406,7 @@ function html(d){
   const chB = trB.filter(isCh);
   trB.forEach(tb => {
     const trN = named(tb.nguoi);
-    const tt = tb.ten || st.tenTruc || 'Trực điều hành';
+    const tt = (tb.ten || st.tenTruc || 'Trực điều hành').replace(/Công tác trực điều hành sản xuất/i, 'Công tác trực chỉ huy, điều hành sản xuất');
     if (kieuTr !== 'vang' && isCh(tb)){
       // Trực chỉ huy: MỘT mục, bên trong có các nội dung con (Văn phòng Công ty / Cảng)
       if (tb === chB[0]) p('b h2', danhSo ? head('Trực chỉ huy') : '* Trực chỉ huy:');
@@ -1922,7 +1922,7 @@ const ND_NEW = {
   berth: () => tB({ ten: '', phuongTien: '', thucHien: '', thietBi: '' }),
   ban: () => tBan({ ten: '', lead: settingsOf($('cang').value).leadIn || DEFAULT_LEAD, items: [] }),
   thue: () => tT({ congTy: '', intro: '', note: '', dv: [] }),
-  truc: () => tTruc({ kind: 'dh', ten: 'Công tác trực điều hành sản xuất', nguoi: [] })
+  truc: () => tTruc({ kind: 'dh', ten: 'Công tác trực chỉ huy, điều hành sản xuất', nguoi: [] })
 };
 function afterAdd(){ document.querySelectorAll('[data-ban]').forEach(refreshBanPick); refreshDock(); refreshND(); refreshTP(); refreshCC(); markDirty(); }
 
@@ -2539,9 +2539,9 @@ function subGroups(){
     if (!e.dataset.uid) e.dataset.uid = 'u' + (++subUid);
     if (e.matches('[data-ban]')) add(e.dataset.uid, (e.querySelector('[data-bten]').value || 'Ban').trim() || 'Ban', [e], (its => its.length > 0 && its.every(it => [...it.querySelectorAll('[data-hoten]')].some(x => x.value.trim()) || val(it, '[data-note]').trim()))(kids(e.querySelector(':scope > .items'), '[data-item]')));
     else if (e.matches('[data-tn]')) add(e.dataset.uid, (e.querySelector('[data-congty]').value || 'Thuê ngoài').trim() || 'Thuê ngoài', [e], !!(e.querySelector('[data-congty]').value || '').trim());
-    else if (e.matches('[data-truc]')) add('truc', 'Công tác trực điều hành sản xuất', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
+    else if (e.matches('[data-truc]')) add('truc', 'Công tác trực chỉ huy, điều hành sản xuất', [e], [...e.querySelectorAll('[data-hoten]')].some(x => x.value.trim()));
   });
-  if (!g.some(x => x.key === 'truc')) g.push({ key: 'truc', label: 'Công tác trực điều hành sản xuất', els: [], done: false, virtual: true });
+  if (!g.some(x => x.key === 'truc')) g.push({ key: 'truc', label: 'Công tác trực chỉ huy, điều hành sản xuất', els: [], done: false, virtual: true });
   return g;
 }
 function refreshSub(){
@@ -2594,7 +2594,7 @@ function renderAddList(){
   h += `<div class="addgrp"><b>Ban / bộ phận làm việc</b><div>${bans || '<span class="mut">Đã thêm hết.</span>'}${btn('ban', -1, '✎ Ban khác (tự nhập)', 'oth')}</div></div>`;
   const th = c.thue.map((t, i) => ht.has(t.congTy) ? '' : btn('thue', i, '＋ ' + t.congTy)).join('');
   if (c.thue.length || th) h += `<div class="addgrp"><b>Đơn vị thuê ngoài</b><div>${th || '<span class="mut">Đã thêm hết.</span>'}${btn('thue', -1, '✎ Đơn vị khác (tự nhập)', 'oth')}</div></div>`;
-  h += `<div class="addgrp"><b>Công tác trực</b><div><button class="addbtn" data-sub="truc">→ Công tác trực điều hành sản xuất</button></div></div>`;
+  h += `<div class="addgrp"><b>Công tác trực</b><div><button class="addbtn" data-sub="truc">→ Công tác trực chỉ huy, điều hành sản xuất</button></div></div>`;
   box.innerHTML = h;
 }
 // Đang ở mục Cầu bến: ô chọn thêm cầu (giống ô thêm vị trí của từng ban)
@@ -2637,7 +2637,7 @@ document.addEventListener('click', e => {
 const isLBT = () => /long bình tân/i.test($('cang').value);
 function trucLabel(kind){
   const cang = $('cang').value, cn = /^cảng/i.test(cang) ? cang : 'Cảng ' + cang;
-  return kind === 'vp' ? 'Trực chỉ huy Văn phòng Công ty' : kind === 'cang' ? 'Trực chỉ huy ' + cn : 'Công tác trực điều hành sản xuất';
+  return kind === 'vp' ? 'Trực chỉ huy Văn phòng Công ty' : kind === 'cang' ? 'Trực chỉ huy ' + cn : 'Công tác trực chỉ huy, điều hành sản xuất';
 }
 const trucBlocks = () => [...$('ndBox').querySelectorAll(':scope > [data-truc]')];
 function trucMode(){ const b = trucBlocks(); return !b.length ? '' : (b.some(x => x.dataset.tkind === 'dh') ? 'dh' : 'ch'); }
@@ -2769,10 +2769,10 @@ function renderToc(){
       navSeq.push({ sub: x.key, label: x.label });
       if (open) kids(el0.querySelector(':scope > .svcs'), '[data-svc]').forEach(sv => { const nm = val(sv, '[data-t]').trim(); h += leaf(uidOf(sv), nm || '(thiết bị / dịch vụ mới)', !!nm); });
     });
-    // III. Công tác trực điều hành sản xuất
-    h += row(2, NOCH + item('sub ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : '', 'Công tác trực điều hành sản xuất'));
+    // III. Công tác trực chỉ huy, điều hành sản xuất
+    h += row(2, NOCH + item('sub ' + (gt.done ? 'done ' : '') + cur4('truc'), 'data-sub="truc"', gt.done ? '✓' : '', 'Công tác trực chỉ huy, điều hành sản xuất'));
     // chưa có cầu bến / ban nào và trực còn trống: nút "Tiếp theo" đưa tới "Thêm mục", không nhảy vào trực
-    navSeq.push({ sub: 'truc', label: 'Công tác trực điều hành sản xuất' });
+    navSeq.push({ sub: 'truc', label: 'Công tác trực chỉ huy, điều hành sản xuất' });
     if (gt.els.length){
       const dh = gt.els.find(z => z.dataset.tkind === 'dh'), np = z => [...z.querySelectorAll('[data-hoten]')].some(i => i.value.trim());
       if (dh) h += row(3, item('sub ' + (np(dh) ? 'done' : ''), `data-goto="${uidOf(dh)}"`, np(dh) ? '✓' : '', 'Trực điều hành sản xuất'));
