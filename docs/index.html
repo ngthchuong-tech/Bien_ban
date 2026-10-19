@@ -442,6 +442,15 @@ tbody tr:hover{background:#e3effb}
   .form,.preview{max-height:none;position:static}
   .grid3{grid-template-columns:1fr}
 }
+/* ===== mục lục: mỗi cấp một kiểu chữ duy nhất (cỡ, đậm, màu) ===== */
+#toc .ti:not(.sub):not(.leaf):not(.allbtn),#toc .trow.l0 .ti{font-size:15px;font-weight:700;color:#fff}
+#toc .trow.l1 .ti,#toc .trow.l1 .ti.sub,#toc .trow.l1 .ti.head,#toc .trow.l1 .ti.sub.add{font-size:14px;font-weight:700;color:#fff}
+#toc .trow.l2 .ti,#toc .trow.l2 .ti.sub,#toc .trow.l2 .ti.parentlbl,#toc .trow.l2 .ti.leaf{font-size:13.5px;font-weight:600;color:#e6f0fa}
+#toc .trow.l3 .ti,#toc .trow.l3 .ti.sub,#toc .trow.l3 .ti.leaf,#toc .trow.l3 .phanh{font-size:13px;font-weight:600;color:#e6f0fa;letter-spacing:0}
+#toc .trow.l4 .ti,#toc .trow.l4 .ti.leaf{font-size:12.5px;font-weight:500;color:#d3e4f6}
+#toc .trow .phanh{padding:3px 6px}
+#toc .ti.dim{font-style:normal;opacity:.7}
+#toc .trow .ti.on{color:#fff}
 </style>
 </head>
 <body>
