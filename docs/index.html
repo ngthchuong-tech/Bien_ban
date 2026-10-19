@@ -2752,7 +2752,8 @@ function renderToc(){
   if (cur < 0 && !(stepCur === 4)){ nb.innerHTML = ''; return; }
   const pv = navSeq[Math.ceil(cur) - 1], nx = navSeq[Math.floor(cur) + 1];
   nb.innerHTML = (pv ? `<button class="btn back" data-nav="${navSeq.indexOf(pv)}">‹ ${esc(pv.label)}</button>` : '<span></span>') +
-    (nx ? `<button class="btn next" data-nav="${navSeq.indexOf(nx)}">Tiếp theo: ${esc(nx.label)} ›</button>` : '');
+    (nx && nx.addban !== undefined ? (skip => skip ? `<button class="btn back" data-nav="${navSeq.indexOf(skip)}" title="Không có ban này: sang ${esc(skip.label)}">Bỏ qua ›</button>` : '')(navSeq.slice(navSeq.indexOf(nx) + 1).find(z => z.addban === undefined)) : '') +
+    (nx ? `<button class="btn next" data-nav="${navSeq.indexOf(nx)}">${nx.addban !== undefined ? 'Thêm' : 'Tiếp theo:'} ${esc(nx.label)} ›</button>` : '');
 }
 document.addEventListener('click', e => {
   const o = e.target.closest('[data-tocopen]');
