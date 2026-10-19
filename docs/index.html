@@ -2410,30 +2410,31 @@ function sheetHtml(cang, withNames){
   <tr><th>Cầu bến</th><th>Phương tiện cập bến</th><th>Công việc đang làm (xuất / nhập / không làm hàng)</th><th>Thiết bị làm hàng</th></tr>`;
   c.berths.forEach(b => { h += `<tr class="sg"><td class="c"><b>${esc(b.ten)}</b></td><td></td><td></td><td></td></tr>`; });
   h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`;
-  // Bước 4.2 các ban
+  // Bước 4.2 các ban: mỗi người một dòng (người có mặt phải ký tên)
+  const rowsFor = lb => /trưởng ca/i.test(lb) ? 1 : /điều độ cầu tàu/i.test(lb) ? 3 : /giao nhận cầu tàu/i.test(lb) ? 3 : /điều độ bãi/i.test(lb) ? 6 : /^nhân viên thủ tục/i.test(lb) ? 8 : /depot/i.test(lb) && /điều độ/i.test(lb) ? 2 : /trạm cân/i.test(lb) ? 3 : 1;
+  const spareFor = (gname, pool) => /cơ giới/i.test(pool || '') ? 5 : /bảo vệ/i.test(gname) ? 2 : 0;
+  const cell = '<td class="c" style="font-size:11px"><span class="box"></span> Có &nbsp;<span class="box"></span> Vắng</td><td></td></tr>';
   c.groups.forEach((g, gi) => {
     h += `<h3>4.${gi + 2}. ${esc(g.ten)}</h3>
-    <table><colgroup><col style="width:11mm"><col style="width:46mm"><col style="width:44mm"><col style="width:26mm"><col><col style="width:28mm"></colgroup>
-    <tr><th>STT</th><th>Vị trí / thiết bị</th><th>Họ tên người làm việc</th><th>Có mặt</th><th>Người thay thế / ghi chú</th><th>Ký tên</th></tr>`;
-    let last = null; n = 0;
+    <table><colgroup><col style="width:11mm"><col style="width:58mm"><col><col style="width:36mm"><col style="width:32mm"></colgroup>
+    <tr><th>STT</th><th>Vị trí / thiết bị</th><th>Họ tên người làm việc</th><th>Có mặt</th><th>Ký tên</th></tr>`;
+    let last = null, ph = null; n = 0;
+    const spare = () => { const k = spareFor(g.ten, last); if (k){ h += `<tr class="gh"><td colspan="5">Dự phòng${last ? ' – ' + esc(last) : ''} (vị trí / người phát sinh)</td></tr>`; for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td><td></td><td></td>${cell}`; } };
     g.items.forEach(it => {
-      if ((it.phan || '') !== last){ last = it.phan || ''; if (last) h += `<tr class="gh"><td colspan="6">${esc(last)}</td></tr>`; }
-      const pool = g.pools.find(p => p.ten === (it.phan || ''));
-      const names = it.nguoi.length ? it.nguoi.map(nm).join('; ') : '';
-      h += `<tr class="sg"><td class="c">${++n}</td><td>${esc(it.label)}${it.note ? `<br><small>(${esc(it.note)})</small>` : ''}</td><td>${withNames ? esc(names) : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td><td></td></tr>`;
+      if ((it.phan || '') !== last){ if (last !== null) spare(); last = it.phan || ''; if (last) h += `<tr class="gh"><td colspan="5">${esc(last)}</td></tr>`; }
+      const nn = [...String(it.note || '').matchAll(/(\d+)\s*nhân viên/g)].reduce((a, m) => a + (+m[1]), 0), k = nn || rowsFor(it.label);
+      for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td>${i === 0 ? `<td rowspan="${k}"><b>${esc(it.label)}</b>${it.note ? `<br><small>(${esc(it.note)})</small>` : ''}</td>` : ''}<td></td>${cell}`;
     });
-    for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${++n}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td><td></td></tr>`;
+    if (last !== null) spare();
     h += `</table>`;
-    const pools = g.pools.filter(p => p.nhanVien.length);
-    if (withNames && pools.length) pools.forEach(p => { h += `<p class="note"><b>${esc(p.ten || 'Nhân viên chung')}</b> – nhân viên theo danh mục: ${p.nhanVien.map(nm).map(esc).join('; ')}. Ghi tên người thực tế vào cột “Họ tên người làm việc”.</p>`; });
-    h += `<p class="note">3 dòng cuối để ghi vị trí / người phát sinh ngoài danh mục.</p>`;
   });
-  // thuê ngoài
+  // thuê ngoài: chỉ liệt kê phương tiện, thiết bị, công nhân kèm số lượng
   h += `<h3>4.${c.groups.length + 2}. ${esc(st.tenThue || 'Thiết bị thuê ngoài')}</h3>
-  <table><colgroup><col style="width:46mm"><col><col style="width:46mm"><col style="width:28mm"></colgroup>
-  <tr><th>Công ty</th><th>Thiết bị / dịch vụ đang làm hàng (ghi số lượng)</th><th>Người đại diện / người vận hành</th><th>Ký tên</th></tr>`;
-  c.thue.forEach(t => { h += `<tr class="sg"><td><b>${esc(t.congTy)}</b></td><td>${withNames && t.dv.length ? esc(t.dv.map(x => x.t).join('; ')) + '<br><small>Thực tế: </small>' : ''}</td><td></td><td></td></tr>`; });
-  h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr><tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`;
+  <p class="note">Ghi tên công ty, liệt kê phương tiện / thiết bị / công nhân đang làm hàng kèm số lượng. Không cần ghi tên người, không ký.</p>
+  <table><colgroup><col style="width:11mm"><col style="width:52mm"><col><col style="width:28mm"></colgroup>
+  <tr><th>STT</th><th>Công ty</th><th>Phương tiện / thiết bị / công nhân</th><th>Số lượng</th></tr>`;
+  for (let i = 0; i < 10; i++) h += `<tr class="sg"><td class="c">${i + 1}</td><td></td><td></td><td></td></tr>`;
+  h += `</table>`;
   // trực
   h += `<h3>4.${c.groups.length + 3}. Công tác trực</h3>
   <p class="note">Ngày thường: <span class="box"></span> Trực điều hành sản xuất. Ngày lễ, tết: <span class="box"></span> Trực chỉ huy Văn phòng Công ty <span class="box"></span> Trực chỉ huy ${esc(cn)}.</p>
