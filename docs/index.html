@@ -267,8 +267,10 @@ tbody tr:hover{background:#e3effb}
 .finish .chk .ok{color:var(--ok);font-weight:700}
 .finish .chk .miss{color:var(--err);font-weight:700}
 .finish .chk.cov{margin-top:-2px}
-.finish .sigchk{margin-top:6px;padding-top:6px;border-top:1px dashed #b9d0e8}
-.finish .sigchk input{padding:2px 6px;min-height:28px}
+.finish .sigtb{width:100%;border-collapse:collapse;margin-top:4px}
+.finish .sigtb td{padding:2px 4px;border-bottom:1px dotted #b9d0e8;font-size:14px;vertical-align:middle}
+.finish .sigtb input{width:64px;padding:2px 6px;min-height:28px}
+.finish .sigtb .rs{white-space:nowrap}
 .finish .chk a{color:var(--blue2);cursor:pointer;text-decoration:underline;margin-left:6px}
 .bigbtns{display:grid;gap:8px}
 .bigbtns .btn{min-height:50px;font-size:17px;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
@@ -2405,13 +2407,13 @@ function sheetHtml(cang, withNames){
   c.dv.forEach(u => u.nguoi.forEach(p => part.push([nm(p), [p.chucDanh, u.ten].filter(Boolean).join(' – ')])));
   part.forEach((r, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(r[0]) : ''}</td><td>${withNames ? esc(r[1]) : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có &nbsp;<span class="box"></span> Vắng</td><td></td></tr>`; });
   for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${part.length + i + 1}</td><td></td><td></td><td></td><td></td></tr>`;
-  h += `</table><p class="note">Người không có tên sẵn thì ghi vào các dòng trống ở cuối bảng.</p>`;
+  h += `</table><p class="note">Người không có tên sẵn thì ghi vào các dòng trống ở cuối bảng.</p><p class="note" style="text-align:right"><b>Số chữ ký thành phần tham gia: ………</b></p>`;
   // Bước 4.1 cầu bến
   h += `<h2 class="pb">Mục 4. Kết quả từng nơi</h2><h3>4.1. Tình hình cầu bến</h3>
   <table><colgroup><col style="width:22mm"><col><col style="width:48mm"><col style="width:42mm"></colgroup>
   <tr><th>Cầu bến</th><th>Phương tiện cập bến</th><th>Công việc đang làm (xuất / nhập / không làm hàng)</th><th>Thiết bị làm hàng</th></tr>`;
   c.berths.forEach(b => { h += `<tr class="sg"><td class="c"><b>${esc(b.ten)}</b></td><td></td><td></td><td></td></tr>`; });
-  h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`;
+  h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`+'<p class="note" style="text-align:right"><b>Số cầu bến đã ghi: ………</b></p>';
   // Bước 4.2 các ban: mỗi người một dòng (người có mặt phải ký tên)
   const rowsFor = lb => /trưởng ca/i.test(lb) ? 1 : /điều độ cầu tàu/i.test(lb) ? 3 : /giao nhận cầu tàu/i.test(lb) ? 3 : /điều độ bãi/i.test(lb) ? 6 : /^nhân viên thủ tục/i.test(lb) ? 8 : /depot/i.test(lb) && /điều độ/i.test(lb) ? 2 : /trạm cân/i.test(lb) ? 3 : 1;
   const spareFor = (gname, pool) => /cơ giới/i.test(pool || '') ? 5 : /bảo vệ/i.test(gname) ? 2 : 0;
@@ -2428,7 +2430,7 @@ function sheetHtml(cang, withNames){
       for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td>${i === 0 ? `<td rowspan="${k}"><b>${esc(it.label)}</b>${it.note ? `<br><small>(${esc(it.note)})</small>` : ''}</td>` : ''}<td></td>${cell}`;
     });
     if (last !== null) spare();
-    h += `</table>`;
+    h += `</table><p class="note" style="text-align:right"><b>Số chữ ký ${esc(g.ten)}: ………</b></p>`;
   });
   // thuê ngoài: chỉ liệt kê phương tiện, thiết bị, công nhân kèm số lượng
   h += `<h3>4.${c.groups.length + 2}. ${esc(st.tenThue || 'Thiết bị thuê ngoài')}</h3>
@@ -2436,7 +2438,7 @@ function sheetHtml(cang, withNames){
   <table><colgroup><col style="width:11mm"><col style="width:52mm"><col><col style="width:28mm"></colgroup>
   <tr><th>STT</th><th>Công ty</th><th>Phương tiện / thiết bị / công nhân</th><th>Số lượng</th></tr>`;
   for (let i = 0; i < 10; i++) h += `<tr class="sg"><td class="c">${i + 1}</td><td></td><td></td><td></td></tr>`;
-  h += `</table>`;
+  h += `</table><p class="note" style="text-align:right"><b>Số công ty thuê ngoài đã ghi: ………</b></p>`;
   // trực
   h += `<h3>4.${c.groups.length + 3}. Công tác trực</h3>
   <p class="note">Ngày thường: <span class="box"></span> Trực điều hành sản xuất. Ngày lễ, tết: <span class="box"></span> Trực chỉ huy Văn phòng Công ty <span class="box"></span> Trực chỉ huy ${esc(cn)}.</p>
@@ -2444,7 +2446,7 @@ function sheetHtml(cang, withNames){
   <tr><th>STT</th><th>Họ tên người trực</th><th>Chức danh / hình thức trực</th><th>Có mặt</th><th>Ký tên</th></tr>`;
   c.truc.forEach((p, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(nm(p)) : ''}</td><td>${withNames ? esc(p.chucDanh || '') : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`; });
   for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${c.truc.length + i + 1}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`;
-  h += `</table>`;
+  h += `</table><p class="note" style="text-align:right"><b>Số chữ ký công tác trực: ………</b></p>`;
   // bước 5–7
   h += `<h2 class="pb">Mục 5–7. An ninh trật tự, kết luận, kết thúc</h2>
   <h3>5. Tình hình an ninh trật tự</h3><div class="ln"></div><div class="ln"></div><div class="ln"></div>
@@ -2453,8 +2455,8 @@ function sheetHtml(cang, withNames){
   <p class="note">Phối hợp giữa các bộ phận: <span class="box"></span> bình thường &nbsp; <span class="box"></span> có vấn đề: ……………………………</p>
   <div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>
   <h3>7. Kết thúc và đối chiếu</h3>
-  <div class="grid"><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div><div>Tổng số chữ ký trên phiếu: ……………</div></div>
-  <p class="note">Số chữ ký này nhập vào ô “Số chữ ký trên phiếu giấy” ở bước 7 của app để đối chiếu. Đếm chữ ký ở các bảng ban và bảng trực.</p>
+  <div class="grid"><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div><div>(Số chữ ký từng mục đã ghi ở cuối mỗi bảng)</div></div>
+  <p class="note">Khi nhập máy, vào bước 7 gõ số đã ghi ở cuối mỗi bảng vào ô tương ứng để app đối chiếu với biên bản.</p>
   <table style="margin-top:14px"><tr><th>Đại diện Ban KSNB</th><th>Đại diện ${esc(cn)}</th></tr><tr style="height:24mm"><td></td><td></td></tr></table>`;
   return h;
 }
@@ -2707,53 +2709,38 @@ function miss4(){
     gp.slice(0, MAX).map(x => `&nbsp;&nbsp;• <a data-goto="${esc(x.uid)}">${esc(x.text)}</a><br>`).join('') + (gp.length > MAX ? `&nbsp;&nbsp;… và ${gp.length - MAX} chỗ nữa<br>` : '');
 }
 
-/* ---- Bước 7: đối chiếu với danh mục để không sót ---- */
-function cover(){
-  const nd = $('ndBox'), c = cat($('cang').value), out = { miss: [], stat: {} };
-  const has = (arr, f) => new Set(arr.map(f).map(x => (x || '').trim()));
-  // cầu bến
-  const haveB = has(kids(nd, '[data-berth]'), el => val(el, '[data-cbten]'));
-  c.berths.forEach(b => { if (!haveB.has(b.ten.trim())) out.miss.push({ text: 'Cầu bến ' + b.ten + ': chưa có trong biên bản', act: 'berth' }); });
-  // ban và vị trí
-  const bans = kids(nd, '[data-ban]'), haveBan = has(bans, el => val(el, ':scope > .bh [data-bten]'));
-  let catPos = 0, havePos = 0, withP = 0, absent = 0, signs = 0;
-  c.groups.forEach(g => {
-    const card = bans.find(el => val(el, ':scope > .bh [data-bten]').trim() === g.ten.trim());
-    if (!card){ out.miss.push({ text: g.ten + ': chưa thêm ban này (' + g.items.length + ' vị trí)', act: 'ban', idx: c.groups.indexOf(g) }); catPos += g.items.length; return; }
-    const its = kids(card.querySelector(':scope > .items'), '[data-item]');
-    const haveL = new Set(its.map(it => val(it, '[data-label]').trim()));
-    const lack = g.items.filter(x => !haveL.has(x.label.trim()));
-    catPos += g.items.length;
-    if (lack.length) out.miss.push({ text: g.ten + ': thiếu ' + lack.length + ' vị trí so với danh mục — ' + lack.slice(0, 4).map(x => x.label).join('; ') + (lack.length > 4 ? '…' : ''), uid: uidOf(card) });
-  });
-  bans.forEach(card => kids(card.querySelector(':scope > .items'), '[data-item]').forEach(it => {
-    havePos++;
-    const ps = [...it.querySelectorAll('[data-p]')].filter(r => (q(r, '[data-hoten]') || {}).value && q(r, '[data-hoten]').value.trim());
-    if (ps.length) withP++;
-    ps.forEach(r => { if (q(r, '[data-co]').checked) signs++; else absent++; });
-  }));
-  // thuê ngoài
-  const haveT = has(kids(nd, '[data-tn]'), el => val(el, '[data-congty]'));
-  c.thue.forEach(t => { if (!haveT.has((t.congTy || '').trim())) out.miss.push({ text: 'Thuê ngoài — ' + t.congTy + ': chưa thêm', act: 'tn' }); });
-  // trực
-  const tr = kids(nd, '[data-truc]');
-  if (!tr.length) out.miss.push({ text: 'Công tác trực: chưa chọn hình thức trực', act: 'truc' });
-  tr.forEach(t => [...t.querySelectorAll('[data-p]')].forEach(r => { const h = q(r, '[data-hoten]'); if (h && h.value.trim() && q(r, '[data-co]').checked) signs++; }));
-  out.stat = { catPos, havePos, withP, absent, signs };
-  return out;
+/* ---- Bước 7: đối chiếu số liệu ghi trên phiếu giấy với biên bản đang lập ---- */
+let sigVals = {};
+function recount(){
+  const nd = $('ndBox'), c = cat($('cang').value), rows = [];
+  const named = r => { const h = q(r, '[data-hoten]'); return h && h.value.trim(); };
+  const here = r => q(r, '[data-co]') && q(r, '[data-co]').checked;
+  const cnt = scope => { let on = 0, off = 0; scope.querySelectorAll('[data-p]').forEach(r => { if (!named(r)) return; here(r) ? on++ : off++; }); return { on, off }; };
+  const tp = cnt($('tpBox'));
+  rows.push({ key: 'tp', label: 'Thành phần tham gia', n: tp.on, off: tp.off, unit: 'chữ ký' });
+  rows.push({ key: 'cb', label: 'Cầu bến', n: kids(nd, '[data-berth]').filter(b => val(b, '[data-cbten]').trim()).length, unit: 'cầu bến' });
+  const bans = kids(nd, '[data-ban]'), names = [];
+  c.groups.forEach(g => names.push(g.ten.trim()));
+  bans.forEach(el => { const t = val(el, ':scope > .bh [data-bten]').trim(); if (t && !names.includes(t)) names.push(t); });
+  names.forEach(t => { const card = bans.find(el => val(el, ':scope > .bh [data-bten]').trim() === t); const k = card ? cnt(card) : { on: 0, off: 0 }; rows.push({ key: 'b:' + t, label: t, n: k.on, off: k.off, unit: 'chữ ký' }); });
+  rows.push({ key: 'tn', label: 'Thiết bị thuê ngoài', n: kids(nd, '[data-tn]').filter(t => val(t, '[data-congty]').trim()).length, unit: 'công ty' });
+  let tr = { on: 0, off: 0 }; kids(nd, '[data-truc]').forEach(t => { const k = cnt(t); tr.on += k.on; tr.off += k.off; });
+  rows.push({ key: 'tr', label: 'Công tác trực', n: tr.on, off: tr.off, unit: 'chữ ký' });
+  return rows;
 }
-let sigVal = '', covList = [];
-const sigMsg = n => sigVal === '' ? '' : (+sigVal === n ? '<span class="ok">✓ khớp</span>' : `<span class="miss">⚠ lệch ${Math.abs(+sigVal - n)}: kiểm tra lại phiếu hoặc biên bản</span>`);
+const sigMsg = (n, v) => v === undefined || v === '' ? '' : (+v === n ? '<span class="ok">✓ khớp</span>' : `<span class="miss">⚠ phiếu ${v}, biên bản ${n}: lệch ${Math.abs(+v - n)}</span>`);
 function coverHtml(){
-  const r = cover(), st = r.stat, MAX = 8; covList = r.miss; window.__sigs = st.signs;
-  let h = '<div class="chk cov"><b>Đối chiếu với danh mục (soát sót):</b><br>';
-  h += r.miss.length
-    ? `<span class="miss">⚠</span> Còn ${r.miss.length} mục có trong danh mục nhưng chưa có trong biên bản:<br>` +
-      r.miss.slice(0, MAX).map((x, i) => `&nbsp;&nbsp;• <a data-cover="${i}">${esc(x.text)}</a><br>`).join('') + (r.miss.length > MAX ? `&nbsp;&nbsp;… và ${r.miss.length - MAX} mục nữa<br>` : '')
-    : '<span class="ok">✓</span> Đã có đủ cầu bến, ban, vị trí, thuê ngoài và trực theo danh mục.<br>';
-  h += `▪ Vị trí: biên bản ${st.havePos} / danh mục ${st.catPos}; có người ${st.withP}; vắng ${st.absent}.<br>`;
-  h += `<div class="sigchk">Số chữ ký trên phiếu giấy: <input type="number" id="sigCount" min="0" style="width:70px"> <span id="sigRes"></span><br><small>Tổng chữ ký ở các bảng ban và bảng trực. Biên bản đang có <b>${st.signs}</b> người có mặt.</small></div></div>`;
-  return h;
+  const rows = recount(); window.__rows = rows;
+  return '<div class="chk cov"><b>Đối chiếu số lượng với phiếu giấy:</b><br><small>Đếm trên phiếu giấy của từng mục, nhập vào ô; máy so với số trong biên bản đang lập.</small>' +
+    '<table class="sigtb">' + rows.map((r, i) => `<tr><td>${esc(r.label)}</td><td><input type="number" min="0" data-sig="${esc(r.key)}"> <small>${r.unit}</small></td><td class="bb">BB: <b>${r.n}</b>${r.off ? ` <small>(+${r.off} vắng)</small>` : ''}</td><td class="rs" data-sigres="${esc(r.key)}"></td></tr>`).join('') + '</table></div>';
+}
+function sigRefresh(){
+  (window.__rows || []).forEach(r => {
+    const inp = document.querySelector(`[data-sig="${CSS.escape(r.key)}"]`); if (!inp) return;
+    const v = sigVals[r.key]; if (document.activeElement !== inp && inp.value !== (v === undefined ? '' : v)) inp.value = v === undefined ? '' : v;
+    const rs = document.querySelector(`[data-sigres="${CSS.escape(r.key)}"]`); if (rs) rs.innerHTML = sigMsg(r.n, v);
+    const bb = inp.closest('tr').querySelector('.bb'); if (bb) bb.innerHTML = `BB: <b>${r.n}</b>${r.off ? ` <small>(+${r.off} vắng)</small>` : ''}`;
+  });
 }
 function updateSteps(){
   renderToc();
@@ -2765,21 +2752,13 @@ function updateSteps(){
     ? `<span class="ok">✓</span> ${s.t}<br>` : (i + 1 === 4 ? miss4() : `<span class="miss">⚠</span> ${s.t} chưa có nội dung <a data-sg="${i + 1}">mở bước này</a><br>`)).join('') + '</div>'
     + coverHtml()
     + '<div class="bigbtns"><button class="btn" style="background:#FF8A3D" data-proxy="btnSave">💾 Lưu biên bản</button><button class="btn" style="background:#2E7D32" data-proxy="btnWord">⬇ Xuất file Word</button><button class="btn" style="background:#2E75B6" data-proxy="btnPrint">🖨 In / PDF</button></div>';
-  if (document.activeElement && document.activeElement.id === 'sigCount') return;   // đang gõ số chữ ký: không vẽ lại
+  if (document.activeElement && document.activeElement.dataset && document.activeElement.dataset.sig !== undefined){ window.__rows = recount(); sigRefresh(); return; }   // đang gõ số: không vẽ lại
   if (fb.dataset.h !== fbHtml){ fb.dataset.h = fbHtml; fb.innerHTML = fbHtml; }
-  const sc = $('sigCount'); if (sc){ if (sc.value !== sigVal) sc.value = sigVal; $('sigRes').innerHTML = sigMsg(window.__sigs || 0); }
+  sigRefresh();
 }
 document.addEventListener('input', e => {
-  if (e.target.id !== 'sigCount') return;
-  sigVal = e.target.value; $('sigRes').innerHTML = sigMsg(window.__sigs || 0);
-});
-document.addEventListener('click', e => {
-  const a = e.target.closest('[data-cover]'); if (!a) return;
-  const x = covList[+a.dataset.cover]; if (!x) return;
-  $('formBox').classList.remove('allmode');
-  if (x.uid){ goTo(x.uid); return; }
-  if (x.act === 'ban'){ openBanNew(x.idx); return; }
-  gotoStep(4); subCur = x.act === 'berth' ? (subGroups().some(g => g.key === 'berth') ? 'berth' : 'add') : x.act === 'truc' ? 'truc' : 'add'; refreshSub(); updateSteps();
+  const k = e.target.dataset && e.target.dataset.sig; if (k === undefined) return;
+  sigVals[k] = e.target.value; sigRefresh();
 });
 document.addEventListener('click', e => {
   const g = e.target.closest('[data-sg]');
