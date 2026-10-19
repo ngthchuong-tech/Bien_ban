@@ -2435,6 +2435,10 @@ function gotoStep(n, quiet){
   if (!quiet) f.scrollTop = 0;
   if (n === 4) refreshDock();
 }
+function openBanNew(idx){   // thêm ban từ Danh mục rồi mở luôn
+  $('formBox').classList.remove('allmode'); if (stepCur !== 4) gotoStep(4);
+  addNd('ban', idx); $('formBox').scrollTop = 0;
+}
 function goTo(uid){
   const el = byUid(uid); if (!el) return;
   const card = el.matches('[data-item]') ? el.closest('[data-ban]') : el.matches('[data-svc]') ? el.closest('[data-tn]') : el;
@@ -2692,8 +2696,17 @@ function renderToc(){
     // II. Các ban, bộ phận
     const bansDone = bans.length > 0 && bans.every(z => z.done);
     h += row(1, NOCH + item('sub head ' + (bansDone ? 'done ' : '') + (bans.length ? '' : 'dim'), bans.length ? `data-sub="${esc(bans[0].key)}"` : 'data-sub="add"', bansDone ? '✓' : 'II', 'Các ban, bộ phận, trực') + plus('banall', 'Thêm ban / bộ phận'));
-    bans.forEach(x => {
-      const el0 = x.els[0], open = isOpen(x.key);
+    // các ban theo thứ tự Danh mục: ban đã thêm thì mở được, ban chưa thêm hiện mờ — bấm là thêm và mở luôn
+    const ccat = cat($('cang').value), banItems = [];
+    ccat.groups.forEach((cg0, gi) => { const x0 = bans.find(z => z.label === cg0.ten); banItems.push(x0 ? { x: x0 } : { pending: gi, label: cg0.ten }); });
+    bans.forEach(x => { if (!ccat.groups.some(cg0 => cg0.ten === x.label)) banItems.push({ x }); });
+    banItems.forEach(bi => {
+      if (bi.pending !== undefined){
+        h += row(2, NOCH + item('sub dim', `data-addban="${bi.pending}"`, '+', esc(bi.label) + ' (chưa thêm)'));
+        navSeq.push({ addban: bi.pending, label: bi.label });
+        return;
+      }
+      const x = bi.x, el0 = x.els[0], open = isOpen(x.key);
       h += row(2, chev(x.key) + item('sub ' + (x.done ? 'done ' : '') + cur4(x.key), `data-sub="${esc(x.key)}"`, x.done ? '✓' : '', esc(x.label)) + plus('ban:' + x.key, 'Thêm vị trí vào ' + x.label));
       navSeq.push({ sub: x.key, label: x.label });
       if (!open) return;
@@ -2745,11 +2758,13 @@ document.addEventListener('click', e => {
   const o = e.target.closest('[data-tocopen]');
   if (o){ const k = o.dataset.tocopen, isOpen = !tocShut.has(k) && (subCur === k || tocOpen.has(k)); if (isOpen){ tocOpen.delete(k); tocShut.add(k); } else { tocShut.delete(k); tocOpen.add(k); } renderToc(); return; }
   const gt = e.target.closest('[data-goto]'); if (gt){ goTo(gt.dataset.goto); return; }
+  const ab = e.target.closest('[data-addban]'); if (ab){ openBanNew(+ab.dataset.addban); return; }
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   const t = navSeq[+b.dataset.nav]; if (!t) return;
   $('formBox').classList.remove('allmode');
+  if (t.addban !== undefined){ openBanNew(t.addban); return; }
   if (t.sg){ if (t.sg === 4) subCur = 'add'; gotoStep(t.sg); refreshSub(); } else { subCur = t.sub; gotoStep(4); refreshSub(); }
   $('formBox').scrollTop = 0;
 });
