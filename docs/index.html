@@ -832,6 +832,14 @@ Xe nâng cont Kalmar 2 | Lái xe: Lê Văn Út
 Xe vận chuyển 38 | Lái xe: Hà Văn Tài
 Xe vận chuyển 39 | Lái xe: Châu Văn Hải
 Xe vận chuyển 37 | Lái xe: Lý Hùng Phong
+Cẩu MAC 1 |
+xe cuốc Cobelco |
+xe cuốc 0660 |
+xe cuốc 0659 |
+xe xúc Komastsu |
+xe nâng Mitsubisshi |
+xe nâng CAT |
+xe đầu kéo Otawa |
 ## Ban Kế toán thương vụ
 Nhân viên Trạm cân | Nguyễn Văn Lợi
 ## Ban Hành chính bảo vệ
@@ -872,7 +880,8 @@ Bà Lưu Thị Mỹ Chi | Phó GĐ Kho vận - logistics`
     canCu: `Căn cứ nội quy lao động hiện hành của công ty;
 Căn cứ thông báo số 56/TB-CGD-HCBV ngày 03/08/2017 về việc bấm vân tay chấm công làm việc tại Cảng Gò Dầu;
 Căn cứ thông báo số 1565/TB-CĐN-HCTH ngày 15/8/2026 về việc trực lễ Quốc khánh 02/9/2026.`,
-    ksnb: `Ông Vũ Ngọc Hiếu | Nhân viên`,
+    ksnb: `Ông Vũ Ngọc Hiếu | Nhân viên KSNB
+Ông Nguyễn Thanh Chương | Nhân viên KSNB`,
     dvKhac: `## Cảng Gò Dầu
 Ông Vũ Văn Độ | Phó GĐ Cảng Gò Dầu
 Ông Nguyễn Ngọc Đệ | Trưởng Ca`,
@@ -902,7 +911,7 @@ Trưởng ca | Nguyễn Ngọc Đệ
 ## Ban Kế toán Tài vụ
 Trạm cân Khu A | Nguyễn Văn Nghi
 Trạm cân Khu B | Trần Thanh Hà
-## Ban Hành chính bảo vệ
+## Ban hành chính bảo vệ
 Trực ban an ninh | Nguyễn Quang Tuyên
 Khu B | (04 nhân viên cổng ra vào)
 B1+B5 | (01 nhân viên cầu cảng)
@@ -2390,7 +2399,9 @@ async function exportWord(){
 
 $('btnPrint').onclick = () => window.print();
 /* ---------------- phiếu giấy ghi tại hiện trường ---------------- */
+const PHIEU_CFG = { 'Long Bình Tân': { tpKs: false, tpSign: true, pb4: false, pb5: true }, 'Gò Dầu': { tpKs: true, tpSign: false, pb4: true, pb5: false, spareHdr: true } };   // theo mẫu Word đã chỉnh tay
 function sheetHtml(cang, withNames){
+  const pc = PHIEU_CFG[cang] || { tpKs: false, tpSign: true, pb4: false, pb5: false };
   const c = cat(cang), st = settingsOf(cang), cn = /^cảng/i.test(cang) ? cang : 'Cảng ' + cang;
   const nm = p => ((p.xung ? p.xung + ' ' : '') + p.hoTen).trim();
   const blank = '<span class="box"></span> Có mặt &nbsp; <span class="box"></span> Vắng';
@@ -2399,20 +2410,19 @@ function sheetHtml(cang, withNames){
   // Bước 1–3
   h += `<h2>Mục 1–3. Thông tin chung, thành phần, thời gian</h2>
   <div class="grid"><div>Ngày kiểm tra: ……………………………</div><div>Ca trực: ……………</div><div>Bắt đầu lúc: …… giờ …… phút, ngày ……/……/……</div><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div></div>
-  <h3>Thành phần tham gia</h3>
-  <table><colgroup><col style="width:11mm"><col style="width:55mm"><col><col style="width:30mm"><col style="width:32mm"></colgroup>
-  <tr><th>STT</th><th>Họ tên</th><th>Chức danh / đơn vị</th><th>Có mặt</th><th>Ký tên</th></tr>`;
-  const part = [];
-  c.ks.forEach(p => part.push([nm(p), (p.chucDanh || '') + ' (Ban KSNB)']));
-  c.dv.forEach(u => u.nguoi.forEach(p => part.push([nm(p), [p.chucDanh, u.ten].filter(Boolean).join(' – ')])));
-  part.forEach((r, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(r[0]) : ''}</td><td>${withNames ? esc(r[1]) : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có &nbsp;<span class="box"></span> Vắng</td><td></td></tr>`; });
-  for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${part.length + i + 1}</td><td></td><td></td><td></td><td></td></tr>`;
+  <h3>Thành phần tham gia</h3>`;
+  const part = pc.tpKs ? c.ks.map(p => [nm(p), (p.chucDanh || '') + ' (Ban KSNB)']) : [];
+  const boxc = '<td class="c" style="font-size:11px"><span class="box"></span> Có &nbsp;<span class="box"></span> Vắng</td>';
+  h += pc.tpSign
+    ? `<table><colgroup><col style="width:11mm"><col style="width:55mm"><col><col style="width:30mm"><col style="width:32mm"></colgroup><tr><th>STT</th><th>Họ tên</th><th>Chức danh / đơn vị</th><th>Có mặt</th><th>Ký tên</th></tr>`
+    : `<table style="width:auto"><colgroup><col style="width:11mm"><col style="width:55mm"><col style="width:58mm"><col style="width:30mm"></colgroup><tr><th>STT</th><th>Họ tên</th><th>Chức danh / đơn vị</th><th>Có mặt</th></tr>`;
+  for (let i = 0; i < Math.max(7, part.length); i++){ const r = part[i]; h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames && r ? esc(r[0]) : ''}</td><td>${withNames && r ? esc(r[1]) : ''}</td>${boxc}${pc.tpSign ? '<td></td>' : ''}</tr>`; }
   h += `</table><p class="note">Người không có tên sẵn thì ghi vào các dòng trống ở cuối bảng.</p><p class="note" style="text-align:right"><b>Số chữ ký thành phần tham gia: ………</b></p>`;
   // Bước 4.1 cầu bến
-  h += `<h2 class="pb">Mục 4. Kết quả từng nơi</h2><h3>4.1. Tình hình cầu bến</h3>
+  h += `<h2${pc.pb4 ? ' class="pb"' : ''}>Mục 4. Kết quả từng nơi</h2><h3>4.1. Tình hình cầu bến</h3>
   <table><colgroup><col style="width:22mm"><col><col style="width:48mm"><col style="width:42mm"></colgroup>
   <tr><th>Cầu bến</th><th>Phương tiện cập bến</th><th>Công việc đang làm (xuất / nhập / không làm hàng)</th><th>Thiết bị làm hàng</th></tr>`;
-  c.berths.forEach(b => { h += `<tr class="sg"><td class="c"><b>${esc(b.ten)}</b></td><td></td><td></td><td></td></tr>`; });
+  c.berths.forEach(b => { const mm = /^([A-Za-z]+\d+)\s*-\s*([A-Za-z]+\d+)$/.exec(b.ten.trim()); (mm ? [mm[1], mm[2]] : [b.ten]).forEach(t => { h += `<tr class="sg"><td class="c"><b>${esc(t)}</b></td><td></td><td></td><td></td></tr>`; }); });
   h += `<tr class="sg"><td></td><td></td><td></td><td></td></tr></table>`+'<p class="note" style="text-align:right"><b>Số cầu bến đã ghi: ………</b></p>';
   // Bước 4.2 các ban: mỗi người một dòng (người có mặt phải ký tên)
   const rowsFor = lb => /trưởng ca/i.test(lb) ? 1 : /điều độ cầu tàu/i.test(lb) ? 3 : /giao nhận cầu tàu/i.test(lb) ? 3 : /điều độ bãi/i.test(lb) ? 6 : /^nhân viên thủ tục/i.test(lb) ? 8 : /depot/i.test(lb) && /điều độ/i.test(lb) ? 2 : /trạm cân/i.test(lb) ? 3 : 1;
@@ -2423,11 +2433,13 @@ function sheetHtml(cang, withNames){
     <table><colgroup><col style="width:11mm"><col style="width:58mm"><col><col style="width:36mm"><col style="width:32mm"></colgroup>
     <tr><th>STT</th><th>Vị trí / thiết bị</th><th>Họ tên người làm việc</th><th>Có mặt</th><th>Ký tên</th></tr>`;
     let last = null, ph = null; n = 0;
-    const spare = () => { const k = spareFor(g.ten, last); if (k){ h += `<tr class="gh"><td colspan="5">Dự phòng${last ? ' – ' + esc(last) : ''} (vị trí / người phát sinh)</td></tr>`; for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td><td></td><td></td>${cell}`; } };
+    const spare = () => { const k = spareFor(g.ten, last); if (k){ if (pc.spareHdr && !last) h += `<tr class="gh"><td colspan="5">Dự phòng (vị trí / người phát sinh)</td></tr>`; for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td><td></td><td></td>${cell}`; } };
     g.items.forEach(it => {
-      if ((it.phan || '') !== last){ if (last !== null) spare(); last = it.phan || ''; if (last) h += `<tr class="gh"><td colspan="5">${esc(last)}</td></tr>`; }
+      const tc = /^nhân viên trạm cân$/i.test(it.label.trim());
+      const phn = tc ? 'Trạm cân' : (it.phan || '');
+      if (phn !== last){ if (last !== null) spare(); last = phn; if (last) h += `<tr class="gh"><td colspan="5">${esc(last)}</td></tr>`; }
       const nn = [...String(it.note || '').matchAll(/(\d+)\s*nhân viên/g)].reduce((a, m) => a + (+m[1]), 0), k = nn || rowsFor(it.label);
-      for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td>${i === 0 ? `<td rowspan="${k}"><b>${esc(it.label)}</b>${it.note ? `<br><small>(${esc(it.note)})</small>` : ''}</td>` : ''}<td></td>${cell}`;
+      for (let i = 0; i < k; i++) h += `<tr class="sg"><td class="c">${++n}</td>${i === 0 ? `<td rowspan="${k}"><b>${esc(tc ? 'Trạm cân' : it.label)}</b>${it.note && !/không bố trí/i.test(it.note) ? `<br><small>(${esc(it.note)})</small>` : ''}</td>` : ''}<td></td>${cell}`;
     });
     if (last !== null) spare();
     h += `</table><p class="note" style="text-align:right"><b>Số chữ ký ${esc(g.ten)}: ………</b></p>`;
@@ -2444,11 +2456,10 @@ function sheetHtml(cang, withNames){
   <p class="note">Ngày thường: <span class="box"></span> Trực điều hành sản xuất. Ngày lễ, tết: <span class="box"></span> Trực chỉ huy Văn phòng Công ty <span class="box"></span> Trực chỉ huy ${esc(cn)}.</p>
   <table><colgroup><col style="width:11mm"><col style="width:58mm"><col><col style="width:26mm"><col style="width:30mm"></colgroup>
   <tr><th>STT</th><th>Họ tên người trực</th><th>Chức danh / hình thức trực</th><th>Có mặt</th><th>Ký tên</th></tr>`;
-  c.truc.forEach((p, i) => { h += `<tr class="sg"><td class="c">${i + 1}</td><td>${withNames ? esc(nm(p)) : ''}</td><td>${withNames ? esc(p.chucDanh || '') : ''}</td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`; });
-  for (let i = 0; i < 3; i++) h += `<tr class="sg"><td class="c">${c.truc.length + i + 1}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`;
+  for (let i = 0; i < Math.max(5, c.truc.length + 3); i++) h += `<tr class="sg"><td class="c">${i + 1}</td><td></td><td></td><td class="c" style="font-size:11px"><span class="box"></span> Có<br><span class="box"></span> Vắng</td><td></td></tr>`;
   h += `</table><p class="note" style="text-align:right"><b>Số chữ ký công tác trực: ………</b></p>`;
   // bước 5–7
-  h += `<h2 class="pb">Mục 5–7. An ninh trật tự, kết luận, kết thúc</h2>
+  h += `<h2${pc.pb5 ? ' class="pb"' : ''}>Mục 5–7. An ninh trật tự, kết luận, kết thúc</h2>
   <h3>5. Tình hình an ninh trật tự</h3><div class="ln"></div><div class="ln"></div><div class="ln"></div>
   <h3>6. Ghi chú cho phần kết luận</h3>
   <p class="note">Lưu lượng xe ra vào cảng: <span class="box"></span> thấp &nbsp; <span class="box"></span> bình thường &nbsp; <span class="box"></span> cao. Ùn tắc xe: <span class="box"></span> không &nbsp; <span class="box"></span> có, tại: ……………………………</p>
@@ -2456,8 +2467,7 @@ function sheetHtml(cang, withNames){
   <div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div><div class="ln"></div>
   <h3>7. Kết thúc và đối chiếu</h3>
   <div class="grid"><div>Kết thúc lúc: …… giờ …… phút, ngày ……/……/……</div><div>(Số chữ ký từng mục đã ghi ở cuối mỗi bảng)</div></div>
-  <p class="note">Khi nhập máy, vào bước 7 gõ số đã ghi ở cuối mỗi bảng vào ô tương ứng để app đối chiếu với biên bản.</p>
-  <table style="margin-top:14px"><tr><th>Đại diện Ban KSNB</th><th>Đại diện ${esc(cn)}</th></tr><tr style="height:24mm"><td></td><td></td></tr></table>`;
+  <p class="note">Khi nhập máy, vào bước 7 gõ số đã ghi ở cuối mỗi bảng vào ô tương ứng để app đối chiếu với biên bản.</p>`;
   return h;
 }
 function showSheet(){
